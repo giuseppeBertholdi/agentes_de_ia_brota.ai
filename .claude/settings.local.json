@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(curl -s http://localhost:8080/instance/fetchInstances -H 'apikey: 285ef14b54809280963f028e161dbb66e1dc295e0b4d2dce')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import sys,json; lines=sys.stdin.read\\(\\); import re; d=json.loads\\(re.search\\('\\\\{.*\\\\}',lines,re.S\\).group\\(\\)\\); print\\('status:', d.get\\('instance',{}\\).get\\('status'\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('connect response:', d\\)\")",
+      "Bash(docker exec *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(cp src/pages/Settings.tsx /tmp/Settings.tsx.bak)",
+      "Bash(python3 -)",
+      "Bash(python3 -c \"import ast; [ast.parse\\(open\\(f\\).read\\(\\), f\\) for f in ['app/config.py','app/services/whatsapp_cloud_api.py','app/api/webhooks.py','app/api/settings.py','app/api/conversations.py','app/models/schemas.py','main.py']]\")",
+      "Bash(/home/giuseppe/brota/backend/.venv/bin/python3 --version)",
+      "Bash(python3 *)",
+      "Bash(.venv/bin/python -c ' *)",
+      "Bash(git add *)"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+# Env files (segredos — nunca commitar)
+.env
+.env.*
+!.env.example
+*.save
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
