@@ -152,14 +152,34 @@ Cada empresa cliente conecta o próprio número pela página de Configurações,
 
 ## Produção
 
-```bash
-# Frontend
-cd frontend && npm run build
-# Sirva a pasta dist/ com nginx, Vercel, Netlify, etc.
+Frontend e backend são deployados separadamente: **Netlify** serve o frontend estático, **Railway** roda o backend (FastAPI precisa de um processo persistente, que Netlify não oferece).
 
-# Backend
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-# Ou use Railway, Render, Fly.io, etc.
-```
+### Frontend → Netlify
 
-Lembre-se de atualizar `FRONTEND_URL` no `.env` para o domínio de produção (necessário para CORS) e de recadastrar a URL do webhook (`https://SEU_DOMINIO/webhook`) no App da Meta.
+1. Crie um site na Netlify e conecte ao repositório do GitHub.
+2. A Netlify lê o `netlify.toml` da raiz automaticamente (`base = frontend`, `publish = dist`) — não precisa configurar build settings manualmente.
+3. Em **Site settings > Environment variables**, adicione:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_API_URL` → URL pública do backend (ex: `https://api.plimpost.com`)
+   - `VITE_META_APP_ID` e `VITE_META_CONFIG_ID` (quando for configurar o WhatsApp)
+4. Em **Domain management**, adicione `plimpost.com` (ou `app.plimpost.com`) e siga as instruções de DNS da Netlify (CNAME ou os NS dela, dependendo de onde o domínio foi registrado).
+
+### Backend → Railway
+
+1. Crie um projeto na Railway, conecte ao mesmo repositório.
+2. Em **Settings > Root Directory**, defina `backend` (é um monorepo — sem isso a Railway tenta buildar a raiz).
+3. A Railway detecta o `Procfile` e o `.python-version` automaticamente (Nixpacks) — não precisa de Dockerfile.
+4. Em **Variables**, adicione todas as chaves do `.env.example` referentes ao backend (`SUPABASE_*`, `OPENAI_API_KEY`, `META_*`, `WEBHOOK_VERIFY_TOKEN`, `FRONTEND_URL`, `BACKEND_URL`).
+   - `FRONTEND_URL` → `https://plimpost.com` (domínio do frontend, necessário pro CORS)
+   - `BACKEND_URL` → `https://api.plimpost.com` (ou a URL gerada pela Railway, se for usar antes de configurar o subdomínio)
+5. Em **Settings > Networking**, gere o domínio público da Railway ou aponte um subdomínio seu (`api.plimpost.com`) via CNAME.
+
+### DNS em plimpost.com
+
+| Registro | Destino |
+|----------|---------|
+| `plimpost.com` (ou `app`) | Netlify (CNAME/NS conforme instrução da própria Netlify) |
+| `api.plimpost.com` | CNAME para o domínio gerado pela Railway |
+
+Depois de ambos no ar, lembre de recadastrar a URL do webhook (`https://api.plimpost.com/webhook`) no App da Meta quando for configurar o WhatsApp.
