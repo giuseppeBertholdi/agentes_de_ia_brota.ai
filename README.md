@@ -152,7 +152,7 @@ Cada empresa cliente conecta o próprio número pela página de Configurações,
 
 ## Produção
 
-Frontend e backend são deployados separadamente: **Netlify** serve o frontend estático, **Railway** roda o backend (FastAPI precisa de um processo persistente, que Netlify não oferece).
+Frontend e backend são deployados separadamente: **Netlify** serve o frontend estático, **Render** roda o backend (FastAPI precisa de um processo persistente, que Netlify não oferece).
 
 ### Frontend → Netlify
 
@@ -165,21 +165,24 @@ Frontend e backend são deployados separadamente: **Netlify** serve o frontend e
    - `VITE_META_APP_ID` e `VITE_META_CONFIG_ID` (quando for configurar o WhatsApp)
 4. Em **Domain management**, adicione `plimpost.com` (ou `app.plimpost.com`) e siga as instruções de DNS da Netlify (CNAME ou os NS dela, dependendo de onde o domínio foi registrado).
 
-### Backend → Railway
+### Backend → Render
 
-1. Crie um projeto na Railway, conecte ao mesmo repositório.
-2. Em **Settings > Root Directory**, defina `backend` (é um monorepo — sem isso a Railway tenta buildar a raiz).
-3. A Railway detecta o `Procfile` e o `.python-version` automaticamente (Nixpacks) — não precisa de Dockerfile.
-4. Em **Variables**, adicione todas as chaves do `.env.example` referentes ao backend (`SUPABASE_*`, `OPENAI_API_KEY`, `META_*`, `WEBHOOK_VERIFY_TOKEN`, `FRONTEND_URL`, `BACKEND_URL`).
+1. Crie conta em [render.com](https://render.com) (login com GitHub facilita) e clique em **New > Blueprint**.
+2. Selecione este repositório — o Render lê o `render.yaml` da raiz automaticamente e já cria o serviço `brota-backend` configurado (root dir `backend`, build e start command, plano free).
+3. No painel do serviço criado, vá em **Environment** e preencha os valores das variáveis (o blueprint já lista as chaves, só falta o valor de cada uma): `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`, `OPENAI_API_KEY`, `META_*`, `WEBHOOK_VERIFY_TOKEN`, `FRONTEND_URL`, `BACKEND_URL`.
    - `FRONTEND_URL` → `https://plimpost.com` (domínio do frontend, necessário pro CORS)
-   - `BACKEND_URL` → `https://api.plimpost.com` (ou a URL gerada pela Railway, se for usar antes de configurar o subdomínio)
-5. Em **Settings > Networking**, gere o domínio público da Railway ou aponte um subdomínio seu (`api.plimpost.com`) via CNAME.
+   - `BACKEND_URL` → `https://api.plimpost.com` (ou a URL `.onrender.com` gerada, se for usar antes de configurar o subdomínio)
+4. Em **Settings > Custom Domains**, adicione `api.plimpost.com` e siga a instrução de CNAME que o Render mostra.
+
+> Sem `render.yaml`, também dá pra criar o serviço manualmente em **New > Web Service**: aponte o Root Directory para `backend`, build command `pip install -r requirements.txt`, start command `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+
+⚠️ No plano free, o serviço "dorme" depois de ~15 min sem requisições e demora uns 30s pra responder na próxima chamada (cold start). Pra um webhook de WhatsApp isso pode atrasar a primeira resposta do bot depois de um período ocioso — vale considerar o plano pago (~US$7/mês) quando tiver clientes reais.
 
 ### DNS em plimpost.com
 
 | Registro | Destino |
 |----------|---------|
 | `plimpost.com` (ou `app`) | Netlify (CNAME/NS conforme instrução da própria Netlify) |
-| `api.plimpost.com` | CNAME para o domínio gerado pela Railway |
+| `api.plimpost.com` | CNAME para o domínio `.onrender.com` gerado pelo Render |
 
 Depois de ambos no ar, lembre de recadastrar a URL do webhook (`https://api.plimpost.com/webhook`) no App da Meta quando for configurar o WhatsApp.
