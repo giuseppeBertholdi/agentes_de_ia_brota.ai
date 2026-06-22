@@ -29,7 +29,7 @@ jobs:
         working-directory: backend
     env:
       SUPABASE_URL: https://example.supabase.co
-      SUPABASE_SERVICE_KEY: dummy
+      SUPABASE_SERVICE_KEY: dummy.dummy.dummy
       SUPABASE_JWT_SECRET: dummy
       OPENAI_API_KEY: dummy
     steps:
