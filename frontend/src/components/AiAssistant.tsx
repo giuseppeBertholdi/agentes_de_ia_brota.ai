@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bot, X, Send, Loader2, Sparkles, ChevronDown } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -64,7 +65,21 @@ function Msg({ msg }: { msg: ChatMessage }) {
             <Loader2 size={13} className="animate-spin" />
             Pensando…
           </span>
-        ) : msg.content}
+        ) : isUser ? msg.content : (
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+              strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+              em: ({ children }) => <em className="italic">{children}</em>,
+              ul: ({ children }) => <ul className="list-disc pl-4 my-1 flex flex-col gap-0.5">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal pl-4 my-1 flex flex-col gap-0.5">{children}</ol>,
+              li: ({ children }) => <li>{children}</li>,
+              code: ({ children }) => <code className="bg-ink/10 px-1 rounded text-xs font-mono">{children}</code>,
+            }}
+          >
+            {msg.content}
+          </ReactMarkdown>
+        )}
       </div>
       {msg.actions && msg.actions.length > 0 && (
         <div className="flex flex-wrap gap-1.5 max-w-[90%]">

@@ -86,7 +86,17 @@ export default function Reports() {
 
       {loading && !report ? (
         <div className="text-ink-faint text-sm font-body py-10 text-center">Carregando…</div>
-      ) : report && (
+      ) : !report ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <div className="w-16 h-16 rounded-full bg-cream-2 border-2 border-ink flex items-center justify-center shadow-hard">
+            <TrendingUp size={28} className="text-ink-soft" />
+          </div>
+          <div className="text-center">
+            <p className="font-display font-bold text-lg text-ink">Seus relatórios aparecerão aqui</p>
+            <p className="text-ink-soft text-sm font-body mt-1">Assim que houver movimentação, o resumo semanal será gerado automaticamente.</p>
+          </div>
+        </div>
+      ) : (
         <>
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
             {tiles.map(({ label, value, icon: Icon, color, delta }) => (

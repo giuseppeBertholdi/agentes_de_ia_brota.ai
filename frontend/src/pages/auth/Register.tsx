@@ -57,10 +57,10 @@ export default function Register() {
     <div className="min-h-screen bg-cream flex items-center justify-center p-4" style={{ backgroundImage: 'url(/doodles.svg)', backgroundSize: '320px' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 font-display font-bold text-3xl text-ink mb-2">
+          <Link to="/" className="inline-flex items-center gap-2 font-display font-bold text-3xl text-ink mb-2 hover:opacity-80 transition-opacity">
             <Zap size={28} className="text-green" fill="currentColor" />
             Brota<span className="text-green">.</span>
-          </div>
+          </Link>
           <p className="text-ink-soft font-body text-sm">Comece grátis agora</p>
         </div>
 
