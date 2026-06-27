@@ -1,6 +1,11 @@
 import { supabase } from './supabase'
 
-const BASE = import.meta.env.VITE_API_URL as string
+// força HTTPS quando a página está em HTTPS (evita mixed content)
+const _rawBase = import.meta.env.VITE_API_URL as string
+const BASE =
+  window.location.protocol === 'https:' && _rawBase.startsWith('http:')
+    ? _rawBase.replace('http:', 'https:')
+    : _rawBase
 
 async function authHeaders(): Promise<HeadersInit> {
   const { data } = await supabase.auth.getSession()

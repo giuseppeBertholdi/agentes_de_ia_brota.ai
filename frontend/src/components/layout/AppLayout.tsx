@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import AiAssistant from '@/components/AiAssistant'
@@ -12,6 +12,9 @@ interface Company {
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [configVersion, setConfigVersion] = useState(0)
+  const location = useLocation()
+
+  const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
 
   useEffect(() => {
     api.get<Company>('/settings/company')
@@ -33,7 +36,9 @@ export default function AppLayout() {
           <Outlet key={configVersion} />
         </div>
       </main>
-      <AiAssistant isFirstTime={isFirstTime} onConfigChanged={handleConfigChanged} />
+      {!isDashboard && (
+        <AiAssistant isFirstTime={isFirstTime} onConfigChanged={handleConfigChanged} />
+      )}
     </div>
   )
 }
