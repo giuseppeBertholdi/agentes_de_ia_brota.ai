@@ -163,8 +163,8 @@ export default function Settings() {
 
   return (
     <div className="p-8 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-3xl text-ink tracking-tight">Configurações</h1>
+      <div className="mb-7">
+        <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Configurações</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Configure sua empresa, preços e agentes de IA</p>
       </div>
 

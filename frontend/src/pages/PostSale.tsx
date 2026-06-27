@@ -62,8 +62,8 @@ export default function PostSale() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-3xl text-ink tracking-tight">Pós-venda</h1>
+      <div className="mb-7">
+        <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Pós-venda</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Acompanhamento automático depois da venda</p>
       </div>
 

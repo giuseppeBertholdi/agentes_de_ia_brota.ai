@@ -83,11 +83,11 @@ export default function Inbox() {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex" style={{ height: '100%' }}>
       {/* Conversation list */}
       <div className="w-80 flex-none border-r-2 border-ink bg-white flex flex-col">
-        <div className="h-[70px] flex items-center px-5 border-b-2 border-ink">
-          <h2 className="font-display font-bold text-lg text-ink">Inbox</h2>
+        <div className="h-[64px] flex items-center px-5 border-b border-ink/10 bg-white">
+          <h2 className="font-display font-bold text-base text-ink">Inbox</h2>
           <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length}</Badge>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -132,7 +132,7 @@ export default function Inbox() {
       {active ? (
         <div className="flex-1 flex flex-col">
           {/* Chat header */}
-          <div className="h-[70px] flex items-center px-6 bg-white border-b-2 border-ink gap-4">
+          <div className="h-[64px] flex items-center px-6 bg-white border-b border-ink/10 gap-4">
             <div className="w-10 h-10 rounded-full bg-green-soft border-2 border-ink flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
               {initials(active.contact_name || active.contact_phone || '?')}
             </div>

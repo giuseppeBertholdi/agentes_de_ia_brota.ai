@@ -66,20 +66,20 @@ export default function Reports() {
 
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-7 flex items-center justify-between">
         <div>
-          <h1 className="font-display font-bold text-3xl text-ink tracking-tight">Relatórios</h1>
-          <p className="text-ink-soft text-sm mt-1 font-body">Resumo semanal da sua operação</p>
+          <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Relatórios</h1>
+          <p className="text-ink-soft text-sm mt-1 font-body">Resumo semanal da operação</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setOffset(o => o + 1)}>
-            <ChevronLeft size={15} /> Semana anterior
+        <div className="flex items-center gap-1 bg-white border-2 border-ink rounded-md shadow-hard overflow-hidden">
+          <Button variant="ghost" size="sm" onClick={() => setOffset(o => o + 1)} className="border-0 shadow-none rounded-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 border-r-2 border-ink/10">
+            <ChevronLeft size={15} />
           </Button>
-          <span className="font-mono text-xs text-ink-soft px-2">
-            {report ? `${fmtDateBR(report.week_start)} – ${fmtDateBR(report.week_end)}` : '...'}
+          <span className="font-mono text-xs text-ink px-3 min-w-[160px] text-center">
+            {report ? `${fmtDateBR(report.week_start)} – ${fmtDateBR(report.week_end)}` : '…'}
           </span>
-          <Button variant="ghost" size="sm" onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0}>
-            Próxima semana <ChevronRight size={15} />
+          <Button variant="ghost" size="sm" onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0} className="border-0 shadow-none rounded-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 border-l-2 border-ink/10">
+            <ChevronRight size={15} />
           </Button>
         </div>
       </div>
