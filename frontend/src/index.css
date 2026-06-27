@@ -13,6 +13,27 @@
   .font-600 { font-weight: 600; }
 }
 
+/* AI Chat animations */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-in { animation: msg-in 0.22s cubic-bezier(.2,.9,.3,1) both; }
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30%            { opacity: 1;    transform: translateY(-4px); }
+}
+.typing-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dot-bounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
 /* ============================================================
    Landing page — estilos específicos (WhatsApp mockup, bubbles,
    pilares, agentes, etc.) não cobertos pelo Tailwind

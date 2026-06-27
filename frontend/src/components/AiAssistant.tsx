@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, X, Send, Loader2, Sparkles, ChevronDown } from 'lucide-react'
+import { Bot, X, Send, Loader2, Sparkles, ChevronDown, BarChart3, Tag, Settings2, Zap } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,143 @@ interface Action {
   type: string
 }
 
+// ─── Capabilities (shown before first exchange) ───────────────────────────────
+
+const CAPABILITIES = [
+  { label: 'Gerenciar agentes', icon: Bot,       prompt: 'Quais agentes estão disponíveis?' },
+  { label: 'Tabela de preços',  icon: Tag,       prompt: 'Quero ver e adicionar preços' },
+  { label: 'Ver estatísticas',  icon: BarChart3, prompt: 'Quais são as estatísticas do meu negócio?' },
+  { label: 'Configurar empresa',icon: Settings2, prompt: 'Quero configurar os dados da minha empresa' },
+]
+
+// ─── Contextual suggestions ───────────────────────────────────────────────────
+
+function getSuggestions(actions: Action[]): string[] {
+  if (actions.some(a => a.type === 'update_agent'))     return ['Ver todos os agentes', 'Personalizar o prompt', 'Adicionar preço']
+  if (actions.some(a => a.type === 'create_price_item'))return ['Adicionar mais itens', 'Ver estatísticas', 'Configurar agentes']
+  if (actions.some(a => a.type === 'update_company'))   return ['Configurar agentes', 'Adicionar preços', 'Ver estatísticas']
+  if (actions.some(a => a.type === 'get_stats'))        return ['Como melhorar minhas vendas?', 'Ver agentes ativos', 'Adicionar preço']
+  return ['Adicionar preço', 'Ver agentes', 'Ver estatísticas']
+}
+
+// ─── Action badges ─────────────────────────────────────────────────────────────
+
+const ACTION_META: Record<string, { color: string; icon: string }> = {
+  update_company:   { color: 'bg-cream-2 border-ink/30 text-ink',          icon: '🏢' },
+  create_price_item:{ color: 'bg-green-tint border-green/60 text-green-700',icon: '✅' },
+  delete_price_item:{ color: 'bg-red-50 border-red-200 text-red-600',       icon: '🗑️' },
+  update_agent:     { color: 'bg-lime/40 border-ink/20 text-ink',           icon: '🤖' },
+  get_stats:        { color: 'bg-cream-2 border-ink/20 text-ink-soft',      icon: '📊' },
+}
+
+function ActionBadge({ action }: { action: Action }) {
+  const meta = ACTION_META[action.type] || { color: 'bg-cream-2 border-ink/20 text-ink', icon: '✓' }
+  return (
+    <div className={cn(
+      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-mono font-bold',
+      meta.color
+    )}>
+      <span className="text-[11px]">{meta.icon}</span>
+      <span>{action.label}</span>
+    </div>
+  )
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function BotAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  return (
+    <div className={cn(
+      'rounded-full bg-green border-2 border-ink flex items-center justify-center flex-none',
+      size === 'sm' ? 'w-5 h-5' : 'w-6 h-6'
+    )}>
+      <Sparkles size={size === 'sm' ? 9 : 11} className="text-lime" />
+    </div>
+  )
+}
+
+function Msg({ msg }: { msg: ChatMessage }) {
+  const isUser = msg.role === 'user'
+
+  if (isUser) {
+    return (
+      <div className="flex justify-end msg-in">
+        <div className="max-w-[82%] px-3 py-2 rounded-xl rounded-br-sm bg-ink text-white text-sm font-body leading-relaxed shadow-hard">
+          {msg.content}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex gap-2 items-start msg-in">
+      <BotAvatar />
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className={cn(
+          'inline-block max-w-full px-3 py-2 rounded-xl rounded-bl-sm text-sm font-body leading-relaxed',
+          msg.isError
+            ? 'bg-red-50 border-2 border-red-200 text-red-600'
+            : 'bg-white border-2 border-ink shadow-hard text-ink'
+        )}>
+          {msg.isLoading ? (
+            <span className="flex items-center gap-1 py-0.5 text-ink-faint">
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </span>
+          ) : (
+            <ReactMarkdown
+              components={{
+                p:      ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                em:     ({ children }) => <em className="italic">{children}</em>,
+                ul:     ({ children }) => <ul className="list-disc pl-4 my-1 flex flex-col gap-0.5">{children}</ul>,
+                ol:     ({ children }) => <ol className="list-decimal pl-4 my-1 flex flex-col gap-0.5">{children}</ol>,
+                li:     ({ children }) => <li>{children}</li>,
+                code:   ({ children }) => <code className="bg-ink/10 px-1 rounded text-xs font-mono">{children}</code>,
+              }}
+            >
+              {msg.content}
+            </ReactMarkdown>
+          )}
+        </div>
+        {msg.actions && msg.actions.length > 0 && (
+          <div className="flex flex-wrap gap-1 pl-0.5">
+            {msg.actions.map((a, i) => <ActionBadge key={i} action={a} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function CapCard({ label, icon: Icon, onClick }: { label: string; icon: React.ElementType; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-ink rounded-lg shadow-hard text-left hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all w-full"
+    >
+      <div className="w-7 h-7 rounded-md bg-green-tint border-2 border-ink flex items-center justify-center flex-none">
+        <Icon size={13} className="text-green-deep" />
+      </div>
+      <span className="text-xs font-body font-semibold text-ink leading-tight">{label}</span>
+    </button>
+  )
+}
+
+function SugChip({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex-none px-3 py-1.5 bg-white border-2 border-ink rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep active:scale-95 transition-all whitespace-nowrap shadow-[2px_2px_0_#16241C] hover:shadow-[2px_2px_0_#12693A]"
+    >
+      {label}
+    </button>
+  )
+}
+
+// ─── Panel ─────────────────────────────────────────────────────────────────────
+
 interface ChatPanelProps {
   messages: ChatMessage[]
   input: string
@@ -25,103 +162,98 @@ interface ChatPanelProps {
   onInputChange: (v: string) => void
   onSend: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
+  onQuickSend: (text: string) => void
   inputRef: React.RefObject<HTMLInputElement>
   bottomRef: React.RefObject<HTMLDivElement>
-  /** Se true, o painel tem header com botão de fechar */
   showHeader?: boolean
   onClose?: () => void
   className?: string
 }
 
-const ACTION_ICONS: Record<string, string> = {
-  update_company: '🏢',
-  create_price_item: '➕',
-  delete_price_item: '🗑️',
-  update_agent: '🤖',
-  get_stats: '📊',
-}
-
-function ActionBadge({ action }: { action: Action }) {
-  return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-tint border border-green rounded-md text-xs font-body text-green-700 font-semibold">
-      <span>{ACTION_ICONS[action.type] || '✓'}</span>
-      <span>{action.label}</span>
-    </div>
-  )
-}
-
-function Msg({ msg }: { msg: ChatMessage }) {
-  const isUser = msg.role === 'user'
-  return (
-    <div className={cn('flex flex-col gap-1.5', isUser ? 'items-end' : 'items-start')}>
-      <div
-        className={cn(
-          'max-w-[82%] px-3 py-2 rounded-lg text-sm font-body leading-relaxed whitespace-pre-wrap',
-          isUser
-            ? 'bg-ink text-white rounded-br-none'
-            : 'bg-white border-2 border-ink text-ink rounded-bl-none shadow-hard'
-        )}
-      >
-        {msg.isLoading ? (
-          <span className="flex items-center gap-2 text-ink-soft">
-            <Loader2 size={13} className="animate-spin" />
-            Pensando…
-          </span>
-        ) : isUser ? msg.content : (
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-              strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-              em: ({ children }) => <em className="italic">{children}</em>,
-              ul: ({ children }) => <ul className="list-disc pl-4 my-1 flex flex-col gap-0.5">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal pl-4 my-1 flex flex-col gap-0.5">{children}</ol>,
-              li: ({ children }) => <li>{children}</li>,
-              code: ({ children }) => <code className="bg-ink/10 px-1 rounded text-xs font-mono">{children}</code>,
-            }}
-          >
-            {msg.content}
-          </ReactMarkdown>
-        )}
-      </div>
-      {msg.actions && msg.actions.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 max-w-[90%]">
-          {msg.actions.map((a, i) => <ActionBadge key={i} action={a} />)}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function AiChatPanel({
-  messages, input, loading, onInputChange, onSend, onKeyDown,
+  messages, input, loading, onInputChange, onSend, onKeyDown, onQuickSend,
   inputRef, bottomRef, showHeader, onClose, className,
 }: ChatPanelProps) {
+  const realMsgs = messages.filter(m => !m.isInitial)
+  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && !m.isInitial && !m.isLoading)
+  const suggestions = lastAssistant?.actions ? getSuggestions(lastAssistant.actions) : getSuggestions([])
+  const showCaps = realMsgs.length === 0
+
   return (
     <div className={cn('flex flex-col bg-cream border-2 border-ink rounded-xl overflow-hidden shadow-hard', className)}>
+
+      {/* Header */}
       {showHeader && (
-        <div className="flex items-center justify-between px-4 py-3 bg-ink border-b-2 border-ink flex-none">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center">
-              <Sparkles size={14} className="text-lime" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-sm text-white leading-none">Assistente Brota</div>
-              <div className="font-mono text-[10px] text-white/40 mt-0.5">IA · Configuração & Dados</div>
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-ink border-b-2 border-ink flex-none">
+          <div className="w-7 h-7 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center">
+            <Sparkles size={14} className="text-lime" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-display font-bold text-sm text-white leading-none">Assistente Brota</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse flex-none" />
+              <span className="font-mono text-[10px] text-white/50 uppercase tracking-wide">online agora</span>
             </div>
           </div>
           {onClose && (
-            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors p-1">
+            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors p-1 rounded">
               <X size={16} />
             </button>
           )}
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {messages.map((msg, i) => <Msg key={i} msg={msg} />)}
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 min-h-0">
+
+        {/* Initial message */}
+        {messages.filter(m => m.isInitial).map((msg, i) => (
+          <div key={i} className="flex gap-2 items-start msg-in">
+            <BotAvatar />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="inline-block max-w-full px-3 py-2 rounded-xl rounded-bl-sm text-sm font-body leading-relaxed bg-white border-2 border-ink shadow-hard text-ink">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+
+              {/* Capability cards */}
+              {showCaps && (
+                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                  {CAPABILITIES.map(cap => (
+                    <CapCard
+                      key={cap.label}
+                      label={cap.label}
+                      icon={cap.icon}
+                      onClick={() => onQuickSend(cap.prompt)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Conversation messages */}
+        {realMsgs.map((msg, i) => <Msg key={i} msg={msg} />)}
         <div ref={bottomRef} />
       </div>
 
+      {/* Suggestion chips */}
+      {!showCaps && (
+        <div className="flex gap-1.5 px-3 py-2 overflow-x-auto border-t border-ink/10 flex-none scrollbar-hide">
+          {suggestions.map(s => (
+            <SugChip key={s} label={s} onClick={() => onQuickSend(s)} />
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
       <div className="border-t-2 border-ink px-3 py-2.5 flex items-center gap-2 bg-white flex-none">
         <input
           ref={inputRef}
@@ -138,7 +270,7 @@ export function AiChatPanel({
           className={cn(
             'w-8 h-8 rounded-md flex items-center justify-center border-2 border-ink transition-all flex-none',
             input.trim() && !loading
-              ? 'bg-green text-white hover:bg-green-deep shadow-hard'
+              ? 'bg-green text-white hover:bg-green-deep shadow-hard active:shadow-none active:translate-x-0.5 active:translate-y-0.5'
               : 'bg-cream-2 text-ink-faint cursor-not-allowed'
           )}
         >
@@ -148,6 +280,8 @@ export function AiChatPanel({
     </div>
   )
 }
+
+// ─── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   const ONBOARDING =
@@ -171,19 +305,19 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
     .filter(m => !m.isLoading && !m.isInitial && !m.isError)
     .map(m => ({ role: m.role, content: m.content }))
 
-  const send = async () => {
-    const text = input.trim()
-    if (!text || loading) return
+  const send = async (text?: string) => {
+    const msg = (text ?? input).trim()
+    if (!msg || loading) return
     setInput('')
     setMessages(prev => [
       ...prev,
-      { role: 'user', content: text },
+      { role: 'user', content: msg },
       { role: 'assistant', content: '', isLoading: true },
     ])
     setLoading(true)
     try {
       const res = await api.post<{ message: string; actions: Action[] }>('/assistant/chat', {
-        message: text,
+        message: msg,
         history: historyForApi,
       })
       setMessages(prev => [
@@ -208,8 +342,15 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
-  return { messages, input, loading, setInput, send, onSend: send, onKeyDown, bottomRef, inputRef }
+  const quickSend = (text: string) => {
+    setInput(text)
+    send(text)
+  }
+
+  return { messages, input, loading, setInput, send, onSend: send, onKeyDown, quickSend, bottomRef, inputRef }
 }
+
+// ─── Floating assistant ────────────────────────────────────────────────────────
 
 interface FloatProps {
   isFirstTime?: boolean
@@ -237,28 +378,31 @@ export default function AiAssistant({ isFirstTime = false, onConfigChanged }: Fl
 
   return (
     <>
+      {/* FAB */}
       <button
         onClick={() => setOpen(v => !v)}
         className={cn(
-          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-hard-md transition-all border-2 border-ink',
+          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 border-ink shadow-hard-md hover:shadow-hard-lg hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard',
           open ? 'bg-ink text-white' : 'bg-green text-white hover:bg-green-deep',
         )}
         aria-label="Assistente de IA"
       >
-        {open ? <ChevronDown size={22} /> : <Bot size={22} />}
+        {open ? <ChevronDown size={22} /> : <Sparkles size={20} />}
         {hasUnread && !open && (
-          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-lime border-2 border-white rounded-full" />
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-lime border-2 border-white rounded-full animate-pulse" />
         )}
       </button>
 
+      {/* Panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] flex flex-col">
+        <div className="fixed bottom-24 right-6 z-50 w-[390px] max-w-[calc(100vw-3rem)] flex flex-col msg-in">
           <AiChatPanel
             {...chat}
             onInputChange={chat.setInput}
+            onQuickSend={chat.quickSend}
             showHeader
             onClose={() => setOpen(false)}
-            className="min-h-[400px] max-h-[500px]"
+            className="min-h-[420px] max-h-[560px]"
           />
         </div>
       )}

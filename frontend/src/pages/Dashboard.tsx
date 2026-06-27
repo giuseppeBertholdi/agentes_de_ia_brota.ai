@@ -194,6 +194,7 @@ export default function Dashboard() {
         <AiChatPanel
           {...chat}
           onInputChange={chat.setInput}
+          onQuickSend={chat.quickSend}
           className="flex-1 min-h-0"
         />
       </div>
