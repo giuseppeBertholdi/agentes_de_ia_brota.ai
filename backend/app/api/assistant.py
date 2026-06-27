@@ -186,7 +186,7 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
         current_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).eq("agent_type", agent_type).maybe_single().execute()
         current = current_r.data or {}
 
-        payload: dict[str, Any] = {"company_id": company_id, "agent_type": agent_type}
+        payload: Dict[str, Any] = {"company_id": company_id, "agent_type": agent_type}
         if "enabled" in args:
             payload["enabled"] = args["enabled"]
         else:
@@ -270,7 +270,18 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
 
         if choice.finish_reason == "tool_calls":
             msg = choice.message
-            messages.append(msg.model_dump(exclude_none=True))
+            # constrói o dict manualmente — model_dump() pode incluir campos inválidos
+            assistant_msg: Dict[str, Any] = {"role": "assistant", "content": msg.content}
+            if msg.tool_calls:
+                assistant_msg["tool_calls"] = [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    }
+                    for tc in msg.tool_calls
+                ]
+            messages.append(assistant_msg)
 
             for tc in msg.tool_calls:
                 args = json.loads(tc.function.arguments)
