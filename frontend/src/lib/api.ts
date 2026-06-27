@@ -9,7 +9,12 @@ const BASE = _isLocal
   : '/api'
 
 async function authHeaders(): Promise<HeadersInit> {
-  const { data } = await supabase.auth.getSession()
+  // tenta pegar a sessão; se expirada, refreshSession() renova automaticamente
+  let { data } = await supabase.auth.getSession()
+  if (!data.session) {
+    const refreshed = await supabase.auth.refreshSession()
+    data = refreshed.data as typeof data
+  }
   const token = data.session?.access_token
   return {
     'Content-Type': 'application/json',
