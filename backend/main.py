@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale
+from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant
 
 app = FastAPI(title="Brota API", version="1.0.0")
 
@@ -19,6 +19,7 @@ app.include_router(quotes.router)
 app.include_router(settings_router.router)
 app.include_router(reports.router)
 app.include_router(post_sale.router)
+app.include_router(assistant.router)
 
 
 @app.get("/health")
