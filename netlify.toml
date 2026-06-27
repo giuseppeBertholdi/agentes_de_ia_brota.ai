@@ -7,7 +7,7 @@
 # O Netlify faz o fetch server-side e segue qualquer redirect transparentemente
 [[redirects]]
   from = "/api/*"
-  to = "https://api.plimpost.com/:splat"
+  to = "https://www.api.plimpost.com/:splat"
   status = 200
   force = true
 
