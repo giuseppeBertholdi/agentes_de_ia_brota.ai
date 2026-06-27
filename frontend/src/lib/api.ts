@@ -1,11 +1,8 @@
 import { supabase } from './supabase'
 
-// força HTTPS quando a página está em HTTPS (evita mixed content)
-const _rawBase = import.meta.env.VITE_API_URL as string
-const BASE =
-  window.location.protocol === 'https:' && _rawBase.startsWith('http:')
-    ? _rawBase.replace('http:', 'https:')
-    : _rawBase
+// Em produção VITE_API_URL deve ser "/api" — o Netlify faz proxy para o backend
+// (evita CORS e redirects de infraestrutura). Em dev, use http://localhost:8000
+const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
 
 async function authHeaders(): Promise<HeadersInit> {
   const { data } = await supabase.auth.getSession()

@@ -3,6 +3,14 @@
   command = "npm run build"
   publish = "dist"
 
+# Proxy para o backend — evita CORS completamente (mesma origem para o browser)
+# O Netlify faz o fetch server-side e segue qualquer redirect transparentemente
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.plimpost.com/:splat"
+  status = 200
+  force = true
+
 # SPA: qualquer rota cai no index.html e o React Router assume
 [[redirects]]
   from = "/*"
