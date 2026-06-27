@@ -1,8 +1,12 @@
 import { supabase } from './supabase'
 
-// Em produção VITE_API_URL deve ser "/api" — o Netlify faz proxy para o backend
-// (evita CORS e redirects de infraestrutura). Em dev, use http://localhost:8000
-const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
+// Em produção sempre usa o proxy do Netlify (/api/*), independente de VITE_API_URL.
+// Em dev (localhost) usa VITE_API_URL ou cai para http://localhost:8000.
+const _isLocal = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const BASE = _isLocal
+  ? ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000')
+  : '/api'
 
 async function authHeaders(): Promise<HeadersInit> {
   const { data } = await supabase.auth.getSession()
