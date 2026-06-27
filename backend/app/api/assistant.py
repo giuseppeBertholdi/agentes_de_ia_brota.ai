@@ -183,8 +183,8 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
 
     if name == "update_agent":
         agent_type = args["agent_type"]
-        current_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).eq("agent_type", agent_type).maybe_single().execute()
-        current = current_r.data or {}
+        current_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).eq("agent_type", agent_type).limit(1).execute()
+        current = (current_r.data or [{}])[0]
 
         payload: Dict[str, Any] = {"company_id": company_id, "agent_type": agent_type}
         if "enabled" in args:
