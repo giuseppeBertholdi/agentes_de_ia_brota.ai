@@ -9,6 +9,8 @@ interface ChatMessage {
   content: string
   actions?: Action[]
   isLoading?: boolean
+  isInitial?: boolean
+  isError?: boolean
 }
 
 interface Action {
@@ -154,7 +156,7 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
     'Olá! Posso ajudar a configurar agentes, adicionar preços, consultar dados do negócio ou responder qualquer dúvida. O que você precisa?'
 
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: isFirstTime ? ONBOARDING : WELCOME },
+    { role: 'assistant', content: isFirstTime ? ONBOARDING : WELCOME, isInitial: true },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -166,7 +168,7 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   }, [messages])
 
   const historyForApi = messages
-    .filter(m => !m.isLoading)
+    .filter(m => !m.isLoading && !m.isInitial && !m.isError)
     .map(m => ({ role: m.role, content: m.content }))
 
   const send = async () => {
@@ -195,7 +197,7 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
     } catch {
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { role: 'assistant', content: 'Ops, algo deu errado. Tente novamente.' },
+        { role: 'assistant', content: 'Ops, algo deu errado. Tente novamente.', isError: true },
       ])
     } finally {
       setLoading(false)
