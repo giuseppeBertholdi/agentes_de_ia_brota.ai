@@ -336,7 +336,7 @@ export default function Settings() {
                   </label>
                   <Textarea
                     rows={3}
-                    placeholder="Deixe em branco para usar o padrão da Brota…"
+                    placeholder="Deixe em branco para usar o padrão da Plimpost…"
                     value={agent.system_prompt || ''}
                     onChange={e => setAgents(prev => prev.map(a => a.agent_type === agent.agent_type ? { ...a, system_prompt: e.target.value } : a))}
                     onBlur={() => saveAgent(agent.agent_type, agent.enabled, agent.system_prompt)}

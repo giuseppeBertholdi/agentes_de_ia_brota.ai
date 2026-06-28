@@ -59,7 +59,7 @@ export default function Register() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 font-display font-bold text-3xl text-ink mb-2 hover:opacity-80 transition-opacity">
             <Zap size={28} className="text-green" fill="currentColor" />
-            Brota<span className="text-green">.</span>
+            Plimpost<span className="text-green">.</span>
           </Link>
           <p className="text-ink-soft font-body text-sm">Comece grátis agora</p>
         </div>

@@ -40,7 +40,7 @@ export default function Sidebar() {
       <div className="h-[64px] flex items-center px-5 border-b border-white/10">
         <span className="font-display font-bold text-xl tracking-tight flex items-center gap-2">
           <Zap size={18} className="text-lime" fill="currentColor" />
-          Brota<span className="text-lime">.</span>
+          Plimpost<span className="text-lime">.</span>
         </span>
       </div>
 

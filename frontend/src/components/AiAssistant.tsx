@@ -189,7 +189,7 @@ export function AiChatPanel({
             <Sparkles size={14} className="text-lime" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-display font-bold text-sm text-white leading-none">Assistente Brota</div>
+            <div className="font-display font-bold text-sm text-white leading-none">Assistente Plimpost</div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-lime animate-pulse flex-none" />
               <span className="font-mono text-[10px] text-white/50 uppercase tracking-wide">online agora</span>
@@ -285,7 +285,7 @@ export function AiChatPanel({
 
 export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   const ONBOARDING =
-    'Olá! Sou o assistente da Brota. Vou te ajudar a configurar tudo para o seu WhatsApp. 👋\n\nMe conta: qual é o seu negócio? O que você vende ou oferece?'
+    'Olá! Sou o assistente da Plimpost. Vou te ajudar a configurar tudo para o seu WhatsApp. 👋\n\nMe conta: qual é o seu negócio? O que você vende ou oferece?'
   const WELCOME =
     'Olá! Posso ajudar a configurar agentes, adicionar preços, consultar dados do negócio ou responder qualquer dúvida. O que você precisa?'
 

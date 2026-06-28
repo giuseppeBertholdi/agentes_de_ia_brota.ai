@@ -377,3 +377,6 @@
   .landing-root .l-hero { padding-top: 34px; }
   .landing-root .section-pad { padding: 64px 0; }
 }
+@media (max-width: 820px){
+  .landing-root #sobre .wrap > div:last-child { grid-template-columns: 1fr !important; }
+}

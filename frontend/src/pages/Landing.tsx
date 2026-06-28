@@ -146,11 +146,12 @@ export default function Landing() {
       {/* ---- NAV ---- */}
       <nav className="l-nav" id="l-nav">
         <div className="wrap l-nav-inner">
-          <a className="l-brand" href="#top">Brota<span className="dotmark">.</span></a>
+          <a className="l-brand" href="#top">Plimpost<span className="dotmark">.</span></a>
           <div className="l-nav-links">
             <a href="#capacidades">Capacidades</a>
             <a href="#demo">Veja em ação</a>
             <a href="#como">Como funciona</a>
+            <a href="#sobre">Sobre</a>
           </div>
           <div className="l-nav-cta">
             <Link to="/login" className="btn btn-ghost" style={{ padding: '11px 20px' }}>Entrar</Link>
@@ -167,7 +168,7 @@ export default function Landing() {
           <div className="hero-copy reveal">
             <span className="eyebrow"><span className="dot" /> Agentes de IA · seu negócio no automático</span>
             <h1>Uma equipe de IA cuidando do seu <span className="hl">negócio inteiro</span>.</h1>
-            <p className="hero-sub">A Brota atende no WhatsApp, fecha vendas, cobra quem deve, emite nota, monta relatório e cuida do pós-venda — agentes que trabalham juntos, 24h, sem time de TI.</p>
+            <p className="hero-sub">A Plimpost atende no WhatsApp, fecha vendas, cobra quem deve, emite nota, monta relatório e cuida do pós-venda — agentes que trabalham juntos, 24h, sem time de TI.</p>
             <div className="hero-cta">
               <a href="#cta" className="btn btn-primary btn-lg">Começar de graça {IC.arrow}</a>
               <a href="#demo" className="btn btn-ghost btn-lg">Ver funcionando</a>
@@ -201,7 +202,7 @@ export default function Landing() {
           <div className="sec-head reveal">
             <span className="sec-tag">Tudo num lugar só</span>
             <h2>Começa no WhatsApp. <span style={{ color: 'var(--green)' }}>Não para por aí.</span></h2>
-            <p>O atendimento é a porta de entrada. Por trás dela, a Brota cuida de vendas, finanças, equipe e pós-venda — no automático, conversando com as ferramentas que você já usa.</p>
+            <p>O atendimento é a porta de entrada. Por trás dela, a Plimpost cuida de vendas, finanças, equipe e pós-venda — no automático, conversando com as ferramentas que você já usa.</p>
           </div>
 
           <div className="pillars">
@@ -300,7 +301,7 @@ export default function Landing() {
           <div className="demo-copy reveal">
             <span className="sec-tag">Veja em ação</span>
             <h2 style={{ fontSize: 'clamp(28px,3.4vw,42px)' }}>Conversa de verdade, não robô travado</h2>
-            <p style={{ marginTop: 16, fontSize: 17, color: 'var(--ink-soft)', lineHeight: 1.55 }}>Cada negócio fala de um jeito. A Brota aprende o seu — preços, produtos, tom — e responde como gente. Toca num caso pra ver acontecendo:</p>
+            <p style={{ marginTop: 16, fontSize: 17, color: 'var(--ink-soft)', lineHeight: 1.55 }}>Cada negócio fala de um jeito. A Plimpost aprende o seu — preços, produtos, tom — e responde como gente. Toca num caso pra ver acontecendo:</p>
             <div className="demo-tabs">
               {tabs.map((k) => {
                 const s = SCENARIOS[k]
@@ -360,7 +361,7 @@ export default function Landing() {
           </div>
           <div className="steps">
             {[
-              { n: '1', title: 'Conta pra gente sobre seu negócio', body: 'Numa conversa rápida, a Brota aprende seus produtos, seus preços e o seu jeito de falar com o cliente.' },
+              { n: '1', title: 'Conta pra gente sobre seu negócio', body: 'Numa conversa rápida, a Plimpost aprende seus produtos, seus preços e o seu jeito de falar com o cliente.' },
               { n: '2', title: 'A gente conecta no seu WhatsApp', body: 'No seu número de sempre, em minutos. Seus clientes nem percebem que tem IA do outro lado.' },
               { n: '3', title: 'Seu agente começa a atender', body: 'Ele responde, orça e agenda dia e noite. Você acompanha tudo e entra na conversa quando quiser.' },
             ].map((s) => (
@@ -370,6 +371,128 @@ export default function Landing() {
                 <p>{s.body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---- SOBRE / DESENVOLVEDOR ---- */}
+      <section className="section-pad" id="sobre" style={{ background: 'var(--cream-2)', borderTop: '2px solid var(--ink)' }}>
+        <div className="wrap">
+          <div className="sec-head reveal">
+            <span className="sec-tag">Quem fez isso</span>
+            <h2>A história por trás da <span style={{ color: 'var(--green)' }}>Plimpost</span></h2>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.6fr',
+            gap: 48,
+            alignItems: 'center',
+          }} className="reveal">
+
+            {/* Avatar card */}
+            <div style={{
+              background: 'var(--card)',
+              border: '2px solid var(--ink)',
+              borderRadius: 'var(--r-lg)',
+              boxShadow: 'var(--hard-md)',
+              padding: '32px 28px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 16,
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 88,
+                height: 88,
+                borderRadius: '50%',
+                background: 'var(--green)',
+                border: '3px solid var(--ink)',
+                boxShadow: '4px 4px 0 var(--ink)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: 32,
+                color: '#fff',
+              }}>GB</div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ink)' }}>Giuseppe Bertholdi</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--green)', marginTop: 4 }}>Fundador &amp; Dev</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+                <a
+                  href="mailto:giuseppe.bertholdi@gmail.com"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '10px 16px', background: 'var(--ink)', color: '#fff',
+                    borderRadius: 'var(--r-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+                    fontSize: 14, textDecoration: 'none', transition: 'opacity .15s',
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = '.85')}
+                  onMouseOut={e => (e.currentTarget.style.opacity = '1')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+                  Mandar email
+                </a>
+                <a
+                  href="https://linkedin.com/in/giuseppe-bertholdi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '10px 16px', background: 'var(--green-tint)', color: 'var(--green-deep)',
+                    border: '2px solid var(--ink)', borderRadius: 'var(--r-md)',
+                    fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14,
+                    textDecoration: 'none', boxShadow: '2px 2px 0 var(--ink)', transition: 'all .12s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.transform = 'translate(-2px,-2px)'; e.currentTarget.style.boxShadow = '4px 4px 0 var(--ink)' }}
+                  onMouseOut={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '2px 2px 0 var(--ink)' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                  LinkedIn
+                </a>
+              </div>
+            </div>
+
+            {/* Story */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{
+                background: 'var(--lime)',
+                border: '2px solid var(--ink)',
+                borderRadius: 'var(--r-md)',
+                padding: '14px 18px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                fontSize: 13,
+                boxShadow: 'var(--hard)',
+              }}>
+                "Vi donos de pequenas empresas perdendo horas respondendo as mesmas mensagens no WhatsApp todo dia. Sabia que tinha que ter um jeito melhor."
+              </div>
+
+              <p style={{ fontSize: 16.5, lineHeight: 1.65, color: 'var(--ink)', margin: 0 }}>
+                Sou desenvolvedor full-stack e empreendedor brasileiro. A Plimpost nasceu de uma frustração real: enquanto ajudava negócios locais com automações, percebi que a barreira pra IA de verdade era enorme — plataformas caras, complexas, feitas pra grandes empresas.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.65, color: 'var(--ink-soft)', margin: 0 }}>
+                Decidi construir algo diferente — uma plataforma que qualquer dono de negócio consegue configurar numa conversa, sem técnico, sem manual. Um assistente que aprende seu jeito de falar, seus preços, seu negócio, e atende seus clientes 24h no WhatsApp como se fosse você mesmo.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.65, color: 'var(--ink-soft)', margin: 0 }}>
+                A Plimpost foi desenvolvida do zero — backend em Python, frontend em React, IA com GPT-4 — com foco em ser simples de verdade, não só de parecer.
+              </p>
+
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
+                {['Python · FastAPI', 'React · TypeScript', 'Supabase', 'GPT-4o', 'WhatsApp Cloud API'].map(tag => (
+                  <span key={tag} style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 11.5, fontWeight: 700,
+                    padding: '5px 11px', border: '2px solid var(--ink)',
+                    borderRadius: 'var(--r-sm)', background: 'var(--card)',
+                    boxShadow: '2px 2px 0 var(--ink)',
+                  }}>{tag}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -394,14 +517,15 @@ export default function Landing() {
       {/* ---- FOOTER ---- */}
       <footer className="l-footer">
         <div className="wrap footer-inner">
-          <a className="l-brand" href="#top">Brota<span className="dotmark">.</span></a>
+          <a className="l-brand" href="#top">Plimpost<span className="dotmark">.</span></a>
           <div className="footer-links">
             <a href="#capacidades">Capacidades</a>
             <a href="#demo">Veja em ação</a>
             <a href="#como">Como funciona</a>
+            <a href="#sobre">Sobre</a>
             <a href="#cta">Começar</a>
           </div>
-          <div className="copy">© 2025 Brota · Feito no Brasil 💚</div>
+          <div className="copy">© 2026 Plimpost · Feito no Brasil 💚</div>
         </div>
       </footer>
 

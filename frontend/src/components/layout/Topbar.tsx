@@ -33,7 +33,7 @@ export default function Topbar() {
             <p className="text-ink-faint text-xs font-body mt-0.5 capitalize">{dateStr}</p>
           </>
         ) : (
-          <span className="font-display font-bold text-lg text-ink">Brota</span>
+          <span className="font-display font-bold text-lg text-ink">Plimpost</span>
         )}
       </div>
 
