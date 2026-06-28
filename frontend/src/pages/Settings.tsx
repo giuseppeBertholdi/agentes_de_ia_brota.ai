@@ -69,6 +69,9 @@ export default function Settings() {
 
   useEffect(() => { load().catch(console.error) }, [])
   useRealtimeTable('whatsapp_instances', () => load().catch(console.error))
+  useRealtimeTable('companies',    () => load().catch(console.error))
+  useRealtimeTable('price_items',  () => load().catch(console.error))
+  useRealtimeTable('agent_configs',() => load().catch(console.error))
 
   // Captura waba_id/phone_number_id emitidos pelo Embedded Signup via postMessage
   const signupDataRef = useRef<{ waba_id: string; phone_number_id: string } | null>(null)

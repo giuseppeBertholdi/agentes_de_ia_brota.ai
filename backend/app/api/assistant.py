@@ -205,15 +205,21 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
         )
 
     if name == "get_stats":
-        quotes_r = supabase.table("quotes").select("total").eq("company_id", company_id).execute()
-        quotes = quotes_r.data or []
-        convs_r = supabase.table("conversations").select("id,status").eq("company_id", company_id).execute()
-        convs = convs_r.data or []
-        postsale_r = supabase.table("post_sale_follow_ups").select("id,status").eq("company_id", company_id).execute()
-        postsale = postsale_r.data or []
+        def _safe_query(table, *select_args, **filters):
+            try:
+                q = supabase.table(table).select(*select_args)
+                for col, val in filters.items():
+                    q = q.eq(col, val)
+                return q.execute().data or []
+            except Exception:
+                return []
 
-        total_revenue = sum(float(q.get("total") or 0) for q in quotes)
-        active_convs = sum(1 for c in convs if c.get("status") == "open")
+        quotes   = _safe_query("quotes",               "total",     company_id=company_id)
+        convs    = _safe_query("conversations",         "id,status", company_id=company_id)
+        postsale = _safe_query("post_sale_follow_ups",  "id,status", company_id=company_id)
+
+        total_revenue    = sum(float(q.get("total") or 0) for q in quotes)
+        active_convs     = sum(1 for c in convs    if c.get("status") == "open")
         pending_postsale = sum(1 for p in postsale if p.get("status") == "pending")
 
         summary = (
