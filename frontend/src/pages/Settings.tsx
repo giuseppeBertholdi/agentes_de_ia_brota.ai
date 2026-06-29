@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Trash2, Smartphone, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Smartphone, CheckCircle, XCircle, Loader2, Mail, Code2 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -299,7 +299,7 @@ export default function Settings() {
       </Card>
 
       {/* Agents */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader><CardTitle>Agentes de IA</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col gap-5">
@@ -347,7 +347,49 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Developer */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Code2 size={18} /> Desenvolvedor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-5 items-start">
+            <div className="w-14 h-14 rounded-full bg-green border-2 border-ink shadow-hard flex items-center justify-center font-display font-bold text-xl text-white flex-none">
+              GB
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-display font-bold text-base text-ink">Giuseppe Bertholdi</div>
+              <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-green mt-0.5">Fundador &amp; Dev</div>
+              <p className="text-ink-soft text-sm font-body mt-2 leading-relaxed">
+                Desenvolvedor full-stack e empreendedor brasileiro. A Plimpost nasceu da vontade de trazer IA de verdade pra negócios locais — simples de configurar, poderosa de verdade.
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {['Python · FastAPI', 'React · TypeScript', 'Supabase', 'GPT-4o', 'WhatsApp Cloud API'].map(tag => (
+                  <span key={tag} className="font-mono text-[10px] font-bold px-2 py-1 border-2 border-ink rounded bg-cream-2 shadow-[2px_2px_0_#16241C]">{tag}</span>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <a
+                  href="mailto:giuseppe.bertholdi@gmail.com"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-xs font-body font-bold rounded-md border-2 border-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <Mail size={13} /> Email
+                </a>
+                <a
+                  href="https://linkedin.com/in/giuseppe-bertholdi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-green-tint text-green-deep text-xs font-body font-bold rounded-md border-2 border-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                  LinkedIn
+                </a>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
