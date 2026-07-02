@@ -17,7 +17,25 @@
       "Bash(/home/giuseppe/brota/backend/.venv/bin/python3 --version)",
       "Bash(python3 *)",
       "Bash(.venv/bin/python -c ' *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(grep -E '\\\\.\\(py|js|ts\\)$')",
+      "Bash(grep -E '\\\\.\\(tsx|ts\\)$')",
+      "Bash(git -C /home/giuseppe/brota status)",
+      "Bash(git -C /home/giuseppe/brota diff --stat)",
+      "Bash(git -C /home/giuseppe/brota log --oneline -3)",
+      "Bash(git -C /home/giuseppe/brota add frontend/src/components/layout/AppLayout.tsx frontend/src/components/layout/Sidebar.tsx frontend/src/components/layout/Topbar.tsx frontend/src/hooks/useAuth.ts frontend/src/pages/Dashboard.tsx frontend/src/pages/Inbox.tsx frontend/src/pages/PostSale.tsx frontend/src/pages/Quotes.tsx frontend/src/pages/Reports.tsx frontend/src/pages/Settings.tsx frontend/src/pages/auth/Login.tsx frontend/src/pages/auth/Register.tsx)",
+      "Bash(git -C /home/giuseppe/brota commit -m ' *)",
+      "Bash(python -c \"from app.api.assistant import router; print\\('OK'\\)\")",
+      "Bash(pip show *)",
+      "Bash(.venv/bin/python *)",
+      "Skill(run)",
+      "Bash(git -C /home/giuseppe/brota add frontend/src/components/AiAssistant.tsx frontend/src/pages/Dashboard.tsx frontend/src/index.css)",
+      "Bash(git -C /home/giuseppe/brota push origin main)",
+      "Bash(git -C /home/giuseppe/brota add backend/app/api/assistant.py frontend/src/pages/Settings.tsx)",
+      "Bash(git -C /home/giuseppe/brota add frontend/src/pages/Landing.tsx frontend/src/pages/Settings.tsx frontend/src/pages/auth/Login.tsx frontend/src/pages/auth/Register.tsx frontend/src/components/AiAssistant.tsx frontend/src/components/layout/Sidebar.tsx frontend/src/components/layout/Topbar.tsx frontend/src/index.css)",
+      "Read(//tmp/**)"
     ]
   }
 }
