@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Trash2, Smartphone, CheckCircle, XCircle, Loader2, Mail, Code2 } from 'lucide-react'
+import { Plus, Trash2, Pencil, Check, X as XIcon, Smartphone, CheckCircle, XCircle, Loader2, Mail, Code2 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,6 +47,8 @@ export default function Settings() {
   const [agents, setAgents] = useState<AgentConfig[]>([])
   const [wa, setWa] = useState<WaInstance | null>(null)
   const [newItem, setNewItem] = useState<PriceItem>({ name: '', price: 0, unit: 'un', active: true })
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingItem, setEditingItem] = useState<PriceItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [waLoading, setWaLoading] = useState(false)
   const [waError, setWaError] = useState<string | null>(null)
@@ -121,6 +123,21 @@ export default function Settings() {
   const deletePrice = async (id?: string) => {
     if (!id) return
     await api.delete(`/settings/prices/${id}`)
+    load()
+  }
+
+  const startEdit = (item: PriceItem) => {
+    setEditingId(item.id ?? null)
+    setEditingItem({ ...item })
+  }
+
+  const cancelEdit = () => { setEditingId(null); setEditingItem(null) }
+
+  const saveEdit = async () => {
+    if (!editingItem?.id) return
+    await api.put(`/settings/prices/${editingItem.id}`, editingItem)
+    setEditingId(null)
+    setEditingItem(null)
     load()
   }
 
@@ -265,17 +282,54 @@ export default function Settings() {
         <CardContent>
           <div className="flex flex-col gap-2 mb-5">
             {prices.map(item => (
-              <div key={item.id} className="flex items-center gap-3 p-3 bg-cream-2 border-2 border-ink rounded-md shadow-hard">
-                <div className="flex-1">
-                  <span className="font-body font-bold text-sm text-ink">{item.name}</span>
-                  {item.description && <span className="text-ink-faint text-xs font-body ml-2">— {item.description}</span>}
-                </div>
-                <span className="font-mono font-bold text-sm text-green whitespace-nowrap">
-                  R$ {Number(item.price).toFixed(2)} / {item.unit}
-                </span>
-                <button onClick={() => deletePrice(item.id)} className="text-ink-faint hover:text-red-500 transition-colors">
-                  <Trash2 size={15} />
-                </button>
+              <div key={item.id} className="border-2 border-ink rounded-md shadow-hard bg-cream-2 overflow-hidden">
+                {editingId === item.id && editingItem ? (
+                  <div className="p-3 flex flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Nome"
+                        value={editingItem.name}
+                        onChange={e => setEditingItem(i => i ? { ...i, name: e.target.value } : i)}
+                      />
+                      <Input
+                        placeholder="Descrição (opcional)"
+                        value={editingItem.description || ''}
+                        onChange={e => setEditingItem(i => i ? { ...i, description: e.target.value } : i)}
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Preço (R$)"
+                        value={editingItem.price || ''}
+                        onChange={e => setEditingItem(i => i ? { ...i, price: Number(e.target.value) } : i)}
+                      />
+                      <Input
+                        placeholder="Unidade"
+                        value={editingItem.unit}
+                        onChange={e => setEditingItem(i => i ? { ...i, unit: e.target.value } : i)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="primary" size="sm" onClick={saveEdit}><Check size={13} /> Salvar</Button>
+                      <Button variant="ghost" size="sm" onClick={cancelEdit}><XIcon size={13} /> Cancelar</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3">
+                    <div className="flex-1">
+                      <span className="font-body font-bold text-sm text-ink">{item.name}</span>
+                      {item.description && <span className="text-ink-faint text-xs font-body ml-2">— {item.description}</span>}
+                    </div>
+                    <span className="font-mono font-bold text-sm text-green whitespace-nowrap">
+                      R$ {Number(item.price).toFixed(2)} / {item.unit}
+                    </span>
+                    <button onClick={() => startEdit(item)} className="text-ink-faint hover:text-ink transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => deletePrice(item.id)} className="text-ink-faint hover:text-red-500 transition-colors">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {prices.length === 0 && (
