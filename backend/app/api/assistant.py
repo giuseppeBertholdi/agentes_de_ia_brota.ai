@@ -7,7 +7,7 @@ import json
 from fastapi import APIRouter, Depends
 from openai import AsyncOpenAI
 from pydantic import BaseModel
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.api.auth import require_company
 from app.config import settings
@@ -222,23 +222,21 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
         active_convs     = sum(1 for c in convs    if c.get("status") == "open")
         pending_postsale = sum(1 for p in postsale if p.get("status") == "pending")
 
-        summary = (
-            f"Total de cotações: {len(quotes)} | "
-            f"Receita estimada: R$ {total_revenue:.2f} | "
-            f"Conversas ativas: {active_convs} | "
-            f"Total de conversas: {len(convs)} | "
-            f"Pós-venda pendente: {pending_postsale}"
-        )
-        return summary, {
-            "type": "get_stats",
-            "data": {
-                "quotes": len(quotes),
-                "revenue": total_revenue,
-                "active_conversations": active_convs,
-                "total_conversations": len(convs),
-                "pending_postsale": pending_postsale,
-            },
+        stats_data = {
+            "quotes": len(quotes),
+            "revenue": total_revenue,
+            "active_conversations": active_convs,
+            "total_conversations": len(convs),
+            "pending_postsale": pending_postsale,
         }
+        summary = (
+            f"Total de cotações: {stats_data['quotes']} | "
+            f"Receita estimada: R$ {stats_data['revenue']:.2f} | "
+            f"Conversas ativas: {stats_data['active_conversations']} | "
+            f"Total de conversas: {stats_data['total_conversations']} | "
+            f"Pós-venda pendente: {stats_data['pending_postsale']}"
+        )
+        return summary, {"type": "get_stats", "_label": "Estatísticas consultadas", "data": stats_data}
 
     return f"Ferramenta desconhecida: {name}", {}
 
@@ -293,7 +291,8 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
                 args = json.loads(tc.function.arguments)
                 result_text, action_meta = await _execute_tool(tc.function.name, args, company_id)
                 if action_meta:
-                    actions_taken.append({"label": result_text, **action_meta})
+                    badge_label = action_meta.pop("_label", result_text)
+                    actions_taken.append({"label": badge_label, **action_meta})
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,

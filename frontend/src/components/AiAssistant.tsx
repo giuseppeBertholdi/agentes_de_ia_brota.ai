@@ -302,7 +302,14 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   }, [messages])
 
   const historyForApi = messages
-    .filter(m => !m.isLoading && !m.isInitial && !m.isError)
+    .filter((m, i, arr) => {
+      if (m.isLoading || m.isInitial || m.isError) return false
+      if (m.role === 'user') {
+        const next = arr[i + 1]
+        if (next?.isError || next?.isLoading) return false
+      }
+      return true
+    })
     .map(m => ({ role: m.role, content: m.content }))
 
   const send = async (text?: string) => {
