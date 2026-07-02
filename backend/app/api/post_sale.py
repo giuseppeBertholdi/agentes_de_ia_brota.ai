@@ -14,7 +14,7 @@ CHURN_DAYS_INACTIVE = 14
 
 @router.get("/follow-ups")
 async def list_follow_ups(status: str = "pending", company_id: str = Depends(require_company)):
-    q = supabase.table("follow_ups").select("*").eq("company_id", company_id)
+    q = supabase.table("post_sale_follow_ups").select("*").eq("company_id", company_id)
     if status in ("pending", "done", "skipped"):
         q = q.eq("status", status)
     r = q.order("scheduled_for").execute()
@@ -30,7 +30,7 @@ async def update_follow_up(
     if body.status not in ("pending", "done", "skipped"):
         raise HTTPException(400, "Status inválido")
     r = (
-        supabase.table("follow_ups")
+        supabase.table("post_sale_follow_ups")
         .update({"status": body.status})
         .eq("id", follow_up_id)
         .eq("company_id", company_id)
@@ -44,7 +44,7 @@ async def update_follow_up(
 @router.post("/follow-ups/{follow_up_id}/send")
 async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_company)):
     fu_r = (
-        supabase.table("follow_ups")
+        supabase.table("post_sale_follow_ups")
         .select("*")
         .eq("id", follow_up_id)
         .eq("company_id", company_id)
@@ -85,7 +85,7 @@ async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_co
         raise HTTPException(502, f"Falha ao enviar mensagem: {e}")
 
     r = (
-        supabase.table("follow_ups")
+        supabase.table("post_sale_follow_ups")
         .update({"status": "done"})
         .eq("id", follow_up_id)
         .execute()

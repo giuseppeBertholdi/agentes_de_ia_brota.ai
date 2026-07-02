@@ -216,7 +216,7 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
 
         quotes   = _safe_query("quotes",               "total",     company_id=company_id)
         convs    = _safe_query("conversations",         "id,status", company_id=company_id)
-        postsale = _safe_query("post_sale_follow_ups",  "id,status", company_id=company_id)
+        postsale = _safe_query("post_sale_follow_ups", "id,status", company_id=company_id)
 
         total_revenue    = sum(float(q.get("total") or 0) for q in quotes)
         active_convs     = sum(1 for c in convs    if c.get("status") == "open")
