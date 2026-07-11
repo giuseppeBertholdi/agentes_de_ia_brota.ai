@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, MessageSquare, FileText, TrendingUp, Percent, ArrowUp, ArrowDown } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { StatTile } from '@/components/ui/stat-tile'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 import { fmtCurrency } from '@/lib/utils'
@@ -58,10 +59,10 @@ export default function Reports() {
   }, [offset])
 
   const tiles = report ? [
-    { label: 'Novas conversas', value: report.current.conversations_new, icon: MessageSquare, color: 'bg-green-soft', delta: report.comparison.conversations_new },
-    { label: 'Cotações geradas', value: report.current.quotes_total, icon: FileText, color: 'bg-lime/30', delta: report.comparison.quotes_total },
-    { label: 'Receita fechada', value: fmtCurrency(report.current.revenue_closed), icon: TrendingUp, color: 'bg-cream-2', delta: report.comparison.revenue_closed },
-    { label: 'Taxa de conversão', value: `${report.current.conversion_rate}%`, icon: Percent, color: 'bg-green-tint', delta: null },
+    { label: 'Novas conversas', value: report.current.conversations_new, icon: MessageSquare, iconColor: 'text-green-deep', delta: report.comparison.conversations_new },
+    { label: 'Cotações geradas', value: report.current.quotes_total, icon: FileText, iconColor: 'text-ink', delta: report.comparison.quotes_total },
+    { label: 'Receita fechada', value: fmtCurrency(report.current.revenue_closed), icon: TrendingUp, iconColor: 'text-ink', delta: report.comparison.revenue_closed },
+    { label: 'Taxa de conversão', value: `${report.current.conversion_rate}%`, icon: Percent, iconColor: 'text-green', delta: null },
   ] : []
 
   return (
@@ -98,18 +99,10 @@ export default function Reports() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-            {tiles.map(({ label, value, icon: Icon, color, delta }) => (
-              <Card key={label}>
-                <CardContent className="pt-5">
-                  <div className={`w-11 h-11 rounded-md border-2 border-ink ${color} flex items-center justify-center mb-4`}>
-                    <Icon size={20} className="text-ink" />
-                  </div>
-                  <div className="font-display font-bold text-2xl text-ink mb-1">{value}</div>
-                  <div className="text-ink-soft text-sm font-body mb-2">{label}</div>
-                  {delta !== undefined && <Delta value={delta} />}
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {tiles.map(({ label, value, icon, iconColor, delta }) => (
+              <StatTile key={label} label={label} value={value} icon={icon} iconColor={iconColor}
+                hint={delta !== undefined ? <Delta value={delta} /> : undefined} />
             ))}
           </div>
 
@@ -135,9 +128,9 @@ export default function Reports() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader><CardTitle>Resumo da semana</CardTitle></CardHeader>
-              <CardContent className="flex flex-col gap-3">
+            <Card variant="flat">
+              <CardHeader><CardTitle className="text-base">Resumo da semana</CardTitle></CardHeader>
+              <CardContent className="flex flex-col gap-2.5">
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-ink-soft">Mensagens trocadas</span>
                   <span className="font-bold text-ink">{report.current.messages_total}</span>
@@ -150,7 +143,7 @@ export default function Reports() {
                   <span className="text-ink-soft">Valor total cotado</span>
                   <span className="font-bold text-ink">{fmtCurrency(report.current.revenue_quoted)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-body border-t-2 border-ink/10 pt-3">
+                <div className="flex justify-between text-sm font-body border-t-2 border-ink/10 pt-2.5">
                   <span className="text-ink-soft">Valor fechado</span>
                   <span className="font-bold text-green">{fmtCurrency(report.current.revenue_closed)}</span>
                 </div>

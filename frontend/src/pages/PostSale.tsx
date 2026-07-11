@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Heart, RefreshCw, AlertTriangle, Send, Check, X } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { StatTile } from '@/components/ui/stat-tile'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api } from '@/lib/api'
@@ -73,40 +74,24 @@ export default function PostSale() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-5 mb-8">
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-green-soft flex items-center justify-center">
-              <Heart size={20} className="text-green-deep" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{followUps.filter(f => f.type === 'satisfaction').length}</div>
-              <div className="text-ink-soft text-sm">Pesquisas pendentes</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-lime/30 flex items-center justify-center">
-              <RefreshCw size={20} className="text-ink" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{followUps.filter(f => f.type === 'repurchase').length}</div>
-              <div className="text-ink-soft text-sm">Fluxos de recompra</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-red-100 flex items-center justify-center">
-              <AlertTriangle size={20} className="text-red-600" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{churnRisks.length}</div>
-              <div className="text-ink-soft text-sm">Clientes em risco</div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <StatTile
+          label="Pesquisas pendentes"
+          value={followUps.filter(f => f.type === 'satisfaction').length}
+          icon={Heart}
+          iconColor="text-green-deep"
+        />
+        <StatTile
+          label="Fluxos de recompra"
+          value={followUps.filter(f => f.type === 'repurchase').length}
+          icon={RefreshCw}
+        />
+        <StatTile
+          label="Clientes em risco"
+          value={churnRisks.length}
+          icon={AlertTriangle}
+          iconColor="text-red-600"
+        />
       </div>
 
       <Card className="mb-6">

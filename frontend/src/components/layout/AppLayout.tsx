@@ -6,11 +6,14 @@ import AiAssistant from '@/components/AiAssistant'
 import { api } from '@/lib/api'
 
 interface Company {
+  name?: string
+  plan?: string
   business_desc?: string
 }
 
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [company, setCompany] = useState<Company | null>(null)
   const [configVersion, setConfigVersion] = useState(0)
   const location = useLocation()
 
@@ -18,9 +21,9 @@ export default function AppLayout() {
 
   useEffect(() => {
     api.get<Company>('/settings/company')
-      .then(c => setIsFirstTime(!c.business_desc))
+      .then(c => { setCompany(c); setIsFirstTime(!c.business_desc) })
       .catch(() => {})
-  }, [])
+  }, [configVersion])
 
   const handleConfigChanged = useCallback(() => {
     setIsFirstTime(false)
@@ -29,7 +32,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-cream font-body">
-      <Sidebar />
+      <Sidebar company={company} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <Topbar />
         <div className="flex-1 overflow-y-auto min-h-0">

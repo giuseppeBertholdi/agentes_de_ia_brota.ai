@@ -25,15 +25,15 @@ export default function Topbar() {
   const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div className="h-[64px] flex-none flex items-center justify-between px-8 bg-white border-b border-ink/10 z-10">
+    <div className="h-[64px] flex-none flex items-center justify-between px-8 bg-white border-b-2 border-ink z-10">
       <div>
         {meta ? (
           <>
-            <h1 className="font-display font-bold text-lg text-ink leading-none">{meta.title}</h1>
-            <p className="text-ink-faint text-xs font-body mt-0.5 capitalize">{dateStr}</p>
+            <h1 className="font-display font-bold text-xl text-ink leading-none tracking-tight">{meta.title}</h1>
+            <p className="text-ink-faint text-xs font-body mt-1 capitalize">{dateStr}</p>
           </>
         ) : (
-          <span className="font-display font-bold text-lg text-ink">Plimpost</span>
+          <span className="font-display font-bold text-xl text-ink">Plimpost</span>
         )}
       </div>
 

@@ -201,8 +201,8 @@ export default function Landing() {
         <div className="wrap">
           <div className="sec-head reveal">
             <span className="sec-tag">Tudo num lugar só</span>
-            <h2>Começa no WhatsApp. <span style={{ color: 'var(--green)' }}>Não para por aí.</span></h2>
-            <p>O atendimento é a porta de entrada. Por trás dela, a Plimpost cuida de vendas, finanças, equipe e pós-venda — no automático, conversando com as ferramentas que você já usa.</p>
+            <h2>O que já funciona <span style={{ color: 'var(--green)' }}>hoje</span> — e o que vem por aí.</h2>
+            <p>A gente prefere ser direto: aqui embaixo separamos o que já está rodando de verdade do que ainda está no forno. Sem promessa vazia.</p>
           </div>
 
           <div className="pillars">
@@ -211,84 +211,108 @@ export default function Landing() {
               <div className="pillar-top">
                 <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 4v-4H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M7 9h9M7 12h6"/></svg></div>
                 <h3>Atendimento no WhatsApp</h3>
-                <span className="tagline">Principal</span>
+                <span className="tagline">Disponível</span>
               </div>
               <p className="lead">A porta de entrada do seu negócio, aberta 24 horas por dia.</p>
               <ul>
-                <Bullet><b>Roteamento inteligente</b> <span className="mut">— manda cada cliente pra pessoa certa</span></Bullet>
-                <Bullet><b>Cotações automáticas</b> <span className="mut">na hora, sem deixar o cliente esfriar</span></Bullet>
-                <Bullet><b>Agendamentos</b> <span className="mut">sem trocar mil mensagens</span></Bullet>
-                <Bullet><b>Suporte 24h</b> <span className="mut">— todo dia, até de madrugada</span></Bullet>
+                <Bullet><b>Recepcionista por IA</b> <span className="mut">— entende a intenção do cliente e responde na hora</span></Bullet>
+                <Bullet><b>Cotações automáticas</b> <span className="mut">— coleta os dados e monta o orçamento sozinha</span></Bullet>
+                <Bullet><b>Setores por área</b> <span className="mut">— cliente pede "falar com o RH" e ela transfere sozinha</span></Bullet>
+                <Bullet><b>Você assume quando quiser</b> <span className="mut">— sem perder o histórico da conversa</span></Bullet>
               </ul>
             </div>
 
-            {/* 2 - Vendas */}
+            {/* 2 - Configuração por IA */}
             <div className="pillar reveal">
+              <div className="pillar-top">
+                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 9.6 4.2 6.4 4l-.6 3.2L3 9l1.6 2.9L3 14.9 5.8 16.7l.6 3.2 3.2-.2L12 22l2.4-2.3 3.2.2.6-3.2L21 14.9l-1.6-2.9L21 9l-2.8-1.8L17.6 4l-3.2.2L12 2Z"/></svg></div>
+                <h3>Configuração por IA</h3>
+                <span className="tagline">Disponível</span>
+              </div>
+              <p className="lead">Você monta o negócio inteiro batendo papo, sem formulário.</p>
+              <ul>
+                <Bullet><b>Cria preços e agentes</b> <span className="mut">— só de conversar, sem tela de configuração</span></Bullet>
+                <Bullet><b>Cria setores de atendimento</b> <span className="mut">na hora, quando você pedir</span></Bullet>
+                <Bullet><b>Tira dúvidas sobre seus dados</b> <span className="mut">— vendas, conversas, receita, tudo sob demanda</span></Bullet>
+              </ul>
+            </div>
+
+            {/* 3 - Pós-venda */}
+            <div className="pillar reveal">
+              <div className="pillar-top">
+                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11a6 6 0 0 1 6-6h9"/><path d="M15 2l3 3-3 3"/><path d="M21 13a6 6 0 0 1-6 6H6"/><path d="M9 22l-3-3 3-3"/></svg></div>
+                <h3>Pós-venda</h3>
+                <span className="tagline">Disponível</span>
+              </div>
+              <p className="lead">Quem já comprou é o mais fácil de vender de novo.</p>
+              <ul>
+                <Bullet><b>Pesquisa de satisfação</b> <span className="mut">— criada sozinha alguns dias após a venda</span></Bullet>
+                <Bullet><b>Fluxo de recompra</b> <span className="mut">— agendado automaticamente pro momento certo</span></Bullet>
+                <Bullet><b>Detecção de churn</b> <span className="mut">— avisa quem comprou e sumiu</span></Bullet>
+              </ul>
+            </div>
+
+            {/* 4 - Relatórios */}
+            <div className="pillar reveal">
+              <div className="pillar-top">
+                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
+                <h3>Relatórios &amp; Dashboard</h3>
+                <span className="tagline">Disponível</span>
+              </div>
+              <p className="lead">Você enxerga tudo sem precisar perguntar pra ninguém.</p>
+              <ul>
+                <Bullet><b>Métricas em tempo real</b> <span className="mut">— conversas, cotações e receita</span></Bullet>
+                <Bullet><b>Comparação semana a semana</b> <span className="mut">— o que melhorou, o que caiu</span></Bullet>
+                <Bullet><b>Produtos mais vendidos</b> <span className="mut">— ranking automático por receita</span></Bullet>
+              </ul>
+            </div>
+          </div>
+
+          <div className="subgroup-tag reveal">No forno — chegando em breve</div>
+
+          <div className="pillars">
+            {/* 5 - Vendas */}
+            <div className="pillar soon reveal">
               <div className="pillar-top">
                 <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M17 8h4v4"/></svg></div>
                 <h3>Vendas &amp; Relacionamento</h3>
+                <span className="tagline dev">Em desenvolvimento</span>
               </div>
               <p className="lead">Tira o lead da conversa e leva até a venda — e além.</p>
               <ul>
                 <Bullet><b>E-mail marketing automatizado</b> <span className="mut">— sequências pós-cotação, follow-up e reativação de clientes sumidos</span></Bullet>
-                <Bullet><b>CRM leve</b> <span className="mut">— registra cada lead, atualiza o status e avisa o vendedor na hora certa</span></Bullet>
+                <Bullet><b>CRM completo</b> <span className="mut">— funil de vendas com status por lead</span></Bullet>
                 <Bullet><b>Proposta comercial por IA</b> <span className="mut">— gerada e enviada em PDF direto pro cliente</span></Bullet>
               </ul>
             </div>
 
-            {/* 3 - Operação */}
-            <div className="pillar reveal">
-              <div className="pillar-top">
-                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
-                <h3>Operação Interna</h3>
-              </div>
-              <p className="lead">Você enxerga tudo sem precisar perguntar pra ninguém.</p>
-              <ul>
-                <Bullet><b>Relatórios semanais automáticos</b> <span className="mut">— suas vendas, seus gargalos e sua equipe em 1 parágrafo</span></Bullet>
-                <Bullet><b>Integração com Google Calendar</b> <span className="mut">— agendamento sem troca de mensagem</span></Bullet>
-                <Bullet><b>Alertas internos</b> <span className="mut">quando algo foge do padrão — estoque baixo, prazo vencendo, cliente parado há 3 dias</span></Bullet>
-              </ul>
-            </div>
-
-            {/* 4 - Financeiro */}
-            <div className="pillar reveal">
+            {/* 6 - Financeiro */}
+            <div className="pillar soon reveal">
               <div className="pillar-top">
                 <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21z"/><path d="M9 8h6M9 12h5"/></svg></div>
                 <h3>Financeiro</h3>
+                <span className="tagline dev">Em desenvolvimento</span>
               </div>
               <p className="lead">O dinheiro entra mais rápido e ninguém esquece de cobrar.</p>
               <ul>
                 <Bullet><b>Boletos e NF-e</b> <span className="mut">— emissão e envio automáticos</span></Bullet>
                 <Bullet><b>Lembretes de cobrança escalonados</b> <span className="mut">— do amigável ao formal ao urgente</span></Bullet>
-                <Bullet><b>Conciliação simples</b> <span className="mut">— recebeu, atualiza a planilha e avisa o responsável</span></Bullet>
+                <Bullet><b>Integração com Google Calendar</b> <span className="mut">— agendamento sem troca de mensagem</span></Bullet>
               </ul>
             </div>
 
-            {/* 5 - RH */}
-            <div className="pillar reveal">
+            {/* 7 - RH */}
+            <div className="pillar soon reveal">
               <div className="pillar-top">
                 <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.6-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.8M21 20c0-2.6-1.4-4.6-3.6-5.3"/></svg></div>
                 <h3>RH &amp; Equipe</h3>
+                <span className="tagline dev">Em desenvolvimento</span>
               </div>
               <p className="lead">Menos papelada, mais gente no lugar certo.</p>
               <ul>
                 <Bullet><b>Triagem de currículos</b> <span className="mut">por formulário inteligente</span></Bullet>
                 <Bullet><b>Onboarding automatizado</b> <span className="mut">— envia documentos e agenda treinamentos</span></Bullet>
                 <Bullet><b>Ponto e escala</b> <span className="mut">direto pelo WhatsApp</span></Bullet>
-              </ul>
-            </div>
-
-            {/* 6 - Pós-venda */}
-            <div className="pillar reveal">
-              <div className="pillar-top">
-                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11a6 6 0 0 1 6-6h9"/><path d="M15 2l3 3-3 3"/><path d="M21 13a6 6 0 0 1-6 6H6"/><path d="M9 22l-3-3 3-3"/></svg></div>
-                <h3>Pós-venda</h3>
-              </div>
-              <p className="lead">Quem já comprou é o mais fácil de vender de novo.</p>
-              <ul>
-                <Bullet><b>Pesquisa de satisfação automática</b> <span className="mut">alguns dias após a compra</span></Bullet>
-                <Bullet><b>Fluxo de recompra</b> <span className="mut">pra produtos com ciclo previsível</span></Bullet>
-                <Bullet><b>Detecção de churn</b> <span className="mut">— cliente que sumiu, reclamou ou atrasou pagamento</span></Bullet>
               </ul>
             </div>
           </div>

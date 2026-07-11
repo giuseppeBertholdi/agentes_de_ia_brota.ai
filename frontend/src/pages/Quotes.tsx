@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileText, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { StatTile } from '@/components/ui/stat-tile'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
@@ -65,47 +66,16 @@ export default function Quotes() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-7">
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-green-soft flex items-center justify-center flex-none">
-              <FileText size={19} className="text-green-deep" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{quotes.length}</div>
-              <div className="text-ink-soft text-xs font-body mt-0.5">Total de cotações</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-lime/30 flex items-center justify-center flex-none">
-              <CheckCircle2 size={19} className="text-ink" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{accepted.length}</div>
-              <div className="text-ink-soft text-xs font-body mt-0.5">
-                Aceitas
-                {quotes.length > 0 && (
-                  <span className="ml-1.5 font-mono text-[10px] text-green font-bold">
-                    {conversionRate}% conversão
-                  </span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md border-2 border-ink bg-cream-2 flex items-center justify-center flex-none">
-              <TrendingUp size={19} className="text-ink" />
-            </div>
-            <div>
-              <div className="font-display font-bold text-2xl text-ink">{fmtCurrency(total)}</div>
-              <div className="text-ink-soft text-xs font-body mt-0.5">Valor total cotado</div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-7">
+        <StatTile label="Total de cotações" value={quotes.length} icon={FileText} iconColor="text-green-deep" />
+        <StatTile
+          label="Aceitas"
+          value={accepted.length}
+          icon={CheckCircle2}
+          badge={quotes.length > 0 ? `${conversionRate}% conversão` : undefined}
+          badgeVariant="lime"
+        />
+        <StatTile label="Valor total cotado" value={fmtCurrency(total)} icon={TrendingUp} />
       </div>
 
       {/* Filter tabs */}

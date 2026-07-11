@@ -244,6 +244,12 @@
 .landing-root .pillar.feat li .bullet { background: var(--lime); color: var(--ink); }
 .landing-root .pillar.feat li span.mut { color: rgba(255,255,255,.8); }
 .landing-root .pillar .tagline { align-self: flex-start; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; background: var(--lime); color: var(--ink); padding: 3px 9px; border: 2px solid var(--ink); border-radius: var(--r-sm); margin-left: auto; }
+.landing-root .pillar .tagline.dev { background: var(--cream-2); color: var(--ink-soft); border-style: dashed; }
+.landing-root .pillar.soon { opacity: .88; }
+.landing-root .pillar.soon .ic { background: var(--cream-2); color: var(--ink-soft); }
+.landing-root .pillar.soon li .bullet { background: var(--cream-3); color: var(--ink-soft); }
+.landing-root .subgroup-tag { display: flex; align-items: center; gap: 10px; margin: 48px 0 22px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+.landing-root .subgroup-tag::after { content: ''; flex: 1; height: 2px; background: var(--ink); opacity: .12; }
 @media (max-width: 980px){ .landing-root .pillars { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 620px){ .landing-root .pillars { grid-template-columns: 1fr; } }
 

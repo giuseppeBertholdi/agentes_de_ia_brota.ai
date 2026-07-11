@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, FileText, TrendingUp, Zap, ArrowUpRight, Sparkles, Send, Loader2 } from 'lucide-react'
+import { MessageSquare, FileText, TrendingUp, Zap, Sparkles, Send, Loader2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { StatTile } from '@/components/ui/stat-tile'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { fmtCurrency } from '@/lib/utils'
@@ -36,36 +36,6 @@ function greeting() {
   return 'Boa noite'
 }
 
-interface MetricTileProps {
-  label: string
-  value: string | number
-  icon: React.ElementType
-  color: string
-  iconColor: string
-  badge: string
-  badgeVariant?: 'default' | 'green' | 'lime' | 'yellow'
-}
-
-function MetricTile({ label, value, icon: Icon, color, iconColor, badge, badgeVariant = 'default' }: MetricTileProps) {
-  return (
-    <Card className="hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md transition-all">
-      <CardContent className="pt-5 pb-5">
-        <div className="flex items-start justify-between mb-4">
-          <p className="font-body text-sm text-ink-soft font-medium">{label}</p>
-          <div className={`w-9 h-9 rounded-md border-2 border-ink ${color} flex items-center justify-center flex-none`}>
-            <Icon size={17} className={iconColor} />
-          </div>
-        </div>
-        <div className="font-display font-bold text-3xl text-ink tracking-tight mb-3">{value}</div>
-        <Badge variant={badgeVariant} className="text-[10px]">
-          <ArrowUpRight size={10} className="mr-0.5" />
-          {badge}
-        </Badge>
-      </CardContent>
-    </Card>
-  )
-}
-
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const { user } = useAuth()
@@ -84,41 +54,38 @@ export default function Dashboard() {
   useRealtimeTable('conversations', load)
   useRealtimeTable('quotes', load)
 
-  const tiles: MetricTileProps[] = [
+  const tiles = [
     {
       label: 'Conversas ativas',
       value: stats?.conversations_total ?? '—',
       icon: MessageSquare,
-      color: 'bg-green-soft',
       iconColor: 'text-green-deep',
       badge: `${stats?.conversations_bot ?? 0} no bot`,
-      badgeVariant: 'green',
+      badgeVariant: 'green' as const,
     },
     {
       label: 'Cotações hoje',
       value: stats?.quotes_today ?? '—',
       icon: FileText,
-      color: 'bg-lime/30',
       iconColor: 'text-ink',
-      badge: `${stats?.quotes_week ?? 0} essa semana`,
-      badgeVariant: 'lime',
+      badge: `${stats?.quotes_week ?? 0} na semana`,
+      badgeVariant: 'lime' as const,
     },
     {
       label: 'Receita (semana)',
       value: stats ? fmtCurrency(stats.revenue_week) : '—',
       icon: TrendingUp,
-      color: 'bg-cream-2',
       iconColor: 'text-ink',
-      badge: 'cotações aceitas',
+      badge: 'aceitas',
+      badgeVariant: 'default' as const,
     },
     {
       label: 'Mensagens hoje',
       value: stats?.messages_today ?? '—',
       icon: Zap,
-      color: 'bg-green-tint',
       iconColor: 'text-green',
       badge: 'pelo bot',
-      badgeVariant: 'green',
+      badgeVariant: 'green' as const,
     },
   ]
 
@@ -126,18 +93,18 @@ export default function Dashboard() {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-6xl mx-auto p-8">
 
         {/* Hero da IA — input central, primeira coisa que a pessoa vê */}
         {!hasConversation ? (
-          <div className="max-w-xl mx-auto text-center py-10 mb-4">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green border-2 border-ink flex items-center justify-center shadow-hard">
-              <Sparkles size={20} className="text-lime" />
+          <div className="max-w-xl mx-auto text-center py-6 mb-6">
+            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green border-2 border-ink flex items-center justify-center shadow-hard">
+              <Sparkles size={18} className="text-lime" />
             </div>
-            <h1 className="font-display font-bold text-3xl text-ink tracking-tight mb-2">
+            <h1 className="font-display font-bold text-2xl text-ink tracking-tight mb-1.5">
               {greeting()}, {firstName}. O que vamos fazer hoje?
             </h1>
-            <p className="text-ink-soft text-sm font-body mb-6">
+            <p className="text-ink-soft text-sm font-body mb-5">
               Peça pra IA criar setores, ajustar preços, configurar agentes ou tirar qualquer dúvida — ela faz na hora, sem formulário.
             </p>
 
@@ -189,14 +156,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="mb-4">
-          <h2 className="font-display font-bold text-lg text-ink tracking-tight">Resumo da operação</h2>
-          <p className="text-ink-soft text-sm mt-0.5 font-body">Como o seu negócio está indo hoje.</p>
+        <div className="mb-3">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-faint">Resumo da operação</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {tiles.map((tile) => (
-            <MetricTile key={tile.label} {...tile} />
+            <StatTile key={tile.label} {...tile} />
           ))}
         </div>
 
