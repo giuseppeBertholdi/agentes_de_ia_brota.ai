@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, FileText, TrendingUp, Zap, ArrowUpRight } from 'lucide-react'
+import { MessageSquare, FileText, TrendingUp, Zap, ArrowUpRight, Sparkles, Send, Loader2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { fmtCurrency } from '@/lib/utils'
 import { useRealtimeTable } from '@/hooks/useRealtime'
 import { useAuth } from '@/hooks/useAuth'
-import { AiChatPanel, useAiChat } from '@/components/AiAssistant'
+import { AiChatPanel, useAiChat, CAPABILITIES } from '@/components/AiAssistant'
 
 interface Stats {
   conversations_total: number
@@ -121,17 +122,76 @@ export default function Dashboard() {
     },
   ]
 
+  const hasConversation = chat.messages.some(m => !m.isInitial)
+
   return (
-    <div className="flex h-full min-h-0">
-      {/* Coluna principal — métricas + gráfico */}
-      <div className="flex-1 overflow-y-auto p-8 min-w-0">
-        <div className="mb-8">
-          <h2 className="font-display font-bold text-2xl text-ink tracking-tight">
-            {greeting()}, {firstName}
-          </h2>
-          <p className="text-ink-soft text-sm mt-1 font-body">
-            Aqui está o resumo da sua operação hoje.
-          </p>
+    <div className="h-full min-h-0 overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-8">
+
+        {/* Hero da IA — input central, primeira coisa que a pessoa vê */}
+        {!hasConversation ? (
+          <div className="max-w-xl mx-auto text-center py-10 mb-4">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green border-2 border-ink flex items-center justify-center shadow-hard">
+              <Sparkles size={20} className="text-lime" />
+            </div>
+            <h1 className="font-display font-bold text-3xl text-ink tracking-tight mb-2">
+              {greeting()}, {firstName}. O que vamos fazer hoje?
+            </h1>
+            <p className="text-ink-soft text-sm font-body mb-6">
+              Peça pra IA criar setores, ajustar preços, configurar agentes ou tirar qualquer dúvida — ela faz na hora, sem formulário.
+            </p>
+
+            <div className="relative">
+              <input
+                ref={chat.inputRef}
+                value={chat.input}
+                onChange={e => chat.setInput(e.target.value)}
+                onKeyDown={chat.onKeyDown}
+                disabled={chat.loading}
+                placeholder="Ex: crie um setor de RH e ative o agente de cotação…"
+                className="w-full pl-5 pr-14 py-4 text-sm font-body text-ink bg-white border-2 border-ink rounded-full shadow-hard focus:outline-none focus:shadow-hard-md transition-all placeholder:text-ink-faint"
+              />
+              <button
+                onClick={() => chat.send()}
+                disabled={!chat.input.trim() || chat.loading}
+                className={cn(
+                  'absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 border-ink transition-all',
+                  chat.input.trim() && !chat.loading
+                    ? 'bg-green text-white hover:bg-green-deep'
+                    : 'bg-cream-2 text-ink-faint cursor-not-allowed'
+                )}
+              >
+                {chat.loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {CAPABILITIES.map(cap => (
+                <button
+                  key={cap.label}
+                  onClick={() => chat.quickSend(cap.prompt)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep active:scale-95 transition-all shadow-[2px_2px_0_#16241C] hover:shadow-[2px_2px_0_#12693A]"
+                >
+                  <cap.icon size={12} />
+                  {cap.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-xl mx-auto mb-8">
+            <AiChatPanel
+              {...chat}
+              onInputChange={chat.setInput}
+              onQuickSend={chat.quickSend}
+              className="h-[440px]"
+            />
+          </div>
+        )}
+
+        <div className="mb-4">
+          <h2 className="font-display font-bold text-lg text-ink tracking-tight">Resumo da operação</h2>
+          <p className="text-ink-soft text-sm mt-0.5 font-body">Como o seu negócio está indo hoje.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -180,23 +240,6 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Coluna do chat — fixada à direita */}
-      <div className="w-[340px] flex-none border-l-2 border-ink flex flex-col p-4 bg-cream-2">
-        <div className="flex items-center gap-2 mb-3 flex-none">
-          <div className="w-6 h-6 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center">
-            <Zap size={12} className="text-lime" fill="currentColor" />
-          </div>
-          <span className="font-display font-bold text-sm text-ink">Assistente IA</span>
-          <span className="ml-auto font-mono text-[9px] text-ink-faint uppercase tracking-wide">Configuração & Dados</span>
-        </div>
-        <AiChatPanel
-          {...chat}
-          onInputChange={chat.setInput}
-          onQuickSend={chat.quickSend}
-          className="flex-1 min-h-0"
-        />
       </div>
     </div>
   )

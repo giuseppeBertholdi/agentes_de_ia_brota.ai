@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, X, Send, Loader2, Sparkles, ChevronDown, BarChart3, Tag, Settings2, Zap } from 'lucide-react'
+import { Bot, X, Send, Loader2, Sparkles, ChevronDown, BarChart3, Tag, Settings2, Building2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -20,9 +20,10 @@ interface Action {
 
 // ─── Capabilities (shown before first exchange) ───────────────────────────────
 
-const CAPABILITIES = [
+export const CAPABILITIES = [
   { label: 'Gerenciar agentes', icon: Bot,       prompt: 'Quais agentes estão disponíveis?' },
   { label: 'Tabela de preços',  icon: Tag,       prompt: 'Quero ver e adicionar preços' },
+  { label: 'Criar setor',       icon: Building2, prompt: 'Quero criar um setor de atendimento' },
   { label: 'Ver estatísticas',  icon: BarChart3, prompt: 'Quais são as estatísticas do meu negócio?' },
   { label: 'Configurar empresa',icon: Settings2, prompt: 'Quero configurar os dados da minha empresa' },
 ]
@@ -32,9 +33,10 @@ const CAPABILITIES = [
 function getSuggestions(actions: Action[]): string[] {
   if (actions.some(a => a.type === 'update_agent'))     return ['Ver todos os agentes', 'Personalizar o prompt', 'Adicionar preço']
   if (actions.some(a => a.type === 'create_price_item'))return ['Adicionar mais itens', 'Ver estatísticas', 'Configurar agentes']
+  if (actions.some(a => a.type === 'create_department'))return ['Criar outro setor', 'Configurar agentes', 'Ver estatísticas']
   if (actions.some(a => a.type === 'update_company'))   return ['Configurar agentes', 'Adicionar preços', 'Ver estatísticas']
   if (actions.some(a => a.type === 'get_stats'))        return ['Como melhorar minhas vendas?', 'Ver agentes ativos', 'Adicionar preço']
-  return ['Adicionar preço', 'Ver agentes', 'Ver estatísticas']
+  return ['Adicionar preço', 'Criar setor', 'Ver estatísticas']
 }
 
 // ─── Action badges ─────────────────────────────────────────────────────────────
@@ -44,6 +46,7 @@ const ACTION_META: Record<string, { color: string; icon: string }> = {
   create_price_item:{ color: 'bg-green-tint border-green/60 text-green-700',icon: '✅' },
   delete_price_item:{ color: 'bg-red-50 border-red-200 text-red-600',       icon: '🗑️' },
   update_agent:     { color: 'bg-lime/40 border-ink/20 text-ink',           icon: '🤖' },
+  create_department:{ color: 'bg-green-tint border-green/60 text-green-700',icon: '🏬' },
   get_stats:        { color: 'bg-cream-2 border-ink/20 text-ink-soft',      icon: '📊' },
 }
 

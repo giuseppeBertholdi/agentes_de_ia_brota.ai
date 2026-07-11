@@ -8,6 +8,7 @@ import Inbox from '@/pages/Inbox'
 import Quotes from '@/pages/Quotes'
 import Reports from '@/pages/Reports'
 import PostSale from '@/pages/PostSale'
+import Team from '@/pages/Team'
 import Settings from '@/pages/Settings'
 import Landing from '@/pages/Landing'
 
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="quotes" element={<Quotes />} />
           <Route path="reports" element={<Reports />} />
           <Route path="post-sale" element={<PostSale />} />
+          <Route path="team" element={<Team />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

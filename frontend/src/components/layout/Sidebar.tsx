@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Settings, LogOut, Zap } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { initials } from '@/lib/utils'
@@ -10,6 +10,7 @@ const mainNav = [
   { to: '/app/quotes', icon: FileText, label: 'Cotações' },
   { to: '/app/reports', icon: BarChart3, label: 'Relatórios' },
   { to: '/app/post-sale', icon: Heart, label: 'Pós-venda' },
+  { to: '/app/team', icon: Users, label: 'Equipe' },
 ]
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>

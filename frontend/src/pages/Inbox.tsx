@@ -13,6 +13,12 @@ interface Conversation {
   status: 'bot' | 'human' | 'resolved'
   last_message_at: string
   remote_jid: string
+  department_id: string | null
+}
+
+interface Department {
+  id: string
+  name: string
 }
 
 interface Message {
@@ -31,6 +37,8 @@ const statusBadge: Record<string, { label: string; variant: 'green' | 'yellow' |
 
 export default function Inbox() {
   const [convs, setConvs] = useState<Conversation[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [deptFilter, setDeptFilter] = useState<string>('')
   const [active, setActive] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -38,12 +46,15 @@ export default function Inbox() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const loadConvs = () =>
-    api.get<Conversation[]>('/conversations/').then(setConvs).catch(console.error)
+    api.get<Conversation[]>(`/conversations/${deptFilter ? `?department_id=${deptFilter}` : ''}`).then(setConvs).catch(console.error)
 
   const loadMessages = (id: string) =>
     api.get<Message[]>(`/conversations/${id}/messages`).then(setMessages).catch(console.error)
 
-  useEffect(() => { loadConvs() }, [])
+  useEffect(() => {
+    api.get<Department[]>('/team/departments').then(setDepartments).catch(console.error)
+  }, [])
+  useEffect(() => { loadConvs() }, [deptFilter])
   useRealtimeTable('conversations', loadConvs)
   useRealtimeTable('messages', (payload) => {
     if (active && (payload as { new?: { conversation_id?: string } }).new?.conversation_id === active.id) {
@@ -57,6 +68,8 @@ export default function Inbox() {
     setActive(c)
     loadMessages(c.id)
   }
+
+  const deptName = (id: string | null) => departments.find(d => d.id === id)?.name
 
   const send = async () => {
     if (!input.trim() || !active) return
@@ -90,6 +103,31 @@ export default function Inbox() {
           <h2 className="font-display font-bold text-base text-ink">Inbox</h2>
           <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length}</Badge>
         </div>
+        {departments.length > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-ink/10 bg-white overflow-x-auto">
+            <button
+              onClick={() => setDeptFilter('')}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-xs font-body font-bold whitespace-nowrap border-2 transition-colors',
+                deptFilter === '' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-soft border-ink/20 hover:border-ink/40'
+              )}
+            >
+              Todos
+            </button>
+            {departments.map(d => (
+              <button
+                key={d.id}
+                onClick={() => setDeptFilter(d.id)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-body font-bold whitespace-nowrap border-2 transition-colors',
+                  deptFilter === d.id ? 'bg-green text-white border-green' : 'bg-white text-ink-soft border-ink/20 hover:border-ink/40'
+                )}
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto">
           {convs.map(c => (
             <button
@@ -112,6 +150,11 @@ export default function Inbox() {
                     {statusBadge[c.status]?.label}
                   </Badge>
                 </div>
+                {deptName(c.department_id) && (
+                  <span className="text-green-deep text-[10px] font-mono font-bold block mt-0.5">
+                    {deptName(c.department_id)}
+                  </span>
+                )}
                 {c.last_message_at && (
                   <span className="text-ink-faint text-xs font-mono mt-0.5 block">
                     {new Date(c.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -137,7 +180,12 @@ export default function Inbox() {
               {initials(active.contact_name || active.contact_phone || '?')}
             </div>
             <div className="flex-1">
-              <div className="font-body font-bold text-ink">{active.contact_name || active.contact_phone}</div>
+              <div className="font-body font-bold text-ink flex items-center gap-2">
+                {active.contact_name || active.contact_phone}
+                {deptName(active.department_id) && (
+                  <Badge variant="green" className="text-[9px]">{deptName(active.department_id)}</Badge>
+                )}
+              </div>
               <div className="text-ink-faint text-xs font-mono">{active.contact_phone}</div>
             </div>
             <div className="flex gap-2">

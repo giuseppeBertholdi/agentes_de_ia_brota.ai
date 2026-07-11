@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.auth import require_company, get_current_user
 from app.database import supabase
@@ -8,15 +9,15 @@ router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 
 @router.get("/")
-async def list_conversations(company_id: str = Depends(require_company)):
-    r = (
+async def list_conversations(department_id: Optional[str] = None, company_id: str = Depends(require_company)):
+    q = (
         supabase.table("conversations")
         .select("*")
         .eq("company_id", company_id)
-        .order("last_message_at", desc=True)
-        .limit(100)
-        .execute()
     )
+    if department_id:
+        q = q.eq("department_id", department_id)
+    r = q.order("last_message_at", desc=True).limit(100).execute()
     return r.data or []
 
 

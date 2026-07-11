@@ -95,6 +95,21 @@ TOOLS: List[dict] = [
     {
         "type": "function",
         "function": {
+            "name": "create_department",
+            "description": "Cria um setor/fila de atendimento (ex: RH, Financeiro, Vendas) para onde a recepcionista de IA pode transferir conversas quando o cliente pedir para falar com uma área específica.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Nome do setor, ex: RH, Financeiro, Suporte técnico"},
+                    "description": {"type": "string", "description": "Descrição opcional do que o setor resolve"},
+                },
+                "required": ["name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_stats",
             "description": "Busca estatísticas do negócio: total de cotações, conversas ativas, receita estimada, itens no pós-venda.",
             "parameters": {"type": "object", "properties": {}},
@@ -103,7 +118,7 @@ TOOLS: List[dict] = [
 ]
 
 
-def _build_system(company: dict, prices: List[dict], agents: List[dict]) -> str:
+def _build_system(company: dict, prices: List[dict], agents: List[dict], departments: List[dict]) -> str:
     price_lines = "\n".join(
         f"  [{p['id']}] {p['name']} — R$ {float(p['price']):.2f}/{p.get('unit','un')}"
         + (f" ({p['description']})" if p.get("description") else "")
@@ -115,6 +130,11 @@ def _build_system(company: dict, prices: List[dict], agents: List[dict]) -> str:
         + (" | tem prompt customizado" if a.get("system_prompt") else "")
         for a in agents
     ) or "  (configuração padrão)"
+
+    department_lines = "\n".join(
+        f"  {d['name']}" + (f" — {d['description']}" if d.get("description") else "")
+        for d in departments
+    ) or "  (nenhum setor cadastrado)"
 
     return f"""Você é o assistente inteligente da Brota, plataforma de agentes de IA para WhatsApp.
 
@@ -128,17 +148,22 @@ Tabela de preços:
 
 Agentes:
 {agent_lines}
+
+Setores de atendimento:
+{department_lines}
 ================================
 
 Você pode fazer tudo via conversa:
 - Configurar empresa, preços e agentes usando as ferramentas disponíveis
+- Criar setores/filas de atendimento (create_department) para os quais a recepcionista de IA transfere conversas automaticamente quando o cliente pede para falar com uma área específica (ex: "quero falar com o RH")
 - Responder perguntas sobre dados do negócio (get_stats)
 - Sugerir melhorias e direcionamentos com base no contexto
 
 Quando o usuário descrever o negócio pela primeira vez (onboarding), entenda bem e então:
 1. Use update_company para salvar nome, tom de voz e descrição do negócio
 2. Use create_price_item para cada produto/serviço mencionado com preço
-3. Confirme o que foi configurado e sugira próximos passos
+3. Se fizer sentido para o negócio (ex: empresa com RH, financeiro, vendas, suporte), sugira e use create_department para os setores relevantes
+4. Confirme o que foi configurado e sugira próximos passos
 
 Seja natural, direto e proativo. Faça perguntas quando precisar de mais detalhes.
 Responda sempre em português brasileiro."""
@@ -204,6 +229,14 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
             {"type": "update_agent", "data": payload},
         )
 
+    if name == "create_department":
+        item = {"company_id": company_id, "name": args["name"]}
+        if args.get("description"):
+            item["description"] = args["description"]
+        r = supabase.table("departments").insert(item).execute()
+        created = r.data[0] if r.data else item
+        return f"Setor criado: {args['name']}", {"type": "create_department", "data": created}
+
     if name == "get_stats":
         def _safe_query(table, *select_args, **filters):
             try:
@@ -252,7 +285,10 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
     agents_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).execute()
     agents = agents_r.data or []
 
-    system = _build_system(company, prices, agents)
+    departments_r = supabase.table("departments").select("*").eq("company_id", company_id).order("name").execute()
+    departments = departments_r.data or []
+
+    system = _build_system(company, prices, agents, departments)
 
     messages: List[dict] = [{"role": "system", "content": system}]
     for m in body.history[-20:]:

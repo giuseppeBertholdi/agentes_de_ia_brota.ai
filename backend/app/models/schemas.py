@@ -39,3 +39,17 @@ class CompanyUpdate(BaseModel):
 
 class FollowUpStatusUpdate(BaseModel):
     status: str
+
+
+class DepartmentCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class TeamMemberUpdate(BaseModel):
+    department_id: Optional[str] = None

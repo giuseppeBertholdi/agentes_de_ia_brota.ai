@@ -37,6 +37,21 @@ def _history_text(messages: list[dict]) -> list[dict]:
     return [{"role": m["role"], "content": m["content"]} for m in messages]
 
 
+def _departments_text(departments: list[dict]) -> str:
+    if not departments:
+        return ""
+    lines = ["\nSetores disponíveis para transferência:"]
+    for d in departments:
+        lines.append(f"- {d['name']}" + (f": {d['description']}" if d.get("description") else ""))
+    lines.append(
+        '\nSe o cliente pedir para falar com um desses setores (ex: "quero falar com o RH"), '
+        'responda APENAS com o JSON:\n'
+        '{"action": "transfer", "department": "<nome exato do setor>", '
+        '"message": "<mensagem curta avisando que vai transferir>"}'
+    )
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Receptionist agent
 # ---------------------------------------------------------------------------
@@ -47,7 +62,7 @@ Descrição do negócio: {business_desc}
 
 Sua função:
 1. Receber qualquer mensagem do cliente com cordialidade.
-2. Entender a intenção: saudação, cotação/orçamento, agendamento, dúvida, reclamação ou outro.
+2. Entender a intenção: saudação, cotação/orçamento, agendamento, dúvida, reclamação, pedido para falar com um setor específico, ou outro.
 3. Se o cliente quer um orçamento/cotação, responda APENAS com o JSON:
    {{"action": "quote", "reason": "<resumo breve do que o cliente quer>"}}
 4. Para qualquer outra intenção, responda normalmente e inclua ao final:
@@ -61,13 +76,16 @@ async def run_receptionist(
     history: list[dict],
     user_message: str,
     custom_prompt: str | None = None,
+    departments: list[dict] | None = None,
 ) -> dict:
-    """Retorna {'action': 'reply'|'quote', 'message': str, 'reason': str}"""
+    """Retorna {'action': 'reply'|'quote'|'transfer', 'message': str, 'reason': str, 'department': str}"""
     system = (custom_prompt or RECEPTIONIST_BASE).format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
+    system += _departments_text(departments or [])
+
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
@@ -82,6 +100,13 @@ async def run_receptionist(
             data = json.loads(raw[start:end])
             if data.get("action") == "quote":
                 return {"action": "quote", "reason": data.get("reason", ""), "message": ""}
+            if data.get("action") == "transfer":
+                return {
+                    "action": "transfer",
+                    "department": data.get("department", ""),
+                    "message": data.get("message", raw),
+                    "reason": "",
+                }
             if data.get("action") == "reply":
                 return {"action": "reply", "message": data.get("message", raw), "reason": ""}
     except (json.JSONDecodeError, ValueError):
@@ -172,6 +197,9 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
     agents_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).execute()
     agents = {a["agent_type"]: a for a in (agents_r.data or [])}
 
+    departments_r = supabase.table("departments").select("id,name,description").eq("company_id", company_id).execute()
+    departments = departments_r.data or []
+
     # salva mensagem do usuário
     supabase.table("messages").insert({
         "conversation_id": conversation_id,
@@ -195,11 +223,24 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         history=history,
         user_message=user_message,
         custom_prompt=receptionist_cfg.get("system_prompt"),
+        departments=departments,
     )
 
     reply_text = ""
 
-    if rec_result["action"] == "quote":
+    if rec_result["action"] == "transfer":
+        dept_name = (rec_result.get("department") or "").strip().lower()
+        dept = next((d for d in departments if d["name"].strip().lower() == dept_name), None)
+        if dept:
+            supabase.table("conversations").update({
+                "status": "human",
+                "department_id": dept["id"],
+            }).eq("id", conversation_id).execute()
+            reply_text = rec_result.get("message") or f"Vou te transferir para o setor de {dept['name']}, aguarde um instante."
+        else:
+            # setor não reconhecido — não transfere, apenas responde normalmente
+            reply_text = rec_result.get("message") or "Pode me contar um pouco mais sobre o que você precisa?"
+    elif rec_result["action"] == "quote":
         # aciona agente de cotação
         quote_cfg = agents.get("quote", {})
         if quote_cfg.get("enabled", True):

@@ -166,16 +166,16 @@ export default function Landing() {
       <header className="l-hero">
         <div className="wrap hero-grid">
           <div className="hero-copy reveal">
-            <span className="eyebrow"><span className="dot" /> Agentes de IA · seu negócio no automático</span>
+            <span className="eyebrow"><span className="dot" /> Configurado numa conversa, não num formulário</span>
             <h1>Uma equipe de IA cuidando do seu <span className="hl">negócio inteiro</span>.</h1>
-            <p className="hero-sub">A Plimpost atende no WhatsApp, fecha vendas, cobra quem deve, emite nota, monta relatório e cuida do pós-venda — agentes que trabalham juntos, 24h, sem time de TI.</p>
+            <p className="hero-sub">Você conta pra IA como seu negócio funciona — ela cria os agentes, monta a tabela de preços, organiza os setores de atendimento e já sai atendendo no WhatsApp, fechando vendas, cobrando quem deve e cuidando do pós-venda. 24h, sem time de TI.</p>
             <div className="hero-cta">
               <a href="#cta" className="btn btn-primary btn-lg">Começar de graça {IC.arrow}</a>
               <a href="#demo" className="btn btn-ghost btn-lg">Ver funcionando</a>
             </div>
             <div className="hero-trust">
               <span>{IC.check()} Pronto em minutos</span>
-              <span>{IC.check()} Conecta com o que você já usa</span>
+              <span>{IC.check()} A IA configura tudo por chat</span>
               <span>{IC.check()} Cancele quando quiser</span>
             </div>
           </div>
@@ -357,13 +357,13 @@ export default function Landing() {
           <div className="sec-head center reveal">
             <span className="sec-tag">Como funciona</span>
             <h2>Do zero ao atendendo em um dia</h2>
-            <p style={{ marginLeft: 'auto', marginRight: 'auto' }}>Sem instalar nada, sem manual de mil páginas. A gente faz o trabalho chato — você só aprova.</p>
+            <p style={{ marginLeft: 'auto', marginRight: 'auto' }}>Sem instalar nada, sem manual de mil páginas, sem formulário. Você conversa, a IA monta.</p>
           </div>
           <div className="steps">
             {[
-              { n: '1', title: 'Conta pra gente sobre seu negócio', body: 'Numa conversa rápida, a Plimpost aprende seus produtos, seus preços e o seu jeito de falar com o cliente.' },
+              { n: '1', title: 'Você conta, a IA monta', body: 'Numa conversa com a IA da Plimpost — igual você faria com um funcionário novo — ela já cria a tabela de preços, configura os agentes e organiza os setores certos (RH, vendas, suporte…).' },
               { n: '2', title: 'A gente conecta no seu WhatsApp', body: 'No seu número de sempre, em minutos. Seus clientes nem percebem que tem IA do outro lado.' },
-              { n: '3', title: 'Seu agente começa a atender', body: 'Ele responde, orça e agenda dia e noite. Você acompanha tudo e entra na conversa quando quiser.' },
+              { n: '3', title: 'Seu agente começa a atender', body: 'Ele responde, orça, agenda e transfere pro setor certo quando precisa. Você acompanha tudo e entra na conversa quando quiser.' },
             ].map((s) => (
               <div key={s.n} className="step reveal">
                 <div className="num">{s.n}</div>
@@ -479,19 +479,8 @@ export default function Landing() {
                 Decidi construir algo diferente — uma plataforma que qualquer dono de negócio consegue configurar numa conversa, sem técnico, sem manual. Um assistente que aprende seu jeito de falar, seus preços, seu negócio, e atende seus clientes 24h no WhatsApp como se fosse você mesmo.
               </p>
               <p style={{ fontSize: 16.5, lineHeight: 1.65, color: 'var(--ink-soft)', margin: 0 }}>
-                A Plimpost foi desenvolvida do zero — backend em Python, frontend em React, IA com GPT-4 — com foco em ser simples de verdade, não só de parecer.
+                A Plimpost foi desenvolvida do zero, com foco em ser simples de verdade, não só de parecer.
               </p>
-
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
-                {['Python · FastAPI', 'React · TypeScript', 'Supabase', 'GPT-4o', 'WhatsApp Cloud API'].map(tag => (
-                  <span key={tag} style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 11.5, fontWeight: 700,
-                    padding: '5px 11px', border: '2px solid var(--ink)',
-                    borderRadius: 'var(--r-sm)', background: 'var(--card)',
-                    boxShadow: '2px 2px 0 var(--ink)',
-                  }}>{tag}</span>
-                ))}
-              </div>
             </div>
           </div>
         </div>
