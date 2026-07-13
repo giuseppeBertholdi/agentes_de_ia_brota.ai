@@ -10,6 +10,7 @@ import { useRealtimeTable } from '@/hooks/useRealtime'
 import { useAuth } from '@/hooks/useAuth'
 import { AiChatPanel, useAiChat, CAPABILITIES } from '@/components/AiAssistant'
 import PaywallModal from '@/components/PaywallModal'
+import UpgradeCard from '@/components/UpgradeCard'
 
 interface Stats {
   conversations_total: number
@@ -95,6 +96,8 @@ export default function Dashboard() {
   return (
     <div className="h-full min-h-0 overflow-y-auto">
       <div className="max-w-6xl mx-auto p-8">
+
+        <UpgradeCard />
 
         {/* Hero da IA — input central, primeira coisa que a pessoa vê */}
         {!hasConversation ? (

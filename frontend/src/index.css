@@ -295,6 +295,31 @@
 .landing-root .cta-card .deco.d2 { width: 150px; height: 150px; border-radius: var(--r-lg); bottom: -60px; right: -30px; transform: rotate(12deg); }
 .landing-root .cta-mini { margin-top: 22px; font-size: 13px; opacity: .9; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; }
 
+/* preços */
+.landing-root .pricing-card {
+  max-width: 460px;
+  margin: 0 auto;
+  background: var(--card);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--hard-lg);
+  padding: 40px 40px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.landing-root .pricing-card .tagline { margin-left: 0; }
+.landing-root .price-row { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 26px; }
+.landing-root .price-old { font-family: var(--font-mono); font-size: 20px; color: var(--ink-faint); text-decoration: line-through; }
+.landing-root .price-new { font-family: var(--font-display); font-weight: 800; font-size: 52px; letter-spacing: -0.02em; color: var(--ink); }
+.landing-root .price-period { font-family: var(--font-mono); font-size: 15px; color: var(--ink-soft); }
+.landing-root .pricing-card ul { list-style: none; margin: 0 0 30px; padding: 0; display: flex; flex-direction: column; gap: 13px; text-align: left; width: 100%; }
+.landing-root .pricing-card li { display: flex; gap: 11px; font-size: 15px; line-height: 1.45; color: var(--ink); }
+.landing-root .pricing-card li .bullet { flex: none; width: 19px; height: 19px; margin-top: 1px; border-radius: 5px; background: var(--green); border: 2px solid var(--ink); display: grid; place-items: center; color: #fff; }
+.landing-root .pricing-card .btn { width: 100%; justify-content: center; }
+.landing-root .pricing-card .cta-mini { color: var(--ink-faint); opacity: 1; }
+
 /* footer */
 .landing-root .l-footer { border-top: var(--bw) solid var(--ink); padding: 38px 0; background: var(--cream-2); }
 .landing-root .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }

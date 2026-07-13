@@ -151,6 +151,7 @@ export default function Landing() {
             <a href="#capacidades">Capacidades</a>
             <a href="#demo">Veja em ação</a>
             <a href="#como">Como funciona</a>
+            <a href="#precos">Preços</a>
             <a href="#sobre">Sobre</a>
           </div>
           <div className="l-nav-cta">
@@ -399,6 +400,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---- PREÇOS ---- */}
+      <section className="section-pad" id="precos">
+        <div className="wrap">
+          <div className="sec-head center reveal">
+            <span className="sec-tag">Investimento</span>
+            <h2>Um preço só, <span style={{ color: 'var(--green)' }}>tudo incluso</span></h2>
+            <p style={{ marginLeft: 'auto', marginRight: 'auto' }}>Sem plano escondido, sem taxa por agente. Você testa a configuração de graça e só paga quando for colocar a IA pra atender de verdade no WhatsApp.</p>
+          </div>
+
+          <div className="pricing-card reveal">
+            <span className="tagline">Plano único</span>
+            <div className="price-row">
+              <span className="price-old">R$ 207</span>
+              <span className="price-new">R$ 127</span>
+              <span className="price-period">/mês</span>
+            </div>
+            <ul>
+              <Bullet>WhatsApp conectado e respondendo sozinho, 24h por dia</Bullet>
+              <Bullet>IA configurando preços, agentes e setores por chat</Bullet>
+              <Bullet>Cotações automáticas, pós-venda e relatórios inclusos</Bullet>
+              <Bullet>Cancele quando quiser, sem multa</Bullet>
+            </ul>
+            <Link to="/register" className="btn btn-primary btn-lg">Começar de graça {IC.arrow}</Link>
+            <p className="cta-mini">O onboarding é grátis — a assinatura só é cobrada quando você for conectar o WhatsApp.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ---- SOBRE / DESENVOLVEDOR ---- */}
       <section className="section-pad" id="sobre" style={{ background: 'var(--cream-2)', borderTop: '2px solid var(--ink)' }}>
         <div className="wrap">
@@ -535,6 +564,7 @@ export default function Landing() {
             <a href="#capacidades">Capacidades</a>
             <a href="#demo">Veja em ação</a>
             <a href="#como">Como funciona</a>
+            <a href="#precos">Preços</a>
             <a href="#sobre">Sobre</a>
             <a href="#cta">Começar</a>
           </div>
