@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     graph_api_version: str = "v21.0"
     frontend_url: str = "http://localhost:5173"
     backend_url: str = "http://localhost:8000"
+    # Stripe — assinatura única de R$127/mês
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id: str = ""
 
 
 settings = Settings()

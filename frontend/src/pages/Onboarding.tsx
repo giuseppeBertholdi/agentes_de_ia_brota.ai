@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Zap, Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { AiChatPanel, useAiChat } from '@/components/AiAssistant'
+import { api } from '@/lib/api'
 
 export default function Onboarding() {
   const navigate = useNavigate()
@@ -13,7 +14,10 @@ export default function Onboarding() {
     ''
   const firstName = name.split(' ')[0]
 
-  const finishOnboarding = () => navigate('/app/dashboard')
+  const finishOnboarding = async () => {
+    try { await api.post('/settings/onboarding/complete') } catch { /* segue mesmo se falhar */ }
+    navigate('/app/dashboard')
+  }
 
   const chat = useAiChat(true, undefined)
   const configured = chat.messages.some(m => m.actions?.some(a => a.type === 'update_company'))

@@ -38,6 +38,12 @@ async def _handle_message(phone_number_id: str, value: dict):
         return
     company_id = instance_r.data["company_id"]
 
+    company_r = (
+        supabase.table("companies").select("subscription_status").eq("id", company_id).maybe_single().execute()
+    )
+    if (company_r.data or {}).get("subscription_status") != "active":
+        return
+
     contacts = {c["wa_id"]: c.get("profile", {}).get("name", "") for c in value.get("contacts", [])}
 
     for msg in messages:

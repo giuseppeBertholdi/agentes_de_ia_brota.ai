@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useRealtimeTable } from '@/hooks/useRealtime'
+import PaywallModal from '@/components/PaywallModal'
 
 interface Company { id: string; name: string; voice_tone: string; business_desc: string }
 interface PriceItem { id?: string; name: string; description?: string; price: number; unit: string; active: boolean }
@@ -75,6 +76,7 @@ export default function Settings() {
   const [saved,       setSaved]       = useState(false)
   const [waLoading,   setWaLoading]   = useState(false)
   const [waError,     setWaError]     = useState<string | null>(null)
+  const [paywallOpen, setPaywallOpen] = useState(false)
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = async () => {
@@ -182,7 +184,11 @@ export default function Settings() {
       })
       await load()
     } catch (e) {
-      setWaError(e instanceof Error ? e.message : 'Erro ao conectar')
+      if (e instanceof ApiError && e.status === 402) {
+        setPaywallOpen(true)
+      } else {
+        setWaError(e instanceof Error ? e.message : 'Erro ao conectar')
+      }
     } finally { setWaLoading(false) }
   }
 
@@ -561,6 +567,8 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </div>
   )
 }

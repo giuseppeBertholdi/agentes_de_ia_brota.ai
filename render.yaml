@@ -25,6 +25,12 @@ services:
         sync: false
       - key: WEBHOOK_VERIFY_TOKEN
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
       - key: FRONTEND_URL
         sync: false
       - key: BACKEND_URL

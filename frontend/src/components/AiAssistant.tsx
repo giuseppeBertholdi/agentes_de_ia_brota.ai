@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bot, X, Send, Loader2, Sparkles, ChevronDown, BarChart3, Tag, Settings2, Building2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import PaywallModal from '@/components/PaywallModal'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -297,6 +298,7 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [paywallRequired, setPaywallRequired] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -338,11 +340,16 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
       if (res.actions?.some(a => configActions.includes(a.type))) {
         onConfigChanged?.()
       }
-    } catch {
-      setMessages(prev => [
-        ...prev.slice(0, -1),
-        { role: 'assistant', content: 'Ops, algo deu errado. Tente novamente.', isError: true },
-      ])
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        setMessages(prev => prev.slice(0, -1))
+        setPaywallRequired(true)
+      } else {
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { role: 'assistant', content: 'Ops, algo deu errado. Tente novamente.', isError: true },
+        ])
+      }
     } finally {
       setLoading(false)
     }
@@ -357,7 +364,12 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
     send(text)
   }
 
-  return { messages, input, loading, setInput, send, onSend: send, onKeyDown, quickSend, bottomRef, inputRef }
+  const dismissPaywall = () => setPaywallRequired(false)
+
+  return {
+    messages, input, loading, setInput, send, onSend: send, onKeyDown, quickSend, bottomRef, inputRef,
+    paywallRequired, dismissPaywall,
+  }
 }
 
 // ─── Floating assistant ────────────────────────────────────────────────────────
@@ -416,6 +428,8 @@ export default function AiAssistant({ isFirstTime = false, onConfigChanged }: Fl
           />
         </div>
       )}
+
+      <PaywallModal open={chat.paywallRequired} onClose={chat.dismissPaywall} />
     </>
   )
 }

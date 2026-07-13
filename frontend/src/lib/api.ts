@@ -8,6 +8,14 @@ const BASE = _isLocal
   ? ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000')
   : '/api'
 
+export class ApiError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
 async function authHeaders(): Promise<HeadersInit> {
   // tenta pegar a sessão; se expirada, refreshSession() renova automaticamente
   let { data } = await supabase.auth.getSession()
@@ -22,10 +30,14 @@ async function authHeaders(): Promise<HeadersInit> {
   }
 }
 
+async function handle<T>(r: Response): Promise<T> {
+  if (!r.ok) throw new ApiError(r.status, await r.text())
+  return r.json()
+}
+
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}${path}`, { headers: await authHeaders() })
-  if (!r.ok) throw new Error(await r.text())
-  return r.json()
+  return handle<T>(r)
 }
 
 async function post<T>(path: string, body?: unknown): Promise<T> {
@@ -34,8 +46,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
     headers: await authHeaders(),
     body: body != null ? JSON.stringify(body) : undefined,
   })
-  if (!r.ok) throw new Error(await r.text())
-  return r.json()
+  return handle<T>(r)
 }
 
 async function patch<T>(path: string, body?: unknown): Promise<T> {
@@ -44,8 +55,7 @@ async function patch<T>(path: string, body?: unknown): Promise<T> {
     headers: await authHeaders(),
     body: body != null ? JSON.stringify(body) : undefined,
   })
-  if (!r.ok) throw new Error(await r.text())
-  return r.json()
+  return handle<T>(r)
 }
 
 async function put<T>(path: string, body?: unknown): Promise<T> {
@@ -54,14 +64,12 @@ async function put<T>(path: string, body?: unknown): Promise<T> {
     headers: await authHeaders(),
     body: body != null ? JSON.stringify(body) : undefined,
   })
-  if (!r.ok) throw new Error(await r.text())
-  return r.json()
+  return handle<T>(r)
 }
 
 async function del<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}${path}`, { method: 'DELETE', headers: await authHeaders() })
-  if (!r.ok) throw new Error(await r.text())
-  return r.json()
+  return handle<T>(r)
 }
 
 export const api = { get, post, patch, put, delete: del }

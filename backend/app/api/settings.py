@@ -1,5 +1,6 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from app.api.auth import require_company
+from app.api.auth import require_company, require_active_subscription
 from app.database import supabase
 from app.services import whatsapp_cloud_api
 from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback
@@ -83,7 +84,7 @@ async def get_whatsapp(company_id: str = Depends(require_company)):
 
 
 @router.post("/whatsapp/embedded-signup")
-async def embedded_signup(body: EmbeddedSignupCallback, company_id: str = Depends(require_company)):
+async def embedded_signup(body: EmbeddedSignupCallback, company_id: str = Depends(require_active_subscription)):
     """Recebe o code + waba_id/phone_number_id do Embedded Signup (Facebook JS SDK) e finaliza a conexão."""
     try:
         await whatsapp_cloud_api.exchange_code_for_token(body.code)
@@ -115,4 +116,14 @@ async def disconnect_whatsapp(company_id: str = Depends(require_company)):
     supabase.table("whatsapp_instances").update({"status": "disconnected"}).eq(
         "company_id", company_id
     ).execute()
+    return {"ok": True}
+
+
+# ── Onboarding ────────────────────────────────────────────────────────────────
+
+@router.post("/onboarding/complete")
+async def complete_onboarding(company_id: str = Depends(require_company)):
+    """Marca o fim do onboarding gratuito — a partir daqui o chat com a IA passa a exigir assinatura ativa."""
+    now = datetime.now(timezone.utc).isoformat()
+    supabase.table("companies").update({"onboarding_completed_at": now}).eq("id", company_id).execute()
     return {"ok": True}

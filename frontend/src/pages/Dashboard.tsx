@@ -9,6 +9,7 @@ import { fmtCurrency } from '@/lib/utils'
 import { useRealtimeTable } from '@/hooks/useRealtime'
 import { useAuth } from '@/hooks/useAuth'
 import { AiChatPanel, useAiChat, CAPABILITIES } from '@/components/AiAssistant'
+import PaywallModal from '@/components/PaywallModal'
 
 interface Stats {
   conversations_total: number
@@ -207,6 +208,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <PaywallModal open={chat.paywallRequired} onClose={chat.dismissPaywall} />
     </div>
   )
 }

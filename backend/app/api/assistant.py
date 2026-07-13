@@ -9,7 +9,7 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
-from app.api.auth import require_company
+from app.api.auth import require_active_subscription_after_onboarding
 from app.config import settings
 from app.database import supabase
 
@@ -275,7 +275,7 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
 
 
 @router.post("/chat")
-async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(require_company)):
+async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(require_active_subscription_after_onboarding)):
     company_r = supabase.table("companies").select("*").eq("id", company_id).single().execute()
     company = company_r.data or {}
 
