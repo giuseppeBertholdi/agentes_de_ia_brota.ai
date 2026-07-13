@@ -288,7 +288,7 @@ export function AiChatPanel({
 
 export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
   const ONBOARDING =
-    'Olá! Sou o assistente da Plimpost. Vou te ajudar a configurar tudo para o seu WhatsApp. 👋\n\nMe conta: qual é o seu negócio? O que você vende ou oferece?'
+    'Olá! Sou o assistente da Plimpost. 👋 Vou te fazer algumas perguntas rápidas pra já deixar os preços, o tom de atendimento e os setores certos configurados — sem formulário, e dá pra ajustar qualquer coisa depois.\n\nPra começar: me conta, qual é o seu negócio? O que você vende ou oferece?'
   const WELCOME =
     'Olá! Posso ajudar a configurar agentes, adicionar preços, consultar dados do negócio ou responder qualquer dúvida. O que você precisa?'
 

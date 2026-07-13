@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import AppLayout from '@/components/layout/AppLayout'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
+import Onboarding from '@/pages/Onboarding'
 import Dashboard from '@/pages/Dashboard'
 import Inbox from '@/pages/Inbox'
 import Quotes from '@/pages/Quotes'
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
         <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />

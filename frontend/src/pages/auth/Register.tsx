@@ -40,7 +40,7 @@ export default function Register() {
       setError(err.message)
       setLoading(false)
     } else {
-      navigate('/app/dashboard')
+      navigate('/onboarding')
     }
   }
 

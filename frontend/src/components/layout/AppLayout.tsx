@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, Navigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import AiAssistant from '@/components/AiAssistant'
@@ -13,6 +13,7 @@ interface Company {
 
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [checkedFirstTime, setCheckedFirstTime] = useState(false)
   const [company, setCompany] = useState<Company | null>(null)
   const [configVersion, setConfigVersion] = useState(0)
   const location = useLocation()
@@ -23,12 +24,19 @@ export default function AppLayout() {
     api.get<Company>('/settings/company')
       .then(c => { setCompany(c); setIsFirstTime(!c.business_desc) })
       .catch(() => {})
+      .finally(() => setCheckedFirstTime(true))
   }, [configVersion])
 
   const handleConfigChanged = useCallback(() => {
     setIsFirstTime(false)
     setConfigVersion(v => v + 1)
   }, [])
+
+  // primeiro acesso: manda pro onboarding guiado, a menos que a pessoa já tenha pulado nesta sessão
+  const skippedOnboarding = sessionStorage.getItem('onboarding_skipped') === '1'
+  if (checkedFirstTime && isFirstTime && !skippedOnboarding) {
+    return <Navigate to="/onboarding" replace />
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-cream font-body">
