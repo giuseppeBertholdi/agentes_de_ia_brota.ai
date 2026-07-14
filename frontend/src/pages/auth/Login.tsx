@@ -58,14 +58,14 @@ export default function Login() {
           <p className="text-ink-soft font-body text-sm">Painel de controle</p>
         </div>
 
-        <div className="bg-white border-2 border-ink rounded-lg shadow-hard-md p-8">
+        <div className="bg-white border border-ink/10 rounded-lg shadow-soft-md p-8">
           <h1 className="font-display font-bold text-xl text-ink mb-6">Entrar na conta</h1>
 
           <button
             type="button"
             onClick={handleGoogle}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 border-2 border-ink rounded-md py-2.5 font-body text-sm font-semibold text-ink bg-white hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 border border-ink/10 rounded-md py-2.5 font-body text-sm font-semibold text-ink bg-white hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
             <GoogleIcon />
             {googleLoading ? 'Redirecionando…' : 'Continuar com Google'}
@@ -88,7 +88,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <p className="text-red-600 text-sm font-body bg-red-50 border-2 border-red-200 rounded-md px-3 py-2">{error}</p>
+              <p className="text-red-600 text-sm font-body bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
             )}
 
             <Button type="submit" variant="primary" size="lg" disabled={loading} className="mt-2 w-full">

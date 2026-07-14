@@ -17,10 +17,10 @@ const PLAN_LABEL: Record<string, string> = { free: 'Free', pro: 'Pro', enterpris
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'flex items-center gap-3 px-3 py-2.5 rounded-md font-body font-semibold text-sm border-2 transition-all',
+    'flex items-center gap-3 px-3 py-2.5 rounded-lg font-body font-medium text-sm transition-colors relative',
     isActive
-      ? 'bg-green text-white border-ink shadow-[3px_3px_0_#C7F25C]'
-      : 'text-white/65 border-transparent hover:text-white hover:bg-white/[0.06] hover:border-white/10 hover:-translate-x-0.5 hover:-translate-y-0.5'
+      ? 'bg-white/[0.08] text-white'
+      : 'text-white/55 hover:text-white hover:bg-white/[0.05]'
   )
 
 interface SidebarProps {
@@ -42,7 +42,7 @@ export default function Sidebar({ company }: SidebarProps) {
   }
 
   return (
-    <aside className="w-60 flex-none flex flex-col bg-ink text-white border-r-2 border-ink">
+    <aside className="w-60 flex-none flex flex-col bg-ink text-white">
       {/* Logo */}
       <div className="h-[64px] flex items-center px-5 border-b border-white/10 flex-none">
         <span className="font-display font-bold text-xl tracking-tight flex items-center gap-2">
@@ -56,7 +56,7 @@ export default function Sidebar({ company }: SidebarProps) {
         <span className="font-body font-semibold text-sm text-white/90 truncate">
           {company?.name || 'Sua empresa'}
         </span>
-        <span className="flex-none font-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border border-lime/40 text-lime bg-lime/10">
+        <span className="flex-none font-mono text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full text-lime bg-lime/10">
           {PLAN_LABEL[company?.plan ?? 'free'] ?? 'Free'}
         </span>
       </div>
@@ -68,8 +68,13 @@ export default function Sidebar({ company }: SidebarProps) {
         </p>
         {mainNav.map(({ to, icon: Icon, label }) => (
           <NavLink key={to} to={to} className={navLinkClass}>
-            <Icon size={16} />
-            {label}
+            {({ isActive }) => (
+              <>
+                <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
+                <Icon size={16} />
+                {label}
+              </>
+            )}
           </NavLink>
         ))}
 
@@ -78,8 +83,13 @@ export default function Sidebar({ company }: SidebarProps) {
             Sistema
           </p>
           <NavLink to="/app/settings" className={navLinkClass}>
-            <Settings size={16} />
-            Configurações
+            {({ isActive }) => (
+              <>
+                <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
+                <Settings size={16} />
+                Configurações
+              </>
+            )}
           </NavLink>
         </div>
       </nav>
@@ -87,7 +97,7 @@ export default function Sidebar({ company }: SidebarProps) {
       {/* User profile + sign out */}
       <div className="border-t border-white/10 p-3 flex flex-col gap-1 flex-none">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-md">
-          <div className="w-8 h-8 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center font-display font-bold text-white text-xs flex-none">
+          <div className="w-8 h-8 rounded-full bg-green flex items-center justify-center font-display font-bold text-white text-xs flex-none">
             {initials(name)}
           </div>
           <div className="flex-1 min-w-0">
@@ -97,7 +107,7 @@ export default function Sidebar({ company }: SidebarProps) {
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-white/50 hover:bg-white/10 hover:text-white transition-all text-sm font-body border-2 border-transparent"
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors text-sm font-body"
         >
           <LogOut size={15} />
           Sair

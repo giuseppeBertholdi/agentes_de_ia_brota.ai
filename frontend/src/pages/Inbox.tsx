@@ -98,7 +98,7 @@ export default function Inbox() {
   return (
     <div className="flex" style={{ height: '100%' }}>
       {/* Conversation list */}
-      <div className="w-80 flex-none border-r-2 border-ink bg-white flex flex-col">
+      <div className="w-80 flex-none border-r border-ink/10 bg-white flex flex-col">
         <div className="h-[64px] flex items-center px-5 border-b border-ink/10 bg-white">
           <h2 className="font-display font-bold text-base text-ink">Inbox</h2>
           <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length}</Badge>
@@ -108,8 +108,8 @@ export default function Inbox() {
             <button
               onClick={() => setDeptFilter('')}
               className={cn(
-                'px-2.5 py-1 rounded-full text-xs font-body font-bold whitespace-nowrap border-2 transition-colors',
-                deptFilter === '' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-soft border-ink/20 hover:border-ink/40'
+                'px-2.5 py-1 rounded-full text-xs font-body font-semibold whitespace-nowrap border transition-colors',
+                deptFilter === '' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30'
               )}
             >
               Todos
@@ -119,8 +119,8 @@ export default function Inbox() {
                 key={d.id}
                 onClick={() => setDeptFilter(d.id)}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-body font-bold whitespace-nowrap border-2 transition-colors',
-                  deptFilter === d.id ? 'bg-green text-white border-green' : 'bg-white text-ink-soft border-ink/20 hover:border-ink/40'
+                  'px-2.5 py-1 rounded-full text-xs font-body font-semibold whitespace-nowrap border transition-colors',
+                  deptFilter === d.id ? 'bg-green text-white border-green' : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30'
                 )}
               >
                 {d.name}
@@ -138,7 +138,7 @@ export default function Inbox() {
                 active?.id === c.id && 'bg-green-tint border-l-4 border-l-green'
               )}
             >
-              <div className="w-10 h-10 rounded-full bg-green-soft border-2 border-ink flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
+              <div className="w-10 h-10 rounded-full bg-green-soft flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
                 {initials(c.contact_name || c.contact_phone || '?')}
               </div>
               <div className="flex-1 min-w-0">
@@ -176,7 +176,7 @@ export default function Inbox() {
         <div className="flex-1 flex flex-col">
           {/* Chat header */}
           <div className="h-[64px] flex items-center px-6 bg-white border-b border-ink/10 gap-4">
-            <div className="w-10 h-10 rounded-full bg-green-soft border-2 border-ink flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
+            <div className="w-10 h-10 rounded-full bg-green-soft flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
               {initials(active.contact_name || active.contact_phone || '?')}
             </div>
             <div className="flex-1">
@@ -206,7 +206,7 @@ export default function Inbox() {
             {messages.map(m => (
               <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[72%] px-4 py-2.5 rounded-lg border-2 border-ink text-sm font-body shadow-hard',
+                  'max-w-[72%] px-4 py-2.5 rounded-lg border border-ink/10 text-sm font-body shadow-soft',
                   m.role === 'user' ? 'bg-white text-ink' : 'bg-green text-white'
                 )}>
                   <p className="leading-relaxed">{m.content}</p>
@@ -231,7 +231,7 @@ export default function Inbox() {
           {active.status === 'human' && (
             <div className="bg-white border-t-2 border-ink p-4 flex gap-3 items-end">
               <textarea
-                className="flex-1 resize-none border-2 border-ink rounded-md px-3 py-2.5 text-sm font-body text-ink bg-white shadow-hard focus:outline-none focus:shadow-hard-md transition-all min-h-[44px] max-h-32"
+                className="flex-1 resize-none border border-ink/10 rounded-md px-3 py-2.5 text-sm font-body text-ink bg-white shadow-soft focus:outline-none focus:shadow-soft-md transition-all min-h-[44px] max-h-32"
                 placeholder="Digite sua mensagem…"
                 value={input}
                 rows={1}

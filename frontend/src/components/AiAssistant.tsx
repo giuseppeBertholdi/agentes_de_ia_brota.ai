@@ -69,7 +69,7 @@ function ActionBadge({ action }: { action: Action }) {
 function BotAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
   return (
     <div className={cn(
-      'rounded-full bg-green border-2 border-ink flex items-center justify-center flex-none',
+      'rounded-full bg-green flex items-center justify-center flex-none',
       size === 'sm' ? 'w-5 h-5' : 'w-6 h-6'
     )}>
       <Sparkles size={size === 'sm' ? 9 : 11} className="text-lime" />
@@ -83,7 +83,7 @@ function Msg({ msg }: { msg: ChatMessage }) {
   if (isUser) {
     return (
       <div className="flex justify-end msg-in">
-        <div className="max-w-[82%] px-3 py-2 rounded-xl rounded-br-sm bg-ink text-white text-sm font-body leading-relaxed shadow-hard">
+        <div className="max-w-[82%] px-3 py-2 rounded-xl rounded-br-sm bg-ink text-white text-sm font-body leading-relaxed shadow-soft">
           {msg.content}
         </div>
       </div>
@@ -97,8 +97,8 @@ function Msg({ msg }: { msg: ChatMessage }) {
         <div className={cn(
           'inline-block max-w-full px-3 py-2 rounded-xl rounded-bl-sm text-sm font-body leading-relaxed',
           msg.isError
-            ? 'bg-red-50 border-2 border-red-200 text-red-600'
-            : 'bg-white border-2 border-ink shadow-hard text-ink'
+            ? 'bg-red-50 border border-red-200 text-red-600'
+            : 'bg-white border border-ink/10 shadow-soft text-ink'
         )}>
           {msg.isLoading ? (
             <span className="flex items-center gap-1 py-0.5 text-ink-faint">
@@ -136,9 +136,9 @@ function CapCard({ label, icon: Icon, onClick }: { label: string; icon: React.El
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-ink rounded-lg shadow-hard text-left hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all w-full"
+      className="flex items-center gap-2 px-3 py-2.5 bg-white border border-ink/10 rounded-lg shadow-soft text-left hover:shadow-soft-md transition-shadow w-full"
     >
-      <div className="w-7 h-7 rounded-md bg-green-tint border-2 border-ink flex items-center justify-center flex-none">
+      <div className="w-7 h-7 rounded-md bg-green-tint border border-ink/10 flex items-center justify-center flex-none">
         <Icon size={13} className="text-green-deep" />
       </div>
       <span className="text-xs font-body font-semibold text-ink leading-tight">{label}</span>
@@ -150,7 +150,7 @@ function SugChip({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex-none px-3 py-1.5 bg-white border-2 border-ink rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep active:scale-95 transition-all whitespace-nowrap shadow-[2px_2px_0_#16241C] hover:shadow-[2px_2px_0_#12693A]"
+      className="flex-none px-3 py-1.5 bg-white border border-ink/10 rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep transition-colors whitespace-nowrap"
     >
       {label}
     </button>
@@ -184,12 +184,12 @@ export function AiChatPanel({
   const showCaps = realMsgs.length === 0
 
   return (
-    <div className={cn('flex flex-col bg-cream border-2 border-ink rounded-xl overflow-hidden shadow-hard', className)}>
+    <div className={cn('flex flex-col bg-cream border border-ink/10 rounded-xl overflow-hidden shadow-soft', className)}>
 
       {/* Header */}
       {showHeader && (
         <div className="flex items-center gap-2.5 px-4 py-3 bg-ink border-b-2 border-ink flex-none">
-          <div className="w-7 h-7 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-green flex items-center justify-center">
             <Sparkles size={14} className="text-lime" />
           </div>
           <div className="flex-1 min-w-0">
@@ -215,7 +215,7 @@ export function AiChatPanel({
           <div key={i} className="flex gap-2 items-start msg-in">
             <BotAvatar />
             <div className="flex-1 min-w-0 space-y-2">
-              <div className="inline-block max-w-full px-3 py-2 rounded-xl rounded-bl-sm text-sm font-body leading-relaxed bg-white border-2 border-ink shadow-hard text-ink">
+              <div className="inline-block max-w-full px-3 py-2 rounded-xl rounded-bl-sm text-sm font-body leading-relaxed bg-white border border-ink/10 shadow-soft text-ink">
                 <ReactMarkdown
                   components={{
                     p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
@@ -272,9 +272,9 @@ export function AiChatPanel({
           onClick={onSend}
           disabled={!input.trim() || loading}
           className={cn(
-            'w-8 h-8 rounded-md flex items-center justify-center border-2 border-ink transition-all flex-none',
+            'w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-none',
             input.trim() && !loading
-              ? 'bg-green text-white hover:bg-green-deep shadow-hard active:shadow-none active:translate-x-0.5 active:translate-y-0.5'
+              ? 'bg-green text-white hover:bg-green-deep'
               : 'bg-cream-2 text-ink-faint cursor-not-allowed'
           )}
         >
@@ -404,7 +404,7 @@ export default function AiAssistant({ isFirstTime = false, onConfigChanged }: Fl
       <button
         onClick={() => setOpen(v => !v)}
         className={cn(
-          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 border-ink shadow-hard-md hover:shadow-hard-lg hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard',
+          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-soft-md hover:shadow-soft-lg',
           open ? 'bg-ink text-white' : 'bg-green text-white hover:bg-green-deep',
         )}
         aria-label="Assistente de IA"

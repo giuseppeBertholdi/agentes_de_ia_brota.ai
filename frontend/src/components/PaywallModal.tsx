@@ -34,7 +34,7 @@ export default function PaywallModal({ open, onClose }: PaywallModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-[2px]">
-      <div className="w-full max-w-sm bg-cream border-2 border-ink rounded-xl shadow-hard-lg overflow-hidden msg-in">
+      <div className="w-full max-w-sm bg-cream border border-ink/10 rounded-xl shadow-soft-lg overflow-hidden msg-in">
         <div className="flex items-center justify-between px-5 py-4 bg-ink">
           <span className="inline-flex items-center gap-2 font-display font-bold text-lg text-white">
             <Zap size={18} className="text-lime" fill="currentColor" />
@@ -55,7 +55,7 @@ export default function PaywallModal({ open, onClose }: PaywallModalProps) {
             </p>
           </div>
 
-          <div className="flex items-end gap-2 p-3 bg-white border-2 border-ink rounded-md shadow-hard">
+          <div className="flex items-end gap-2 p-3 bg-white border border-ink/10 rounded-md shadow-soft">
             <span className="text-ink-faint text-sm font-body line-through">R$ 207</span>
             <span className="font-display font-bold text-3xl text-ink leading-none">R$ 127</span>
             <span className="text-ink-soft text-xs font-body mb-0.5">/mês</span>
@@ -73,7 +73,7 @@ export default function PaywallModal({ open, onClose }: PaywallModalProps) {
           </div>
 
           {error && (
-            <div className="p-2.5 bg-red-50 border-2 border-red-400 rounded-md text-red-700 text-xs font-body">
+            <div className="p-2.5 bg-red-50 border border-red-300 rounded-md text-red-700 text-xs font-body">
               {error}
             </div>
           )}

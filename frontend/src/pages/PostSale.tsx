@@ -69,7 +69,7 @@ export default function PostSale() {
       </div>
 
       {error && (
-        <div className="mb-5 p-3 bg-red-50 border-2 border-red-400 rounded-md text-red-700 text-sm font-body">
+        <div className="mb-5 p-3 bg-red-50 border border-red-300 rounded-md text-red-700 text-sm font-body">
           {error}
         </div>
       )}
@@ -108,7 +108,7 @@ export default function PostSale() {
                 const Icon = cfg.icon
                 return (
                   <div key={f.id} className="flex items-start gap-4 px-5 py-4">
-                    <div className="w-10 h-10 rounded-full bg-cream-2 border-2 border-ink flex-none flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-cream-2 flex-none flex items-center justify-center">
                       <Icon size={16} className="text-ink" />
                     </div>
                     <div className="flex-1 min-w-0">

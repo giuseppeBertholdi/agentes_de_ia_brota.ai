@@ -102,7 +102,7 @@ export default function Dashboard() {
         {/* Hero da IA — input central, primeira coisa que a pessoa vê */}
         {!hasConversation ? (
           <div className="max-w-xl mx-auto text-center py-6 mb-6">
-            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green border-2 border-ink flex items-center justify-center shadow-hard">
+            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green flex items-center justify-center shadow-soft">
               <Sparkles size={18} className="text-lime" />
             </div>
             <h1 className="font-display font-bold text-2xl text-ink tracking-tight mb-1.5">
@@ -120,13 +120,13 @@ export default function Dashboard() {
                 onKeyDown={chat.onKeyDown}
                 disabled={chat.loading}
                 placeholder="Ex: crie um setor de RH e ative o agente de cotação…"
-                className="w-full pl-5 pr-14 py-4 text-sm font-body text-ink bg-white border-2 border-ink rounded-full shadow-hard focus:outline-none focus:shadow-hard-md transition-all placeholder:text-ink-faint"
+                className="w-full pl-5 pr-14 py-4 text-sm font-body text-ink bg-white border border-ink/10 rounded-full shadow-soft focus:outline-none focus:shadow-soft-md transition-all placeholder:text-ink-faint"
               />
               <button
                 onClick={() => chat.send()}
                 disabled={!chat.input.trim() || chat.loading}
                 className={cn(
-                  'absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border-2 border-ink transition-all',
+                  'absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border border-ink/10 transition-all',
                   chat.input.trim() && !chat.loading
                     ? 'bg-green text-white hover:bg-green-deep'
                     : 'bg-cream-2 text-ink-faint cursor-not-allowed'
@@ -141,7 +141,7 @@ export default function Dashboard() {
                 <button
                   key={cap.label}
                   onClick={() => chat.quickSend(cap.prompt)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep active:scale-95 transition-all shadow-[2px_2px_0_#16241C] hover:shadow-[2px_2px_0_#12693A]"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-ink/10 rounded-full text-xs font-body font-semibold text-ink hover:bg-green hover:text-white hover:border-green-deep transition-colors"
                 >
                   <cap.icon size={12} />
                   {cap.label}

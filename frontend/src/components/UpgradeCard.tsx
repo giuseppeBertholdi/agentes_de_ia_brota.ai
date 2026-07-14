@@ -20,8 +20,8 @@ export default function UpgradeCard() {
   }
 
   return (
-    <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-ink border-2 border-ink rounded-xl shadow-hard-md">
-      <div className="w-10 h-10 rounded-full bg-green border-2 border-lime/40 flex items-center justify-center flex-none">
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-ink rounded-xl shadow-soft-md">
+      <div className="w-10 h-10 rounded-full bg-green flex items-center justify-center flex-none">
         <Sparkles size={18} className="text-lime" />
       </div>
       <div className="flex-1 min-w-0">
@@ -35,7 +35,7 @@ export default function UpgradeCard() {
       <button
         onClick={subscribe}
         disabled={starting}
-        className="flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green text-white border-2 border-lime/40 rounded-md shadow-hard font-body font-bold text-sm hover:bg-green-deep hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-60"
+        className="flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green text-white rounded-lg font-body font-semibold text-sm hover:bg-green-deep transition-colors disabled:opacity-60"
       >
         {starting ? <><Loader2 size={15} className="animate-spin" /> Abrindo…</> : <>Assinar agora <ArrowRight size={15} /></>}
       </button>

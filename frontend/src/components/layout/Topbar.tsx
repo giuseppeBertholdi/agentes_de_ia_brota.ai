@@ -25,7 +25,7 @@ export default function Topbar() {
   const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div className="h-[64px] flex-none flex items-center justify-between px-8 bg-white border-b-2 border-ink z-10">
+    <div className="h-[64px] flex-none flex items-center justify-between px-8 bg-white border-b border-ink/8 z-10">
       <div>
         {meta ? (
           <>
@@ -42,7 +42,7 @@ export default function Topbar() {
           <div className="font-body font-semibold text-sm text-ink leading-none">{name}</div>
           <div className="text-ink-faint text-[11px] font-mono mt-0.5">{user?.email}</div>
         </div>
-        <div className="w-9 h-9 rounded-full bg-green border-2 border-ink flex items-center justify-center font-display font-bold text-white text-sm shadow-hard flex-none">
+        <div className="w-9 h-9 rounded-full bg-green flex items-center justify-center font-display font-bold text-white text-sm flex-none">
           {initials(name)}
         </div>
       </div>

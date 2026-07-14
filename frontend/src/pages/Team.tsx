@@ -82,7 +82,7 @@ export default function Team() {
           <CardTitle className="flex items-center gap-2">
             <Building2 size={18} /> Setores
             {departments.length > 0 && (
-              <span className="ml-auto font-mono text-[11px] font-bold text-ink-soft border-2 border-ink/30 rounded px-1.5 py-0.5 bg-cream-2">
+              <span className="ml-auto font-mono text-[11px] font-bold text-ink-soft border border-ink/15 rounded px-1.5 py-0.5 bg-cream-2">
                 {departments.length} {departments.length === 1 ? 'setor' : 'setores'}
               </span>
             )}
@@ -96,7 +96,7 @@ export default function Team() {
           ) : (
             <div className="flex flex-col gap-2 mb-5">
               {departments.map(d => (
-                <div key={d.id} className="border-2 border-ink rounded-md shadow-hard bg-white overflow-hidden">
+                <div key={d.id} className="border border-ink/10 rounded-md shadow-soft bg-white overflow-hidden">
                   {editingId === d.id && editingDept ? (
                     <div className="p-3 flex flex-col gap-2 bg-cream-2">
                       <div className="grid grid-cols-2 gap-2">
@@ -112,7 +112,7 @@ export default function Team() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-8 h-8 rounded-md bg-green-tint border-2 border-ink flex items-center justify-center flex-none">
+                      <div className="w-8 h-8 rounded-md bg-green-tint border border-ink/10 flex items-center justify-center flex-none">
                         <Building2 size={13} className="text-green-deep" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -137,7 +137,7 @@ export default function Team() {
               ))}
 
               {departments.length === 0 && (
-                <div className="flex flex-col items-center gap-2 py-8 border-2 border-dashed border-ink/20 rounded-md">
+                <div className="flex flex-col items-center gap-2 py-8 border border-dashed border-ink/20 rounded-md">
                   <Building2 size={28} className="text-ink/20" />
                   <p className="text-ink-faint text-sm font-body text-center">
                     Nenhum setor cadastrado.<br />
@@ -175,13 +175,13 @@ export default function Team() {
           ) : (
             <div className="flex flex-col gap-2">
               {members.map(m => (
-                <div key={m.id} className="flex items-center gap-3 px-4 py-3 border-2 border-ink rounded-md shadow-hard bg-white">
+                <div key={m.id} className="flex items-center gap-3 px-4 py-3 border border-ink/10 rounded-md shadow-soft bg-white">
                   <div className="flex-1 min-w-0">
                     <div className="font-body font-bold text-sm text-ink leading-tight">{m.full_name || '—'}</div>
                     <div className="text-ink-faint text-xs font-mono">{ROLE_LABEL[m.role] || m.role}</div>
                   </div>
                   <select
-                    className="border-2 border-ink rounded-md px-3 py-1.5 text-sm font-body text-ink bg-white shadow-hard focus:outline-none"
+                    className="border border-ink/10 rounded-md px-3 py-1.5 text-sm font-body text-ink bg-white shadow-soft focus:outline-none"
                     value={m.department_id || ''}
                     onChange={e => assignDepartment(m.id, e.target.value)}
                   >

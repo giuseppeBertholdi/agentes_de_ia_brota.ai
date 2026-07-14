@@ -212,13 +212,13 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           {waError && (
-            <div className="mb-3 p-3 bg-red-50 border-2 border-red-400 rounded-md text-red-700 text-sm font-body">
+            <div className="mb-3 p-3 bg-red-50 border border-red-300 rounded-md text-red-700 text-sm font-body">
               {waError}
             </div>
           )}
           {wa ? (
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 p-3 bg-cream-2 border-2 border-ink rounded-md">
+              <div className="flex items-center gap-3 p-3 bg-cream-2 border border-ink/10 rounded-md">
                 <Badge variant={WA_STATUS_MAP[wa.status]?.variant ?? 'gray'}>
                   {WA_STATUS_MAP[wa.status]?.label ?? wa.status}
                 </Badge>
@@ -271,7 +271,7 @@ export default function Settings() {
             <div className="flex flex-col gap-4">
               {/* Preview do que o bot sabe */}
               {(company.name || company.voice_tone || company.business_desc) && (
-                <div className="flex items-start gap-2.5 p-3 bg-green-tint border-2 border-green/40 rounded-md">
+                <div className="flex items-start gap-2.5 p-3 bg-green-tint border border-green/25 rounded-md">
                   <Sparkles size={14} className="text-green mt-0.5 flex-none" />
                   <div className="text-xs font-body text-green-deep leading-relaxed">
                     <span className="font-bold">Configurado: </span>
@@ -336,7 +336,7 @@ export default function Settings() {
           <CardTitle className="flex items-center gap-2">
             <Tag size={18} /> Tabela de preços
             {prices.length > 0 && (
-              <span className="ml-auto font-mono text-[11px] font-bold text-ink-soft border-2 border-ink/30 rounded px-1.5 py-0.5 bg-cream-2">
+              <span className="ml-auto font-mono text-[11px] font-bold text-ink-soft border border-ink/15 rounded px-1.5 py-0.5 bg-cream-2">
                 {prices.length} {prices.length === 1 ? 'item' : 'itens'}
               </span>
             )}
@@ -352,7 +352,7 @@ export default function Settings() {
               {prices.map(item => (
                 <div
                   key={item.id}
-                  className="border-2 border-ink rounded-md shadow-hard bg-white overflow-hidden"
+                  className="border border-ink/10 rounded-md shadow-soft bg-white overflow-hidden"
                 >
                   {editingId === item.id && editingItem ? (
                     <div className="p-3 flex flex-col gap-2 bg-cream-2">
@@ -373,7 +373,7 @@ export default function Settings() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-8 h-8 rounded-md bg-green-tint border-2 border-ink flex items-center justify-center flex-none">
+                      <div className="w-8 h-8 rounded-md bg-green-tint border border-ink/10 flex items-center justify-center flex-none">
                         <Tag size={13} className="text-green-deep" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -405,7 +405,7 @@ export default function Settings() {
               ))}
 
               {prices.length === 0 && (
-                <div className="flex flex-col items-center gap-2 py-8 border-2 border-dashed border-ink/20 rounded-md">
+                <div className="flex flex-col items-center gap-2 py-8 border border-dashed border-ink/20 rounded-md">
                   <Tag size={28} className="text-ink/20" />
                   <p className="text-ink-faint text-sm font-body text-center">
                     Nenhum item cadastrado.<br />
@@ -449,13 +449,13 @@ export default function Settings() {
                   <div
                     key={agent.agent_type}
                     className={cn(
-                      'border-2 border-ink rounded-md shadow-hard overflow-hidden',
+                      'border border-ink/10 rounded-md shadow-soft overflow-hidden',
                       agent.enabled ? 'bg-white' : 'bg-cream-2 opacity-75'
                     )}
                   >
                     {/* Header do agente */}
                     <div className="flex items-center gap-3 px-4 py-3 border-b-2 border-ink/10">
-                      <div className="w-9 h-9 rounded-md bg-green-tint border-2 border-ink flex items-center justify-center flex-none text-base">
+                      <div className="w-9 h-9 rounded-md bg-green-tint border border-ink/10 flex items-center justify-center flex-none text-base">
                         {meta.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -473,7 +473,7 @@ export default function Settings() {
                         </span>
                         <div
                           className={cn(
-                            'w-10 h-5 rounded-full border-2 border-ink relative transition-colors cursor-pointer',
+                            'w-10 h-5 rounded-full border border-ink/10 relative transition-colors cursor-pointer',
                             agent.enabled ? 'bg-green' : 'bg-cream-2'
                           )}
                           onClick={() => {
@@ -484,7 +484,7 @@ export default function Settings() {
                           }}
                         >
                           <div className={cn(
-                            'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-ink transition-all',
+                            'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white border border-ink/10 transition-all',
                             agent.enabled ? 'left-4' : 'left-0.5'
                           )} />
                         </div>
@@ -533,7 +533,7 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-5 items-start">
-            <div className="w-14 h-14 rounded-full bg-green border-2 border-ink shadow-hard flex items-center justify-center font-display font-bold text-xl text-white flex-none">
+            <div className="w-14 h-14 rounded-full bg-green border border-ink/10 shadow-soft flex items-center justify-center font-display font-bold text-xl text-white flex-none">
               GB
             </div>
             <div className="flex-1 min-w-0">
@@ -544,20 +544,20 @@ export default function Settings() {
               </p>
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {['Python · FastAPI', 'React · TypeScript', 'Supabase', 'GPT-4o', 'WhatsApp Cloud API'].map(tag => (
-                  <span key={tag} className="font-mono text-[10px] font-bold px-2 py-1 border-2 border-ink rounded bg-cream-2 shadow-[2px_2px_0_#16241C]">{tag}</span>
+                  <span key={tag} className="font-mono text-[10px] font-bold px-2 py-1 border border-ink/10 rounded bg-cream-2 ">{tag}</span>
                 ))}
               </div>
               <div className="flex gap-2 mt-4">
                 <a
                   href="mailto:giuseppe.bertholdi@gmail.com"
-                  className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-xs font-body font-bold rounded-md border-2 border-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-xs font-body font-bold rounded-md border border-ink/10 shadow-soft hover:shadow-soft-md transition-shadow"
                 >
                   <Mail size={13} /> Email
                 </a>
                 <a
                   href="https://linkedin.com/in/giuseppe-bertholdi"
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 bg-green-tint text-green-deep text-xs font-body font-bold rounded-md border-2 border-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-green-tint text-green-deep text-xs font-body font-bold rounded-md border border-ink/10 shadow-soft hover:shadow-soft-md transition-shadow"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
                   LinkedIn

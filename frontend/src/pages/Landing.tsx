@@ -446,7 +446,7 @@ export default function Landing() {
             {/* Avatar card */}
             <div style={{
               background: 'var(--card)',
-              border: '2px solid var(--ink)',
+              border: '1px solid var(--line-soft)',
               borderRadius: 'var(--r-lg)',
               boxShadow: 'var(--hard-md)',
               padding: '32px 28px',
@@ -461,8 +461,6 @@ export default function Landing() {
                 height: 88,
                 borderRadius: '50%',
                 background: 'var(--green)',
-                border: '3px solid var(--ink)',
-                boxShadow: '4px 4px 0 var(--ink)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -497,12 +495,12 @@ export default function Landing() {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     padding: '10px 16px', background: 'var(--green-tint)', color: 'var(--green-deep)',
-                    border: '2px solid var(--ink)', borderRadius: 'var(--r-md)',
+                    border: '1px solid var(--line-soft)', borderRadius: 'var(--r-md)',
                     fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14,
-                    textDecoration: 'none', boxShadow: '2px 2px 0 var(--ink)', transition: 'all .12s',
+                    textDecoration: 'none', boxShadow: 'var(--hard)', transition: 'box-shadow .15s ease',
                   }}
-                  onMouseOver={e => { e.currentTarget.style.transform = 'translate(-2px,-2px)'; e.currentTarget.style.boxShadow = '4px 4px 0 var(--ink)' }}
-                  onMouseOut={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '2px 2px 0 var(--ink)' }}
+                  onMouseOver={e => { e.currentTarget.style.boxShadow = 'var(--hard-md)' }}
+                  onMouseOut={e => { e.currentTarget.style.boxShadow = 'var(--hard)' }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
                   LinkedIn
@@ -514,7 +512,7 @@ export default function Landing() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{
                 background: 'var(--lime)',
-                border: '2px solid var(--ink)',
+                border: '1px solid var(--line-soft)',
                 borderRadius: 'var(--r-md)',
                 padding: '14px 18px',
                 fontFamily: 'var(--font-mono)',

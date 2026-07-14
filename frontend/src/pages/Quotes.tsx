@@ -85,10 +85,10 @@ export default function Quotes() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={cn(
-              'px-3.5 py-1.5 rounded-md border-2 font-body font-semibold text-xs transition-all',
+              'px-3.5 py-1.5 rounded-lg border font-body font-semibold text-xs transition-colors',
               filter === f.key
-                ? 'bg-ink text-white border-ink shadow-hard'
-                : 'bg-white text-ink-soft border-ink/20 hover:border-ink/50 hover:text-ink'
+                ? 'bg-ink text-white border-ink'
+                : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30 hover:text-ink'
             )}
           >
             {f.label}
@@ -135,7 +135,7 @@ export default function Quotes() {
                       onClick={() => setExpanded(e => e === q.id ? null : q.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-green-soft border-2 border-ink flex-none flex items-center justify-center font-display font-bold text-green-deep text-xs">
+                        <div className="w-9 h-9 rounded-full bg-green-soft flex-none flex items-center justify-center font-display font-bold text-green-deep text-xs">
                           {initials(q.contact_name || q.contact_phone || '?')}
                         </div>
                         <div>

@@ -35,7 +35,7 @@ export default function Onboarding() {
             <Zap size={22} className="text-green" fill="currentColor" />
             Plimpost<span className="text-green">.</span>
           </span>
-          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green border-2 border-ink flex items-center justify-center shadow-hard">
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green flex items-center justify-center shadow-soft">
             <Sparkles size={18} className="text-lime" />
           </div>
           <h1 className="font-display font-bold text-2xl text-ink tracking-tight">
@@ -51,7 +51,7 @@ export default function Onboarding() {
           {...chat}
           onInputChange={chat.setInput}
           onQuickSend={chat.quickSend}
-          className="h-[440px] shadow-hard-md"
+          className="h-[440px] shadow-soft-md"
         />
 
         <div className="flex items-center justify-between mt-4">
@@ -65,7 +65,7 @@ export default function Onboarding() {
           {configured && (
             <button
               onClick={finishOnboarding}
-              className="px-4 py-2 bg-green text-white border-2 border-ink rounded-md shadow-hard font-body font-bold text-xs hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              className="px-4 py-2 bg-green text-white border border-ink/10 rounded-md shadow-soft font-body font-bold text-xs hover:shadow-soft-md transition-shadow"
             >
               Ir para o Dashboard →
             </button>

@@ -72,14 +72,14 @@ export default function Reports() {
           <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Relatórios</h1>
           <p className="text-ink-soft text-sm mt-1 font-body">Resumo semanal da operação</p>
         </div>
-        <div className="flex items-center gap-1 bg-white border-2 border-ink rounded-md shadow-hard overflow-hidden">
-          <Button variant="ghost" size="sm" onClick={() => setOffset(o => o + 1)} className="border-0 shadow-none rounded-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 border-r-2 border-ink/10">
+        <div className="flex items-center gap-1 bg-white border border-ink/10 rounded-md shadow-soft overflow-hidden">
+          <Button variant="ghost" size="sm" onClick={() => setOffset(o => o + 1)} className="border-0 shadow-none rounded-none border-r border-ink/10">
             <ChevronLeft size={15} />
           </Button>
           <span className="font-mono text-xs text-ink px-3 min-w-[160px] text-center">
             {report ? `${fmtDateBR(report.week_start)} – ${fmtDateBR(report.week_end)}` : '…'}
           </span>
-          <Button variant="ghost" size="sm" onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0} className="border-0 shadow-none rounded-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 border-l-2 border-ink/10">
+          <Button variant="ghost" size="sm" onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0} className="border-0 shadow-none rounded-none border-l border-ink/10">
             <ChevronRight size={15} />
           </Button>
         </div>
@@ -89,7 +89,7 @@ export default function Reports() {
         <div className="text-ink-faint text-sm font-body py-10 text-center">Carregando…</div>
       ) : !report ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-16 h-16 rounded-full bg-cream-2 border-2 border-ink flex items-center justify-center shadow-hard">
+          <div className="w-16 h-16 rounded-full bg-cream-2 border border-ink/10 flex items-center justify-center shadow-soft">
             <TrendingUp size={28} className="text-ink-soft" />
           </div>
           <div className="text-center">
