@@ -5,24 +5,17 @@ import Topbar from './Topbar'
 import AiAssistant from '@/components/AiAssistant'
 import { api } from '@/lib/api'
 
-interface Company {
-  name?: string
-  plan?: string
-  business_desc?: string
-}
-
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [checkedFirstTime, setCheckedFirstTime] = useState(false)
-  const [company, setCompany] = useState<Company | null>(null)
   const [configVersion, setConfigVersion] = useState(0)
   const location = useLocation()
 
   const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
 
   useEffect(() => {
-    api.get<Company>('/settings/company')
-      .then(c => { setCompany(c); setIsFirstTime(!c.business_desc) })
+    api.get<{ business_desc?: string }>('/settings/company')
+      .then(c => setIsFirstTime(!c.business_desc))
       .catch(() => {})
       .finally(() => setCheckedFirstTime(true))
   }, [configVersion])
@@ -40,7 +33,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-cream font-body">
-      <Sidebar company={company} />
+      <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         <Topbar />
         <div className="flex-1 overflow-y-auto min-h-0">

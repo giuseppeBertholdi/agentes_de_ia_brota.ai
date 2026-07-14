@@ -199,14 +199,16 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-8 max-w-6xl">
       <div className="mb-7">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Configurações</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Configure sua empresa, preços e agentes de IA</p>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+
       {/* ── WhatsApp ── */}
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Smartphone size={18} /> WhatsApp</CardTitle>
         </CardHeader>
@@ -260,7 +262,7 @@ export default function Settings() {
       </Card>
 
       {/* ── Empresa ── */}
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 size={18} /> Dados da empresa
@@ -329,6 +331,8 @@ export default function Settings() {
           )}
         </CardContent>
       </Card>
+
+      </div>
 
       {/* ── Preços ── */}
       <Card className="mb-6">

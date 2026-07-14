@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Zap, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { useCheckout } from '@/hooks/useCheckout'
 
 const BENEFITS = [
   'WhatsApp conectado e respondendo sozinho, 24h por dia',
@@ -15,21 +15,15 @@ interface PaywallModalProps {
 }
 
 export default function PaywallModal({ open, onClose }: PaywallModalProps) {
-  const [loading, setLoading] = useState(false)
+  const { start, loading } = useCheckout()
   const [error, setError] = useState<string | null>(null)
 
   if (!open) return null
 
   const subscribe = async () => {
-    setLoading(true)
     setError(null)
-    try {
-      const { url } = await api.post<{ url: string }>('/billing/checkout-session')
-      window.location.href = url
-    } catch {
-      setError('Não foi possível iniciar o checkout. Tente novamente.')
-      setLoading(false)
-    }
+    const ok = await start()
+    if (!ok) setError('Não foi possível iniciar o checkout. Tente novamente.')
   }
 
   return (

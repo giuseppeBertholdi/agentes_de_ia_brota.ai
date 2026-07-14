@@ -1,23 +1,12 @@
-import { useState } from 'react'
 import { Sparkles, Loader2, ArrowRight } from 'lucide-react'
-import { api } from '@/lib/api'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useCheckout } from '@/hooks/useCheckout'
 
 export default function UpgradeCard() {
   const { active, loading: statusLoading } = useSubscription()
-  const [starting, setStarting] = useState(false)
+  const { start, loading: starting } = useCheckout()
 
   if (statusLoading || active) return null
-
-  const subscribe = async () => {
-    setStarting(true)
-    try {
-      const { url } = await api.post<{ url: string }>('/billing/checkout-session')
-      window.location.href = url
-    } catch {
-      setStarting(false)
-    }
-  }
 
   return (
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-ink rounded-xl shadow-soft-md">
@@ -33,7 +22,7 @@ export default function UpgradeCard() {
         </p>
       </div>
       <button
-        onClick={subscribe}
+        onClick={start}
         disabled={starting}
         className="flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green text-white rounded-lg font-body font-semibold text-sm hover:bg-green-deep transition-colors disabled:opacity-60"
       >
