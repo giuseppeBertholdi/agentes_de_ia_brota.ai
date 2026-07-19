@@ -12,6 +12,8 @@ import PostSale from '@/pages/PostSale'
 import Team from '@/pages/Team'
 import Settings from '@/pages/Settings'
 import Landing from '@/pages/Landing'
+import Terms from '@/pages/legal/Terms'
+import Privacy from '@/pages/legal/Privacy'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -36,6 +38,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/termos" element={<Terms />} />
+        <Route path="/privacidade" element={<Privacy />} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

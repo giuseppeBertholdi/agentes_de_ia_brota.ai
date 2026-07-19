@@ -565,6 +565,9 @@ export default function Landing() {
             <a href="#precos">Preços</a>
             <a href="#sobre">Sobre</a>
             <a href="#cta">Começar</a>
+            <Link to="/termos">Termos de Uso</Link>
+            <Link to="/privacidade">Privacidade</Link>
+            <a href="mailto:giuseppe.bertholdi@gmail.com">Suporte</a>
           </div>
           <div className="copy">© 2026 Plimpost · Feito no Brasil 💚</div>
         </div>

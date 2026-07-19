@@ -21,6 +21,7 @@ export default function Register() {
   const navigate = useNavigate()
   const [googleLoading, setGoogleLoading] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', email: '', password: '' })
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -30,6 +31,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (form.password.length < 6) { setError('Senha deve ter pelo menos 6 caracteres.'); return }
+    if (!acceptedTerms) { setError('Você precisa aceitar os Termos de Uso e a Política de Privacidade.'); return }
     setLoading(true)
     setError('')
     const { error: err } = await signUp(form.email, form.password, {
@@ -96,11 +98,26 @@ export default function Register() {
               </div>
             ))}
 
+            <label className="flex items-start gap-2.5 text-xs text-ink-soft font-body leading-snug cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-3.5 h-3.5 accent-green flex-none"
+              />
+              <span>
+                Li e concordo com os{' '}
+                <Link to="/termos" target="_blank" className="text-green font-bold hover:underline">Termos de Uso</Link>
+                {' '}e a{' '}
+                <Link to="/privacidade" target="_blank" className="text-green font-bold hover:underline">Política de Privacidade</Link>.
+              </span>
+            </label>
+
             {error && (
               <p className="text-red-600 text-sm font-body bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
             )}
 
-            <Button type="submit" variant="primary" size="lg" disabled={loading} className="mt-2 w-full">
+            <Button type="submit" variant="primary" size="lg" disabled={loading || !acceptedTerms} className="mt-2 w-full">
               {loading ? 'Criando conta…' : 'Criar conta grátis'}
             </Button>
           </form>

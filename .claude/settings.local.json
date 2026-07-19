@@ -35,7 +35,11 @@
       "Bash(git -C /home/giuseppe/brota push origin main)",
       "Bash(git -C /home/giuseppe/brota add backend/app/api/assistant.py frontend/src/pages/Settings.tsx)",
       "Bash(git -C /home/giuseppe/brota add frontend/src/pages/Landing.tsx frontend/src/pages/Settings.tsx frontend/src/pages/auth/Login.tsx frontend/src/pages/auth/Register.tsx frontend/src/components/AiAssistant.tsx frontend/src/components/layout/Sidebar.tsx frontend/src/components/layout/Topbar.tsx frontend/src/index.css)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git -C /home/giuseppe/brota diff)",
+      "Bash(git -C /home/giuseppe/brota add frontend/src/pages/Settings.tsx backend/app/api/assistant.py)",
+      "Bash(git -C /home/giuseppe/brota add supabase/migrations/005_fixes_backfill_realtime.sql backend/app/api/post_sale.py backend/app/api/assistant.py)",
+      "Bash(git -C /home/giuseppe/brota diff --cached --stat)"
     ]
   }
 }

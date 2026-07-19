@@ -8,6 +8,7 @@ Fluxo:
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from typing import Any
 from openai import AsyncOpenAI
 from app.config import settings
@@ -16,6 +17,29 @@ from app.database import supabase
 client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 MODEL = "gpt-4o-mini"
+
+USAGE_LIMIT_MESSAGE = (
+    "No momento nosso atendimento automático atingiu o limite de mensagens deste mês. "
+    "Já avisamos a equipe — alguém te responde por aqui em breve. Obrigado pela paciência!"
+)
+
+
+def _month_start_iso() -> str:
+    now = datetime.now(timezone.utc)
+    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+
+def _monthly_ai_usage(company_id: str) -> int:
+    """Conta quantas respostas de IA a empresa já gerou no mês corrente."""
+    r = (
+        supabase.table("messages")
+        .select("id", count="exact")
+        .eq("company_id", company_id)
+        .eq("role", "assistant")
+        .gte("created_at", _month_start_iso())
+        .execute()
+    )
+    return r.count or 0
 
 
 # ---------------------------------------------------------------------------
@@ -212,6 +236,16 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
     conv_r = supabase.table("conversations").select("status").eq("id", conversation_id).single().execute()
     if conv_r.data and conv_r.data["status"] == "human":
         return ""  # humano assumiu — não responder
+
+    # teto de uso mensal — protege a margem do plano contra picos de custo de IA
+    if _monthly_ai_usage(company_id) >= settings.ai_monthly_message_limit:
+        supabase.table("messages").insert({
+            "conversation_id": conversation_id,
+            "company_id": company_id,
+            "role": "assistant",
+            "content": USAGE_LIMIT_MESSAGE,
+        }).execute()
+        return USAGE_LIMIT_MESSAGE
 
     # Recepcionista
     receptionist_cfg = agents.get("receptionist", {})

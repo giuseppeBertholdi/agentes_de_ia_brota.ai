@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
+    # Teto de respostas de IA por empresa/mês — protege a margem do plano único
+    # contra picos de custo de OpenAI. Passado o limite, o bot avisa e para de
+    # responder automaticamente até o próximo mês (ou upgrade manual do dono).
+    ai_monthly_message_limit: int = 2000
 
 
 settings = Settings()

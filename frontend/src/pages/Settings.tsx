@@ -530,10 +530,10 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* ── Desenvolvedor ── */}
+      {/* ── Suporte / Desenvolvedor ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Code2 size={18} /> Desenvolvedor</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Code2 size={18} /> Suporte &amp; Desenvolvedor</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-5 items-start">
@@ -545,6 +545,9 @@ export default function Settings() {
               <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-green mt-0.5">Fundador &amp; Dev</div>
               <p className="text-ink-soft text-sm font-body mt-2 leading-relaxed">
                 Desenvolvedor full-stack e empreendedor brasileiro. A Plimpost nasceu da vontade de trazer IA de verdade pra negócios locais — simples de configurar, poderosa de verdade.
+              </p>
+              <p className="text-ink-soft text-sm font-body mt-2 leading-relaxed">
+                Precisa de ajuda com sua conta, cobrança ou WhatsApp? Fale direto comigo por um dos canais abaixo.
               </p>
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {['Python · FastAPI', 'React · TypeScript', 'Supabase', 'GPT-4o', 'WhatsApp Cloud API'].map(tag => (
