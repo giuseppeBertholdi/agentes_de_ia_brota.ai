@@ -62,7 +62,7 @@ async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_co
         .maybe_single()
         .execute()
     )
-    if not conv_r.data:
+    if not conv_r or not conv_r.data:
         raise HTTPException(400, "Conversa de origem não encontrada")
 
     instance_r = (
@@ -72,7 +72,7 @@ async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_co
         .maybe_single()
         .execute()
     )
-    if not instance_r.data or instance_r.data.get("status") != "connected":
+    if not instance_r or not instance_r.data or instance_r.data.get("status") != "connected":
         raise HTTPException(400, "WhatsApp não conectado")
 
     try:

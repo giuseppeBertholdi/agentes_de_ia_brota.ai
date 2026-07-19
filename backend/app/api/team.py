@@ -65,7 +65,7 @@ async def update_member(profile_id: str, body: TeamMemberUpdate, company_id: str
         .maybe_single()
         .execute()
     )
-    if not member.data:
+    if not member or not member.data:
         raise HTTPException(404, "Membro não encontrado")
 
     r = (

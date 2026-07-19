@@ -80,7 +80,7 @@ async def upsert_agent(
 @router.get("/whatsapp")
 async def get_whatsapp(company_id: str = Depends(require_company)):
     r = supabase.table("whatsapp_instances").select("*").eq("company_id", company_id).maybe_single().execute()
-    return r.data or {}
+    return (r.data if r else None) or {}
 
 
 @router.post("/whatsapp/embedded-signup")
@@ -108,7 +108,7 @@ async def embedded_signup(body: EmbeddedSignupCallback, company_id: str = Depend
 @router.post("/whatsapp/disconnect")
 async def disconnect_whatsapp(company_id: str = Depends(require_company)):
     inst = supabase.table("whatsapp_instances").select("waba_id").eq("company_id", company_id).maybe_single().execute()
-    if inst.data and inst.data.get("waba_id"):
+    if inst and inst.data and inst.data.get("waba_id"):
         try:
             await whatsapp_cloud_api.unsubscribe_app_from_waba(inst.data["waba_id"])
         except Exception:

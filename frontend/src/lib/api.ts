@@ -16,14 +16,26 @@ export class ApiError extends Error {
   }
 }
 
-async function authHeaders(): Promise<HeadersInit> {
-  // tenta pegar a sessão; se expirada, refreshSession() renova automaticamente
-  let { data } = await supabase.auth.getSession()
-  if (!data.session) {
-    const refreshed = await supabase.auth.refreshSession()
-    data = refreshed.data as typeof data
+// Compartilha uma única promise de sessão entre chamadas concorrentes: evita que
+// múltiplos fetches simultâneos disparem refreshSession() em paralelo e um invalide
+// o refresh token do outro (rotação de refresh token do Supabase), causando 403 aleatórios.
+let sessionPromise: Promise<{ access_token?: string }> | null = null
+
+async function getToken(): Promise<string | undefined> {
+  if (!sessionPromise) {
+    sessionPromise = (async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) return data.session
+      const refreshed = await supabase.auth.refreshSession()
+      return refreshed.data.session ?? {}
+    })().finally(() => { sessionPromise = null })
   }
-  const token = data.session?.access_token
+  const session = await sessionPromise
+  return session.access_token
+}
+
+async function authHeaders(): Promise<HeadersInit> {
+  const token = await getToken()
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
