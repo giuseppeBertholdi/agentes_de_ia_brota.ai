@@ -70,7 +70,7 @@ export default function Team() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-6">
+    <div className="max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
       <h1 className="font-display font-bold text-2xl text-ink mb-1">Equipe</h1>
       <p className="text-ink-soft text-sm font-body mb-6">
         Crie setores para que a recepcionista de IA transfira conversas automaticamente
@@ -99,7 +99,7 @@ export default function Team() {
                 <div key={d.id} className="border border-ink/10 rounded-md shadow-soft bg-white overflow-hidden">
                   {editingId === d.id && editingDept ? (
                     <div className="p-3 flex flex-col gap-2 bg-cream-2">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Input placeholder="Nome" value={editingDept.name}
                           onChange={e => setEditingDept(v => v ? { ...v, name: e.target.value } : v)} />
                         <Input placeholder="Descrição (opcional)" value={editingDept.description || ''}
@@ -150,7 +150,7 @@ export default function Team() {
 
           <div className="border-t-2 border-ink/10 pt-4 flex flex-col gap-3">
             <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">Novo setor</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input placeholder="Nome (ex: RH, Financeiro)" value={newDept.name}
                 onChange={e => setNewDept(v => ({ ...v, name: e.target.value }))} />
               <Input placeholder="Descrição (opcional)" value={newDept.description || ''}
@@ -175,7 +175,7 @@ export default function Team() {
           ) : (
             <div className="flex flex-col gap-2">
               {members.map(m => (
-                <div key={m.id} className="flex items-center gap-3 px-4 py-3 border border-ink/10 rounded-md shadow-soft bg-white">
+                <div key={m.id} className="flex flex-wrap items-center gap-3 px-4 py-3 border border-ink/10 rounded-md shadow-soft bg-white">
                   <div className="flex-1 min-w-0">
                     <div className="font-body font-bold text-sm text-ink leading-tight">{m.full_name || '—'}</div>
                     <div className="text-ink-faint text-xs font-mono">{ROLE_LABEL[m.role] || m.role}</div>

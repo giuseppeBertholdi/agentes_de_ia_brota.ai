@@ -62,7 +62,7 @@ export default function PostSale() {
   const overdue = (date: string) => new Date(date) <= new Date()
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-7">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Pós-venda</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Acompanhamento automático depois da venda</p>
@@ -107,23 +107,25 @@ export default function PostSale() {
                 const cfg = TYPE_CONFIG[f.type]
                 const Icon = cfg.icon
                 return (
-                  <div key={f.id} className="flex items-start gap-4 px-5 py-4">
-                    <div className="w-10 h-10 rounded-full bg-cream-2 flex-none flex items-center justify-center">
-                      <Icon size={16} className="text-ink" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-body font-bold text-sm text-ink">{f.contact_name || f.contact_phone}</span>
-                        <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                        {overdue(f.scheduled_for) ? (
-                          <Badge variant="yellow">Pronto pra enviar</Badge>
-                        ) : (
-                          <span className="text-ink-faint text-xs font-mono">agendado p/ {fmtDate(f.scheduled_for)}</span>
-                        )}
+                  <div key={f.id} className="flex flex-col sm:flex-row sm:items-start gap-4 px-5 py-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-cream-2 flex-none flex items-center justify-center">
+                        <Icon size={16} className="text-ink" />
                       </div>
-                      <p className="text-ink-soft text-sm font-body">{f.message}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="font-body font-bold text-sm text-ink">{f.contact_name || f.contact_phone}</span>
+                          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                          {overdue(f.scheduled_for) ? (
+                            <Badge variant="yellow">Pronto pra enviar</Badge>
+                          ) : (
+                            <span className="text-ink-faint text-xs font-mono">agendado p/ {fmtDate(f.scheduled_for)}</span>
+                          )}
+                        </div>
+                        <p className="text-ink-soft text-sm font-body">{f.message}</p>
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-none">
+                    <div className="flex gap-2 flex-none pl-14 sm:pl-0">
                       <Button size="sm" variant="primary" disabled={busyId === f.id} onClick={() => act(f.id, 'send')}>
                         <Send size={13} /> Enviar agora
                       </Button>
@@ -154,7 +156,7 @@ export default function PostSale() {
           ) : (
             <div className="divide-y-2 divide-ink/10">
               {churnRisks.map(c => (
-                <div key={c.id} className="flex items-center justify-between px-5 py-3">
+                <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-5 py-3">
                   <div>
                     <div className="font-body font-bold text-sm text-ink">{c.contact_name || c.contact_phone}</div>
                     <div className="text-ink-faint text-xs font-mono">{c.contact_phone}</div>

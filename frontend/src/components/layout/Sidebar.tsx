@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -24,7 +24,12 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-white/55 hover:text-white hover:bg-white/[0.05]'
   )
 
-export default function Sidebar() {
+interface SidebarProps {
+  open: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
@@ -37,13 +42,36 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 flex-none flex flex-col bg-ink text-white">
+    <>
+      {/* Backdrop mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-ink/60 z-30 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={cn(
+          'w-64 sm:w-60 flex-none flex flex-col bg-ink text-white',
+          'fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-out',
+          'lg:static lg:translate-x-0',
+          open ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
       {/* Logo */}
-      <div className="h-[64px] flex items-center px-5 border-b border-white/10 flex-none">
+      <div className="h-[64px] flex items-center justify-between px-5 border-b border-white/10 flex-none">
         <span className="font-display font-bold text-xl tracking-tight flex items-center gap-2">
           <Zap size={18} className="text-lime" fill="currentColor" />
           Plimpost<span className="text-lime">.</span>
         </span>
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1.5 -mr-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/[0.08]"
+          aria-label="Fechar menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Upgrade — some sozinho para quem já assina */}
@@ -82,7 +110,7 @@ export default function Sidebar() {
           Menu
         </p>
         {mainNav.map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to} className={navLinkClass}>
+          <NavLink key={to} to={to} className={navLinkClass} onClick={onClose}>
             {({ isActive }) => (
               <>
                 <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
@@ -97,7 +125,7 @@ export default function Sidebar() {
           <p className="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
             Sistema
           </p>
-          <NavLink to="/app/settings" className={navLinkClass}>
+          <NavLink to="/app/settings" className={navLinkClass} onClick={onClose}>
             {({ isActive }) => (
               <>
                 <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
@@ -136,6 +164,7 @@ export default function Sidebar() {
         onConfirm={() => { setConfirmOpen(false); handleSignOut() }}
         onCancel={() => setConfirmOpen(false)}
       />
-    </aside>
+      </aside>
+    </>
   )
 }

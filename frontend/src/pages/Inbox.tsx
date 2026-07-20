@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Bot, User, CheckCheck, RefreshCw } from 'lucide-react'
+import { Send, Bot, User, CheckCheck, RefreshCw, ArrowLeft } from 'lucide-react'
 import { cn, fmtDate, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
@@ -98,7 +98,10 @@ export default function Inbox() {
   return (
     <div className="flex" style={{ height: '100%' }}>
       {/* Conversation list */}
-      <div className="w-80 flex-none border-r border-ink/10 bg-white flex flex-col">
+      <div className={cn(
+        'w-full md:w-80 flex-none border-r border-ink/10 bg-white flex-col',
+        active ? 'hidden md:flex' : 'flex'
+      )}>
         <div className="h-[64px] flex items-center px-5 border-b border-ink/10 bg-white">
           <h2 className="font-display font-bold text-base text-ink">Inbox</h2>
           <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length}</Badge>
@@ -173,9 +176,16 @@ export default function Inbox() {
 
       {/* Chat */}
       {active ? (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col w-full">
           {/* Chat header */}
-          <div className="h-[64px] flex items-center px-6 bg-white border-b border-ink/10 gap-4">
+          <div className="h-[64px] flex items-center px-3 sm:px-6 bg-white border-b border-ink/10 gap-3 sm:gap-4">
+            <button
+              onClick={() => setActive(null)}
+              className="md:hidden p-1.5 -ml-1 rounded-md text-ink-soft hover:bg-cream-2 flex-none"
+              aria-label="Voltar para a lista"
+            >
+              <ArrowLeft size={18} />
+            </button>
             <div className="w-10 h-10 rounded-full bg-green-soft flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
               {initials(active.contact_name || active.contact_phone || '?')}
             </div>
@@ -253,7 +263,7 @@ export default function Inbox() {
           )}
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-ink-faint">
+        <div className="hidden md:flex flex-1 items-center justify-center text-ink-faint">
           <div className="text-center">
             <RefreshCw size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-body text-sm">Selecione uma conversa</p>

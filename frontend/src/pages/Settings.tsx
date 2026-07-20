@@ -199,7 +199,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
       <div className="mb-7">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Configurações</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Configure sua empresa, preços e agentes de IA</p>
@@ -360,7 +360,7 @@ export default function Settings() {
                 >
                   {editingId === item.id && editingItem ? (
                     <div className="p-3 flex flex-col gap-2 bg-cream-2">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Input placeholder="Nome" value={editingItem.name}
                           onChange={e => setEditingItem(i => i ? { ...i, name: e.target.value } : i)} />
                         <Input placeholder="Descrição (opcional)" value={editingItem.description || ''}
@@ -376,11 +376,11 @@ export default function Settings() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-3 px-4 py-3">
                       <div className="w-8 h-8 rounded-md bg-green-tint border border-ink/10 flex items-center justify-center flex-none">
                         <Tag size={13} className="text-green-deep" />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-[120px]">
                         <div className="font-body font-bold text-sm text-ink leading-tight">{item.name}</div>
                         {item.description && (
                           <div className="text-ink-faint text-xs font-body truncate">{item.description}</div>
@@ -422,7 +422,7 @@ export default function Settings() {
 
           <div className="border-t-2 border-ink/10 pt-4 flex flex-col gap-3">
             <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">Novo item</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input placeholder="Nome do produto/serviço"   value={newItem.name}              onChange={e => setNewItem(i => ({ ...i, name:  e.target.value }))} />
               <Input placeholder="Descrição (opcional)"      value={newItem.description || ''} onChange={e => setNewItem(i => ({ ...i, description: e.target.value }))} />
               <Input type="number" placeholder="Preço (R$)"  value={newItem.price || ''}       onChange={e => setNewItem(i => ({ ...i, price: Number(e.target.value) }))} />

@@ -59,7 +59,7 @@ export default function Quotes() {
   const visible = filter === 'all' ? quotes : quotes.filter(q => q.status === filter)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-7">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Cotações</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Histórico de cotações geradas pelo bot</p>
@@ -79,13 +79,13 @@ export default function Quotes() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {filters.map(f => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={cn(
-              'px-3.5 py-1.5 rounded-lg border font-body font-semibold text-xs transition-colors',
+              'flex-none whitespace-nowrap px-3.5 py-1.5 rounded-lg border font-body font-semibold text-xs transition-colors',
               filter === f.key
                 ? 'bg-ink text-white border-ink'
                 : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30 hover:text-ink'

@@ -95,7 +95,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-8">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
         <UpgradeCard />
 
@@ -171,7 +171,7 @@ export default function Dashboard() {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
             <CardTitle>Atividade da semana</CardTitle>
             <div className="flex items-center gap-4 text-xs font-mono text-ink-soft">
               <span className="flex items-center gap-1.5">
