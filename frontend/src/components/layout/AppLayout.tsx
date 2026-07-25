@@ -4,6 +4,9 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import AiAssistant from '@/components/AiAssistant'
 import { api } from '@/lib/api'
+import { useWhatsapp } from '@/hooks/useWhatsapp'
+
+const WA_RESTRICTED_PATHS = ['/app/inbox', '/app/quotes', '/app/reports', '/app/post-sale']
 
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
@@ -11,6 +14,7 @@ export default function AppLayout() {
   const [configVersion, setConfigVersion] = useState(0)
   const [navOpen, setNavOpen] = useState(false)
   const location = useLocation()
+  const { connected: waConnected, loading: waLoading } = useWhatsapp()
 
   const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
 
@@ -32,6 +36,11 @@ export default function AppLayout() {
   const skippedOnboarding = sessionStorage.getItem('onboarding_skipped') === '1'
   if (checkedFirstTime && isFirstTime && !skippedOnboarding) {
     return <Navigate to="/onboarding" replace />
+  }
+
+  // páginas que dependem de mensagens reais só liberam com o WhatsApp conectado
+  if (!waLoading && !waConnected && WA_RESTRICTED_PATHS.includes(location.pathname)) {
+    return <Navigate to="/app/settings" replace />
   }
 
   return (

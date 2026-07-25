@@ -284,7 +284,7 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
             q_result = await run_quote_agent(
                 company=company,
                 price_items=price_items,
-                history=history + [{"role": "user", "content": user_message}],
+                history=history,
                 user_message=user_message,
                 custom_prompt=quote_cfg.get("system_prompt"),
             )

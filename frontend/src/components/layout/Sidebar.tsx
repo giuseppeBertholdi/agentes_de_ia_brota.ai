@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useWhatsapp } from '@/hooks/useWhatsapp'
 import { useCheckout } from '@/hooks/useCheckout'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const mainNav = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/app/inbox', icon: MessageSquare, label: 'Inbox' },
-  { to: '/app/quotes', icon: FileText, label: 'Cotações' },
-  { to: '/app/reports', icon: BarChart3, label: 'Relatórios' },
-  { to: '/app/post-sale', icon: Heart, label: 'Pós-venda' },
-  { to: '/app/team', icon: Users, label: 'Equipe' },
+  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', requiresWa: false },
+  { to: '/app/inbox', icon: MessageSquare, label: 'Inbox', requiresWa: true },
+  { to: '/app/quotes', icon: FileText, label: 'Cotações', requiresWa: true },
+  { to: '/app/reports', icon: BarChart3, label: 'Relatórios', requiresWa: true },
+  { to: '/app/post-sale', icon: Heart, label: 'Pós-venda', requiresWa: true },
+  { to: '/app/team', icon: Users, label: 'Equipe', requiresWa: false },
 ]
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -33,6 +34,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
+  const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { start, loading: starting } = useCheckout()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -104,22 +106,54 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
       )}
 
+      {!waLoading && !waConnected && (
+        <div className="px-3 pt-3 flex-none">
+          <button
+            onClick={() => navigate('/app/settings')}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left"
+          >
+            <Lock size={12} className="text-white/40 flex-none" />
+            <span className="text-white/60 text-[11px] font-body leading-tight">
+              Conecte o WhatsApp para liberar o app
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Main nav */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
         <p className="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
           Menu
         </p>
-        {mainNav.map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to} className={navLinkClass} onClick={onClose}>
-            {({ isActive }) => (
-              <>
-                <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
+        {mainNav.map(({ to, icon: Icon, label, requiresWa }) => {
+          const locked = requiresWa && !waLoading && !waConnected
+          if (locked) {
+            return (
+              <button
+                key={to}
+                type="button"
+                onClick={() => { onClose(); navigate('/app/settings') }}
+                title="Conecte seu WhatsApp em Configurações para liberar"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-body font-medium text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.03] transition-colors relative"
+              >
                 <Icon size={16} />
                 {label}
-              </>
-            )}
-          </NavLink>
-        ))}
+                <Lock size={12} className="ml-auto flex-none" />
+              </button>
+            )
+          }
+          return (
+            <NavLink key={to} to={to} className={navLinkClass} onClick={onClose}>
+              {({ isActive }) => (
+                <>
+                  <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
+                  <Icon size={16} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          )
+        })}
 
         <div className="border-t border-white/10 mt-4 pt-4">
           <p className="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
