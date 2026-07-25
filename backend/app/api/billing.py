@@ -54,7 +54,7 @@ async def create_checkout_session(
             # sem payment_method_types: a Stripe usa automaticamente os métodos
             # ativados em dashboard.stripe.com/settings/payment_methods (ex: card, pix)
             line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
-            success_url=f"{settings.frontend_url}/app/dashboard?checkout=success",
+            success_url=f"{settings.frontend_url}/app/settings?checkout=success",
             cancel_url=f"{settings.frontend_url}/app/dashboard?checkout=cancel",
             metadata={"company_id": company_id},
             subscription_data={"metadata": {"company_id": company_id}},

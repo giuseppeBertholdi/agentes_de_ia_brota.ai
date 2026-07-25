@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -9,12 +9,12 @@ import { useCheckout } from '@/hooks/useCheckout'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const mainNav = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', requiresWa: false },
-  { to: '/app/inbox', icon: MessageSquare, label: 'Inbox', requiresWa: true },
-  { to: '/app/quotes', icon: FileText, label: 'Cotações', requiresWa: true },
-  { to: '/app/reports', icon: BarChart3, label: 'Relatórios', requiresWa: true },
-  { to: '/app/post-sale', icon: Heart, label: 'Pós-venda', requiresWa: true },
-  { to: '/app/team', icon: Users, label: 'Equipe', requiresWa: false },
+  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', gated: false },
+  { to: '/app/inbox', icon: MessageSquare, label: 'Inbox', gated: true },
+  { to: '/app/quotes', icon: FileText, label: 'Cotações', gated: true },
+  { to: '/app/reports', icon: BarChart3, label: 'Relatórios', gated: true },
+  { to: '/app/post-sale', icon: Heart, label: 'Pós-venda', gated: true },
+  { to: '/app/team', icon: Users, label: 'Equipe', gated: false },
 ]
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -30,6 +30,9 @@ interface SidebarProps {
   onClose: () => void
 }
 
+// Duas etapas de liberação: primeiro a assinatura, depois a conexão do WhatsApp.
+type GateStage = 'subscribe' | 'connect' | null
+
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -37,6 +40,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { start, loading: starting } = useCheckout()
   const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const statusReady = !statusLoading && !waLoading
+  const gateStage: GateStage = !statusReady
+    ? null
+    : !subscriptionActive
+      ? 'subscribe'
+      : !waConnected
+        ? 'connect'
+        : null
+
+  const handleGatedClick = () => {
+    onClose()
+    if (gateStage === 'subscribe') start()
+    else if (gateStage === 'connect') navigate('/app/settings')
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -76,8 +94,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
-      {/* Upgrade — some sozinho para quem já assina */}
-      {!statusLoading && !subscriptionActive && (
+      {/* Cartão de status — uma única etapa por vez: assinar, depois conectar */}
+      {gateStage === 'subscribe' && (
         <div className="px-3 pt-3 flex-none">
           <button
             onClick={start}
@@ -106,16 +124,20 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
       )}
 
-      {!waLoading && !waConnected && (
+      {gateStage === 'connect' && (
         <div className="px-3 pt-3 flex-none">
           <button
-            onClick={() => navigate('/app/settings')}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left"
+            onClick={() => { onClose(); navigate('/app/settings') }}
+            className="group w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-left border border-lime/25 bg-white/[0.06] hover:bg-white/[0.09] transition-colors"
           >
-            <Lock size={12} className="text-white/40 flex-none" />
-            <span className="text-white/60 text-[11px] font-body leading-tight">
-              Conecte o WhatsApp para liberar o app
+            <span className="w-7 h-7 rounded-md bg-lime/15 flex items-center justify-center flex-none">
+              <Smartphone size={13} className="text-lime" />
             </span>
+            <span className="flex-1 min-w-0">
+              <span className="block font-body font-bold text-[12.5px] text-white leading-tight">Falta conectar o WhatsApp</span>
+              <span className="block text-white/50 text-[10.5px] font-body leading-tight mt-0.5">Assinatura ativa — finalize em Configurações</span>
+            </span>
+            <ArrowRight size={14} className="text-lime flex-none" />
           </button>
         </div>
       )}
@@ -125,15 +147,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <p className="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
           Menu
         </p>
-        {mainNav.map(({ to, icon: Icon, label, requiresWa }) => {
-          const locked = requiresWa && !waLoading && !waConnected
+        {mainNav.map(({ to, icon: Icon, label, gated }) => {
+          const locked = gated && gateStage !== null
           if (locked) {
             return (
               <button
                 key={to}
                 type="button"
-                onClick={() => { onClose(); navigate('/app/settings') }}
-                title="Conecte seu WhatsApp em Configurações para liberar"
+                onClick={handleGatedClick}
+                title={gateStage === 'subscribe' ? 'Assine para liberar' : 'Conecte o WhatsApp para liberar'}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-body font-medium text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.03] transition-colors relative"
               >
                 <Icon size={16} />

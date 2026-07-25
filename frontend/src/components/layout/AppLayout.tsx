@@ -5,8 +5,10 @@ import Topbar from './Topbar'
 import AiAssistant from '@/components/AiAssistant'
 import { api } from '@/lib/api'
 import { useWhatsapp } from '@/hooks/useWhatsapp'
+import { useSubscription } from '@/hooks/useSubscription'
 
-const WA_RESTRICTED_PATHS = ['/app/inbox', '/app/quotes', '/app/reports', '/app/post-sale']
+// páginas que só fazem sentido com o bot realmente atendendo (assinatura ativa + WhatsApp conectado)
+const GATED_PATHS = ['/app/inbox', '/app/quotes', '/app/reports', '/app/post-sale']
 
 export default function AppLayout() {
   const [isFirstTime, setIsFirstTime] = useState(false)
@@ -15,6 +17,7 @@ export default function AppLayout() {
   const [navOpen, setNavOpen] = useState(false)
   const location = useLocation()
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
+  const { active: subscriptionActive, loading: statusLoading } = useSubscription()
 
   const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
 
@@ -38,8 +41,9 @@ export default function AppLayout() {
     return <Navigate to="/onboarding" replace />
   }
 
-  // páginas que dependem de mensagens reais só liberam com o WhatsApp conectado
-  if (!waLoading && !waConnected && WA_RESTRICTED_PATHS.includes(location.pathname)) {
+  // acesso direto por URL a páginas que dependem do bot ativo — manda pra Configurações
+  const statusReady = !waLoading && !statusLoading
+  if (statusReady && !(subscriptionActive && waConnected) && GATED_PATHS.includes(location.pathname)) {
     return <Navigate to="/app/settings" replace />
   }
 

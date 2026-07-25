@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Plus, Trash2, Pencil, Check, X as XIcon,
   Smartphone, CheckCircle, XCircle, Loader2,
-  Mail, Code2, Bot, Tag, Building2, Sparkles,
+  Mail, Code2, Bot, Tag, Building2, Sparkles, Lock, ArrowRight,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useRealtimeTable } from '@/hooks/useRealtime'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useCheckout } from '@/hooks/useCheckout'
 import PaywallModal from '@/components/PaywallModal'
 
 interface Company { id: string; name: string; voice_tone: string; business_desc: string }
@@ -77,6 +79,10 @@ export default function Settings() {
   const [waLoading,   setWaLoading]   = useState(false)
   const [waError,     setWaError]     = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [confirmingPayment, setConfirmingPayment] = useState(false)
+
+  const { active: subscriptionActive, loading: subLoading, refresh: refreshSubscription } = useSubscription()
+  const { start: startCheckout, loading: startingCheckout } = useCheckout()
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = async () => {
@@ -198,12 +204,58 @@ export default function Settings() {
     finally { setWaLoading(false) }
   }
 
+  // Volta do Stripe Checkout: confirma a assinatura e já emenda pro login da Meta,
+  // pra pessoa não precisar clicar duas vezes.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('checkout') !== 'success') return
+    window.history.replaceState({}, '', '/app/settings')
+
+    let cancelled = false
+    setConfirmingPayment(true)
+
+    const poll = async () => {
+      for (let i = 0; i < 8 && !cancelled; i++) {
+        const r = await api.get<{ status: string }>('/billing/status').catch(() => null)
+        if (r?.status === 'active') return true
+        await new Promise(res => setTimeout(res, 1200))
+      }
+      return false
+    }
+
+    poll().then(async confirmed => {
+      if (cancelled) return
+      await refreshSubscription()
+      setConfirmingPayment(false)
+      if (confirmed) connectWa() // pode ser bloqueado pelo navegador — o card abaixo cobre esse caso
+    })
+
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
       <div className="mb-7">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Configurações</h1>
         <p className="text-ink-soft text-sm mt-1 font-body">Configure sua empresa, preços e agentes de IA</p>
       </div>
+
+      {!subLoading && !subscriptionActive && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-ink rounded-xl shadow-soft-md">
+          <div className="w-9 h-9 rounded-full bg-green flex items-center justify-center flex-none">
+            <Lock size={15} className="text-lime" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-body font-bold text-sm text-white leading-tight">Assinatura ainda não ativa</div>
+            <p className="text-white/60 text-xs font-body mt-0.5">
+              WhatsApp, Inbox, Pós-venda e Relatórios liberam assim que você assinar. Empresa, preços e agentes você já pode configurar livremente.
+            </p>
+          </div>
+          <Button variant="primary" size="sm" onClick={startCheckout} disabled={startingCheckout} className="flex-none">
+            {startingCheckout ? <><Loader2 size={14} className="animate-spin" /> Abrindo…</> : <>Assinar — R$127/mês <ArrowRight size={14} /></>}
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
 
@@ -218,7 +270,26 @@ export default function Settings() {
               {waError}
             </div>
           )}
-          {wa ? (
+          {confirmingPayment ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <Loader2 size={22} className="animate-spin text-green" />
+              <p className="text-ink-soft text-sm font-body">Confirmando seu pagamento…</p>
+            </div>
+          ) : subLoading ? null : !subscriptionActive ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-ink-soft text-sm font-body">
+                Assine o plano pra conectar seu número e deixar a IA atendendo de verdade.
+              </p>
+              <div className="flex items-end gap-2 p-3 bg-cream-2 border border-ink/10 rounded-md w-fit">
+                <span className="text-ink-faint text-sm font-body line-through">R$ 207</span>
+                <span className="font-display font-bold text-2xl text-ink leading-none">R$ 127</span>
+                <span className="text-ink-soft text-xs font-body mb-0.5">/mês</span>
+              </div>
+              <Button variant="primary" onClick={startCheckout} disabled={startingCheckout} className="w-fit">
+                {startingCheckout ? <><Loader2 size={15} className="animate-spin" /> Abrindo…</> : <>Assinar para conectar <ArrowRight size={15} /></>}
+              </Button>
+            </div>
+          ) : wa ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 p-3 bg-cream-2 border border-ink/10 rounded-md">
                 <Badge variant={WA_STATUS_MAP[wa.status]?.variant ?? 'gray'}>
