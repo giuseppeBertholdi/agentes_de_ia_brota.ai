@@ -100,26 +100,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <button
             onClick={() => start()}
             disabled={starting}
-            className="group relative w-full flex flex-col gap-2 px-3.5 py-3 rounded-xl overflow-hidden text-left border border-lime/25 bg-gradient-to-br from-green via-green to-green-deep shadow-[0_4px_16px_-4px_rgba(31,138,76,0.5)] hover:shadow-[0_6px_20px_-4px_rgba(31,138,76,0.65)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:translate-y-0"
+            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-lg text-left border border-white/10 bg-green disabled:opacity-60 hover:bg-green-deep transition-colors"
           >
-            <span className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-lime/20 blur-xl" />
-            <span className="flex items-center gap-2 relative">
-              <span className="w-7 h-7 rounded-md bg-white/15 flex items-center justify-center flex-none">
-                {starting ? <Loader2 size={13} className="animate-spin text-white" /> : <Sparkles size={13} className="text-lime" />}
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="block font-body font-bold text-[13px] text-white leading-tight">Ative o WhatsApp com IA</span>
-              </span>
+            <span className="w-7 h-7 rounded-md bg-white/15 flex items-center justify-center flex-none">
+              {starting ? <Loader2 size={13} className="animate-spin text-white" /> : <Sparkles size={13} className="text-lime" />}
             </span>
-            <span className="flex items-center justify-between relative">
-              <span className="flex items-baseline gap-1.5">
-                <span className="font-mono text-[10px] text-white/50 line-through">R$207</span>
-                <span className="font-mono text-xs font-bold text-lime">R$127/mês</span>
-              </span>
-              <span className="font-body font-semibold text-[11px] text-ink bg-lime px-2 py-1 rounded-md group-hover:bg-white transition-colors">
-                {starting ? 'Abrindo…' : 'Assinar →'}
-              </span>
+            <span className="flex-1 min-w-0">
+              <span className="block font-body font-bold text-[12.5px] text-white leading-tight">Ativar WhatsApp com IA</span>
+              <span className="block text-white/60 text-[10.5px] font-mono mt-0.5">R$127/mês</span>
             </span>
+            <ArrowRight size={14} className="text-lime flex-none" />
           </button>
         </div>
       )}
@@ -128,14 +118,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <div className="px-3 pt-3 flex-none">
           <button
             onClick={() => { onClose(); navigate('/app/settings') }}
-            className="group w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-left border border-lime/25 bg-white/[0.06] hover:bg-white/[0.09] transition-colors"
+            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-lg text-left border border-white/10 bg-white/[0.06] hover:bg-white/[0.09] transition-colors"
           >
             <span className="w-7 h-7 rounded-md bg-lime/15 flex items-center justify-center flex-none">
               <Smartphone size={13} className="text-lime" />
             </span>
             <span className="flex-1 min-w-0">
               <span className="block font-body font-bold text-[12.5px] text-white leading-tight">Falta conectar o WhatsApp</span>
-              <span className="block text-white/50 text-[10.5px] font-body leading-tight mt-0.5">Assinatura ativa — finalize em Configurações</span>
+              <span className="block text-white/50 text-[10.5px] font-body leading-tight mt-0.5">Finalize em Configurações</span>
             </span>
             <ArrowRight size={14} className="text-lime flex-none" />
           </button>

@@ -102,9 +102,9 @@ export default function Inbox() {
         'w-full md:w-80 flex-none border-r border-ink/10 bg-white flex-col',
         active ? 'hidden md:flex' : 'flex'
       )}>
-        <div className="h-[64px] flex items-center px-5 border-b border-ink/10 bg-white">
-          <h2 className="font-display font-bold text-base text-ink">Inbox</h2>
-          <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length}</Badge>
+        <div className="h-[64px] flex items-center px-4 border-b border-ink/10 bg-white flex-none">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-faint">Conversas</span>
+          <Badge className="ml-auto">{convs.filter(c => c.status !== 'resolved').length} ativas</Badge>
         </div>
         {departments.length > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-2 border-b border-ink/10 bg-white overflow-x-auto">

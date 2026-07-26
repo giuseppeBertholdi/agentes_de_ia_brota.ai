@@ -56,3 +56,38 @@ async def dashboard_stats(company_id: str = Depends(require_company)):
         "revenue_week": total_revenue_week,
         "messages_today": msg_today.count or 0,
     }
+
+
+_WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+
+@router.get("/activity")
+async def weekly_activity(company_id: str = Depends(require_company)):
+    """Conversas e cotações por dia, últimos 7 dias — dados reais pro gráfico do dashboard."""
+    from datetime import datetime, timedelta
+    start_day = (datetime.utcnow() - timedelta(days=6)).date()
+
+    convs = (
+        supabase.table("conversations").select("created_at")
+        .eq("company_id", company_id).gte("created_at", start_day.isoformat()).execute()
+    ).data or []
+    quotes = (
+        supabase.table("quotes").select("created_at")
+        .eq("company_id", company_id).gte("created_at", start_day.isoformat()).execute()
+    ).data or []
+
+    buckets = {}
+    for i in range(7):
+        d = start_day + timedelta(days=i)
+        buckets[d.isoformat()] = {"day": _WEEKDAY_LABELS[d.weekday()], "conversas": 0, "cotacoes": 0}
+
+    for c in convs:
+        key = (c.get("created_at") or "")[:10]
+        if key in buckets:
+            buckets[key]["conversas"] += 1
+    for q in quotes:
+        key = (q.get("created_at") or "")[:10]
+        if key in buckets:
+            buckets[key]["cotacoes"] += 1
+
+    return list(buckets.values())
