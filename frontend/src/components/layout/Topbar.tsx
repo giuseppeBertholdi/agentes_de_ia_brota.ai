@@ -9,6 +9,7 @@ const routeMeta: Record<string, { title: string; sub: string }> = {
   '/app/quotes': { title: 'Cotações', sub: 'Orçamentos gerados pelo bot' },
   '/app/reports': { title: 'Relatórios', sub: 'Resumo semanal' },
   '/app/post-sale': { title: 'Pós-venda', sub: 'Acompanhamento pós-compra' },
+  '/app/team': { title: 'Equipe', sub: 'Setores e membros do time' },
   '/app/settings': { title: 'Configurações', sub: 'Empresa, preços e agentes' },
 }
 
@@ -26,9 +27,6 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     user?.email?.split('@')[0] ||
     'Usuário'
 
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-
   return (
     <div className="h-[64px] flex-none flex items-center justify-between gap-3 px-4 sm:px-8 bg-white border-b border-ink/8 z-10">
       <div className="flex items-center gap-3 min-w-0">
@@ -43,7 +41,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           {meta ? (
             <>
               <h1 className="font-display font-bold text-lg sm:text-xl text-ink leading-none tracking-tight truncate">{meta.title}</h1>
-              <p className="text-ink-faint text-xs font-body mt-1 capitalize hidden sm:block">{dateStr}</p>
+              <p className="text-ink-faint text-xs font-body mt-1 hidden sm:block">{meta.sub}</p>
             </>
           ) : (
             <span className="font-display font-bold text-xl text-ink">Plimpost</span>

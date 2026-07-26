@@ -70,8 +70,8 @@ export default function Team() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
-      <h1 className="font-display font-bold text-2xl text-ink mb-1">Equipe</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="max-w-3xl mx-auto">
       <p className="text-ink-soft text-sm font-body mb-6">
         Crie setores para que a recepcionista de IA transfira conversas automaticamente
         (ex: cliente pede para falar com o RH) e organize quem atende cada área.
@@ -200,6 +200,7 @@ export default function Team() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

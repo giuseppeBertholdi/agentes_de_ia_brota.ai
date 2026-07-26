@@ -68,10 +68,7 @@ export default function Reports() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-7 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Relatórios</h1>
-          <p className="text-ink-soft text-sm mt-1 font-body">Resumo semanal da operação</p>
-        </div>
+        <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-faint">Semana selecionada</h2>
         <div className="flex items-center gap-1 bg-white border border-ink/10 rounded-md shadow-soft overflow-hidden self-start sm:self-auto">
           <Button variant="ghost" size="sm" onClick={() => setOffset(o => o + 1)} className="border-0 shadow-none rounded-none border-r border-ink/10">
             <ChevronLeft size={15} />

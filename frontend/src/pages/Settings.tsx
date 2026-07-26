@@ -129,11 +129,6 @@ export default function Settings() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
-      <div className="mb-7">
-        <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Configurações</h1>
-        <p className="text-ink-soft text-sm mt-1 font-body">Configure sua empresa, preços e agentes de IA</p>
-      </div>
-
       {!subLoading && !subscriptionActive && (
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-ink rounded-xl shadow-soft-md">
           <div className="w-9 h-9 rounded-full bg-green flex items-center justify-center flex-none">

@@ -60,11 +60,6 @@ export default function Quotes() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-7">
-        <h1 className="font-display font-bold text-2xl text-ink tracking-tight">Cotações</h1>
-        <p className="text-ink-soft text-sm mt-1 font-body">Histórico de cotações geradas pelo bot</p>
-      </div>
-
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-7">
         <StatTile label="Total de cotações" value={quotes.length} icon={FileText} iconColor="text-green-deep" />
