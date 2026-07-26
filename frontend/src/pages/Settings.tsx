@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Plus, Trash2, Pencil, Check, X as XIcon,
   Smartphone, CheckCircle, XCircle, Loader2,
@@ -9,17 +9,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { api, ApiError } from '@/lib/api'
+import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useRealtimeTable } from '@/hooks/useRealtime'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useCheckout } from '@/hooks/useCheckout'
-import PaywallModal from '@/components/PaywallModal'
+import { useWhatsappConnection } from '@/hooks/useWhatsappConnection'
 
 interface Company { id: string; name: string; voice_tone: string; business_desc: string }
 interface PriceItem { id?: string; name: string; description?: string; price: number; unit: string; active: boolean }
 interface AgentConfig { agent_type: string; enabled: boolean; system_prompt?: string }
-interface WaInstance { phone_number_id: string; waba_id: string; status: string; display_phone_number?: string; verified_name?: string }
 
 const WA_STATUS_MAP: Record<string, { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }> = {
   connected: { label: 'Conectado', variant: 'green' },
@@ -29,24 +28,6 @@ const WA_STATUS_MAP: Record<string, { label: string; variant: 'green' | 'yellow'
 const AGENT_META: Record<string, { label: string; desc: string; icon: string }> = {
   receptionist: { label: 'Recepcionista', desc: 'Recebe mensagens, entende a intenção e roteia para o setor certo', icon: '🤝' },
   quote:        { label: 'Cotação',        desc: 'Coleta dados do cliente e gera orçamentos automaticamente',         icon: '💰' },
-}
-
-declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
-
-type SignupData = { waba_id: string; phone_number_id: string }
-
-const META_APP_ID    = import.meta.env.VITE_META_APP_ID
-const META_CONFIG_ID = import.meta.env.VITE_META_CONFIG_ID
-
-function loadFacebookSdk(): Promise<void> {
-  return new Promise(resolve => {
-    if (window.FB) return resolve()
-    window.fbAsyncInit = () => { window.FB!.init({ appId: META_APP_ID, version: 'v21.0' }); resolve() }
-    if (document.getElementById('facebook-jssdk')) return
-    const s = document.createElement('script')
-    s.id = 'facebook-jssdk'; s.src = 'https://connect.facebook.net/pt_BR/sdk.js'; s.async = true
-    document.body.appendChild(s)
-  })
 }
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
@@ -70,27 +51,22 @@ export default function Settings() {
   const [company,     setCompany]     = useState<Company | null>(null)
   const [prices,      setPrices]      = useState<PriceItem[]>([])
   const [agents,      setAgents]      = useState<AgentConfig[]>([])
-  const [wa,          setWa]          = useState<WaInstance | null>(null)
   const [newItem,     setNewItem]     = useState<PriceItem>({ name: '', price: 0, unit: 'un', active: true })
   const [editingId,   setEditingId]   = useState<string | null>(null)
   const [editingItem, setEditingItem] = useState<PriceItem | null>(null)
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
-  const [waLoading,   setWaLoading]   = useState(false)
-  const [waError,     setWaError]     = useState<string | null>(null)
-  const [paywallOpen, setPaywallOpen] = useState(false)
-  const [confirmingPayment, setConfirmingPayment] = useState(false)
 
-  const { active: subscriptionActive, loading: subLoading, refresh: refreshSubscription } = useSubscription()
+  const { active: subscriptionActive, loading: subLoading } = useSubscription()
   const { start: startCheckout, loading: startingCheckout } = useCheckout()
+  const { wa, waLoading, waError, confirmingPayment, connectWa, disconnectWa } = useWhatsappConnection()
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = async () => {
-    const [cRes, pRes, aRes, wRes] = await Promise.allSettled([
+    const [cRes, pRes, aRes] = await Promise.allSettled([
       api.get<Company>('/settings/company'),
       api.get<PriceItem[]>('/settings/prices'),
       api.get<AgentConfig[]>('/settings/agents'),
-      api.get<WaInstance | Record<string, never>>('/settings/whatsapp'),
     ])
 
     if (cRes.status === 'fulfilled') setCompany(cRes.value)
@@ -101,33 +77,13 @@ export default function Settings() {
         { agent_type: 'quote',        enabled: true },
       ])
     }
-    if (wRes.status === 'fulfilled') {
-      const w = wRes.value
-      setWa(Object.keys(w).length ? w as WaInstance : null)
-    }
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
-  useRealtimeTable('whatsapp_instances', load)
   useRealtimeTable('companies',          load)
   useRealtimeTable('price_items',        load)
   useRealtimeTable('agent_configs',      load)
-
-  // WhatsApp postMessage
-  const signupDataRef = useRef<SignupData | null>(null)
-  useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      if (!e.origin.endsWith('facebook.com')) return
-      try {
-        const d = JSON.parse(e.data)
-        if (d.type === 'WA_EMBEDDED_SIGNUP' && d.event === 'FINISH')
-          signupDataRef.current = { waba_id: d.data.waba_id, phone_number_id: d.data.phone_number_id }
-      } catch { /* non-JSON */ }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
 
   // ── Company ───────────────────────────────────────────────────────────────
   const saveCompany = async () => {
@@ -171,68 +127,6 @@ export default function Settings() {
     await load()
   }
 
-  // ── WhatsApp ──────────────────────────────────────────────────────────────
-  const connectWa = async () => {
-    setWaLoading(true); setWaError(null); signupDataRef.current = null
-    try {
-      await loadFacebookSdk()
-      const response: any = await new Promise(resolve =>
-        window.FB!.login(resolve, {
-          config_id: META_CONFIG_ID, response_type: 'code',
-          override_default_response_type: true, extras: { setup: {} },
-        })
-      )
-      const code = response?.authResponse?.code
-      const sd = signupDataRef.current
-      if (!code || !sd) throw new Error('Conexão cancelada ou incompleta')
-      await api.post('/settings/whatsapp/embedded-signup', {
-        code, waba_id: (sd as SignupData).waba_id, phone_number_id: (sd as SignupData).phone_number_id,
-      })
-      await load()
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 402) {
-        setPaywallOpen(true)
-      } else {
-        setWaError(e instanceof Error ? e.message : 'Erro ao conectar')
-      }
-    } finally { setWaLoading(false) }
-  }
-
-  const disconnectWa = async () => {
-    setWaLoading(true)
-    try { await api.post('/settings/whatsapp/disconnect'); await load() }
-    finally { setWaLoading(false) }
-  }
-
-  // Volta do Stripe Checkout: confirma a assinatura e já emenda pro login da Meta,
-  // pra pessoa não precisar clicar duas vezes.
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('checkout') !== 'success') return
-    window.history.replaceState({}, '', '/app/settings')
-
-    let cancelled = false
-    setConfirmingPayment(true)
-
-    const poll = async () => {
-      for (let i = 0; i < 8 && !cancelled; i++) {
-        const r = await api.get<{ status: string }>('/billing/status').catch(() => null)
-        if (r?.status === 'active') return true
-        await new Promise(res => setTimeout(res, 1200))
-      }
-      return false
-    }
-
-    poll().then(async confirmed => {
-      if (cancelled) return
-      await refreshSubscription()
-      setConfirmingPayment(false)
-      if (confirmed) connectWa() // pode ser bloqueado pelo navegador — o card abaixo cobre esse caso
-    })
-
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
       <div className="mb-7">
@@ -251,7 +145,7 @@ export default function Settings() {
               WhatsApp, Inbox, Pós-venda e Relatórios liberam assim que você assinar. Empresa, preços e agentes você já pode configurar livremente.
             </p>
           </div>
-          <Button variant="primary" size="sm" onClick={startCheckout} disabled={startingCheckout} className="flex-none">
+          <Button variant="primary" size="sm" onClick={() => startCheckout()} disabled={startingCheckout} className="flex-none">
             {startingCheckout ? <><Loader2 size={14} className="animate-spin" /> Abrindo…</> : <>Assinar — R$127/mês <ArrowRight size={14} /></>}
           </Button>
         </div>
@@ -285,7 +179,7 @@ export default function Settings() {
                 <span className="font-display font-bold text-2xl text-ink leading-none">R$ 127</span>
                 <span className="text-ink-soft text-xs font-body mb-0.5">/mês</span>
               </div>
-              <Button variant="primary" onClick={startCheckout} disabled={startingCheckout} className="w-fit">
+              <Button variant="primary" onClick={() => startCheckout()} disabled={startingCheckout} className="w-fit">
                 {startingCheckout ? <><Loader2 size={15} className="animate-spin" /> Abrindo…</> : <>Assinar para conectar <ArrowRight size={15} /></>}
               </Button>
             </div>
@@ -646,7 +540,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </div>
   )
 }

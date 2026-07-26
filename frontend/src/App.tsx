@@ -4,6 +4,8 @@ import AppLayout from '@/components/layout/AppLayout'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
 import Onboarding from '@/pages/Onboarding'
+import OnboardingVideo from '@/pages/OnboardingVideo'
+import OnboardingActivate from '@/pages/OnboardingActivate'
 import Dashboard from '@/pages/Dashboard'
 import Inbox from '@/pages/Inbox'
 import Quotes from '@/pages/Quotes'
@@ -43,6 +45,8 @@ export default function App() {
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/onboarding/video" element={<ProtectedRoute><OnboardingVideo /></ProtectedRoute>} />
+        <Route path="/onboarding/activate" element={<ProtectedRoute><OnboardingActivate /></ProtectedRoute>} />
 
         <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />

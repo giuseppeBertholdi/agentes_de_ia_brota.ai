@@ -22,7 +22,7 @@ export default function UpgradeCard() {
         </p>
       </div>
       <button
-        onClick={start}
+        onClick={() => start()}
         disabled={starting}
         className="flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green text-white rounded-lg font-body font-semibold text-sm hover:bg-green-deep transition-colors disabled:opacity-60"
       >

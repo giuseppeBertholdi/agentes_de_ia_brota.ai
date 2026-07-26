@@ -11,8 +11,8 @@ import { useSubscription } from '@/hooks/useSubscription'
 const GATED_PATHS = ['/app/inbox', '/app/quotes', '/app/reports', '/app/post-sale']
 
 export default function AppLayout() {
-  const [isFirstTime, setIsFirstTime] = useState(false)
-  const [checkedFirstTime, setCheckedFirstTime] = useState(false)
+  const [onboardingDone, setOnboardingDone] = useState(false)
+  const [checkedOnboarding, setCheckedOnboarding] = useState(false)
   const [configVersion, setConfigVersion] = useState(0)
   const [navOpen, setNavOpen] = useState(false)
   const location = useLocation()
@@ -20,29 +20,28 @@ export default function AppLayout() {
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
 
   const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
+  const statusReady = !waLoading && !statusLoading
 
   useEffect(() => { setNavOpen(false) }, [location.pathname])
 
   useEffect(() => {
-    api.get<{ business_desc?: string }>('/settings/company')
-      .then(c => setIsFirstTime(!c.business_desc))
+    api.get<{ onboarding_completed_at?: string | null }>('/settings/company')
+      .then(c => setOnboardingDone(!!c.onboarding_completed_at))
       .catch(() => {})
-      .finally(() => setCheckedFirstTime(true))
+      .finally(() => setCheckedOnboarding(true))
   }, [configVersion])
 
   const handleConfigChanged = useCallback(() => {
-    setIsFirstTime(false)
     setConfigVersion(v => v + 1)
   }, [])
 
-  // primeiro acesso: manda pro onboarding guiado, a menos que a pessoa já tenha pulado nesta sessão
-  const skippedOnboarding = sessionStorage.getItem('onboarding_skipped') === '1'
-  if (checkedFirstTime && isFirstTime && !skippedOnboarding) {
-    return <Navigate to="/onboarding" replace />
+  // onboarding incompleto: manda de volta pro wizard — se já pagou e conectou, direto pro passo final
+  if (checkedOnboarding && !onboardingDone && statusReady) {
+    const target = subscriptionActive && waConnected ? '/onboarding/activate' : '/onboarding'
+    return <Navigate to={target} replace />
   }
 
   // acesso direto por URL a páginas que dependem do bot ativo — manda pra Configurações
-  const statusReady = !waLoading && !statusLoading
   if (statusReady && !(subscriptionActive && waConnected) && GATED_PATHS.includes(location.pathname)) {
     return <Navigate to="/app/settings" replace />
   }
@@ -57,7 +56,7 @@ export default function AppLayout() {
         </div>
       </main>
       {!isDashboard && (
-        <AiAssistant isFirstTime={isFirstTime} onConfigChanged={handleConfigChanged} />
+        <AiAssistant onConfigChanged={handleConfigChanged} />
       )}
     </div>
   )

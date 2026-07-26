@@ -98,7 +98,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       {gateStage === 'subscribe' && (
         <div className="px-3 pt-3 flex-none">
           <button
-            onClick={start}
+            onClick={() => start()}
             disabled={starting}
             className="group relative w-full flex flex-col gap-2 px-3.5 py-3 rounded-xl overflow-hidden text-left border border-lime/25 bg-gradient-to-br from-green via-green to-green-deep shadow-[0_4px_16px_-4px_rgba(31,138,76,0.5)] hover:shadow-[0_6px_20px_-4px_rgba(31,138,76,0.65)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:translate-y-0"
           >

@@ -4,10 +4,10 @@ import { api } from '@/lib/api'
 export function useCheckout() {
   const [loading, setLoading] = useState(false)
 
-  const start = async () => {
+  const start = async (returnTo?: string) => {
     setLoading(true)
     try {
-      const { url } = await api.post<{ url: string }>('/billing/checkout-session')
+      const { url } = await api.post<{ url: string }>('/billing/checkout-session', { return_to: returnTo ?? null })
       window.location.href = url
       return true
     } catch {

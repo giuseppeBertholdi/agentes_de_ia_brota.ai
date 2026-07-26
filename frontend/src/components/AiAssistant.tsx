@@ -49,6 +49,7 @@ const ACTION_META: Record<string, { color: string; icon: string }> = {
   update_agent:     { color: 'bg-lime/40 border-ink/20 text-ink',           icon: '🤖' },
   create_department:{ color: 'bg-green-tint border-green/60 text-green-700',icon: '🏬' },
   get_stats:        { color: 'bg-cream-2 border-ink/20 text-ink-soft',      icon: '📊' },
+  onboarding_ready: { color: 'bg-green-tint border-green/60 text-green-700',icon: '🎉' },
 }
 
 function ActionBadge({ action }: { action: Action }) {
@@ -172,16 +173,18 @@ interface ChatPanelProps {
   showHeader?: boolean
   onClose?: () => void
   className?: string
+  /** Modo enxuto: sem cartões de capacidade nem chips de sugestão genéricos — usado no onboarding */
+  minimal?: boolean
 }
 
 export function AiChatPanel({
   messages, input, loading, onInputChange, onSend, onKeyDown, onQuickSend,
-  inputRef, bottomRef, showHeader, onClose, className,
+  inputRef, bottomRef, showHeader, onClose, className, minimal,
 }: ChatPanelProps) {
   const realMsgs = messages.filter(m => !m.isInitial)
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && !m.isInitial && !m.isLoading)
   const suggestions = lastAssistant?.actions ? getSuggestions(lastAssistant.actions) : getSuggestions([])
-  const showCaps = realMsgs.length === 0
+  const showCaps = !minimal && realMsgs.length === 0
 
   return (
     <div className={cn('flex flex-col bg-cream border border-ink/10 rounded-xl overflow-hidden shadow-soft', className)}>
@@ -249,7 +252,7 @@ export function AiChatPanel({
       </div>
 
       {/* Suggestion chips */}
-      {!showCaps && (
+      {!showCaps && !minimal && (
         <div className="flex gap-1.5 px-3 py-2 overflow-x-auto border-t border-ink/10 flex-none scrollbar-hide">
           {suggestions.map(s => (
             <SugChip key={s} label={s} onClick={() => onQuickSend(s)} />
@@ -287,9 +290,9 @@ export function AiChatPanel({
 
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
+export function useAiChat(isFirstTime = false, onConfigChanged?: () => void, isOnboarding = false) {
   const ONBOARDING =
-    'Olá! Sou o assistente da Plimpost. 👋 Vou te fazer algumas perguntas rápidas pra já deixar os preços, o tom de atendimento e os setores certos configurados — sem formulário, e dá pra ajustar qualquer coisa depois.\n\nPra começar: me conta, qual é o seu negócio? O que você vende ou oferece?'
+    'Olá! 👋 Sou a assistente da Plimpost. Vou te fazer só algumas perguntas rápidas pra deixar a IA de atendimento pronta pro seu negócio — uma de cada vez, no seu tempo.\n\nPra começar: me conta, qual é o seu negócio? O que você vende ou oferece?'
   const WELCOME =
     'Olá! Posso ajudar a configurar agentes, adicionar preços, consultar dados do negócio ou responder qualquer dúvida. O que você precisa?'
 
@@ -331,6 +334,7 @@ export function useAiChat(isFirstTime = false, onConfigChanged?: () => void) {
       const res = await api.post<{ message: string; actions: Action[] }>('/assistant/chat', {
         message: msg,
         history: historyForApi,
+        is_onboarding: isOnboarding,
       })
       setMessages(prev => [
         ...prev.slice(0, -1),

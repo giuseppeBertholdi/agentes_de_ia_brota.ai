@@ -26,6 +26,7 @@ class ChatMessage(BaseModel):
 class AssistantChatRequest(BaseModel):
     message: str
     history: List[ChatMessage] = []
+    is_onboarding: bool = False
 
 
 TOOLS: List[dict] = [
@@ -117,6 +118,31 @@ TOOLS: List[dict] = [
     },
 ]
 
+FINISH_ONBOARDING_TOOL: dict = {
+    "type": "function",
+    "function": {
+        "name": "finish_onboarding",
+        "description": (
+            "Chame quando já tiver informações suficientes sobre o negócio (descrição, tom de voz e "
+            "ao menos um produto/serviço com preço) pra IA atender bem. Encerra a etapa de perguntas "
+            "e libera o próximo passo do cadastro."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "summary": {"type": "string", "description": "Resumo curto e caloroso do que foi configurado, para mostrar à pessoa"},
+            },
+            "required": ["summary"],
+        },
+    },
+}
+
+# Durante o onboarding, a IA só deve mexer no que é relevante pra deixar o atendimento pronto —
+# nada de estatísticas, agentes ou exclusão de itens ainda.
+ONBOARDING_TOOLS: List[dict] = [
+    t for t in TOOLS if t["function"]["name"] in ("update_company", "create_price_item", "create_department")
+] + [FINISH_ONBOARDING_TOOL]
+
 
 def _build_system(company: dict, prices: List[dict], agents: List[dict], departments: List[dict]) -> str:
     price_lines = "\n".join(
@@ -163,9 +189,34 @@ Quando o usuário descrever o negócio pela primeira vez (onboarding), entenda b
 1. Use update_company para salvar nome, tom de voz e descrição do negócio
 2. Use create_price_item para cada produto/serviço mencionado com preço
 3. Se fizer sentido para o negócio (ex: empresa com RH, financeiro, vendas, suporte), sugira e use create_department para os setores relevantes
-4. Confirme o que foi configurado e explique que o último passo — conectar o número de WhatsApp — é feito em Configurações (você não faz essa parte, só avise que fica lá)
+4. Confirme o que foi configurado e explique que os próximos passos — vídeo rápido e ativação do WhatsApp — vêm em seguida
 
 Seja natural, direto e proativo. Faça perguntas quando precisar de mais detalhes.
+Responda sempre em português brasileiro."""
+
+
+def _build_onboarding_system(company: dict, prices: List[dict]) -> str:
+    price_lines = "\n".join(
+        f"  {p['name']} — R$ {float(p['price']):.2f}/{p.get('unit','un')}" for p in prices
+    ) or "  (nenhum ainda)"
+
+    return f"""Você é a assistente de onboarding da Plimpost, plataforma de agentes de IA para WhatsApp.
+Sua única missão nesta conversa é conhecer o negócio da pessoa pra deixar a IA de atendimento pronta pra funcionar.
+
+O que já sabemos até agora:
+Nome: {company.get('name') or 'não informado'}
+Tom de voz: {company.get('voice_tone') or 'não informado'}
+Descrição: {company.get('business_desc') or 'não informada'}
+Produtos/serviços:
+{price_lines}
+
+Regras muito importantes:
+1. Faça UMA pergunta principal por vez — nunca uma lista de perguntas. Converse como uma pessoa real, não como um formulário.
+2. Comece (ou continue, se já tiver algo acima) entendendo o que a empresa vende/oferece. Depois vá aprofundando o necessário: produtos/serviços e preços, tom de atendimento desejado, e se fizer sentido, setores de transferência (RH, financeiro, vendas etc.) — só pergunte sobre setores se o tipo de negócio sugerir que faz sentido.
+3. Assim que uma informação for confirmada pela pessoa, salve na hora com a ferramenta certa (update_company, create_price_item, create_department). Não espere o fim da conversa pra salvar tudo de uma vez.
+4. NUNCA pergunte sobre conectar o WhatsApp nem sobre pagamento/assinatura — isso acontece em uma etapa separada, depois desta conversa.
+5. Quando já tiver o essencial — descrição do negócio, tom de voz e ao menos um produto/serviço com preço — chame finish_onboarding com um resumo curto e caloroso. Não prolongue a conversa além do necessário.
+6. Seja breve: no máximo 2-3 frases por resposta.
 Responda sempre em português brasileiro."""
 
 
@@ -271,6 +322,9 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
         )
         return summary, {"type": "get_stats", "_label": "Estatísticas consultadas", "data": stats_data}
 
+    if name == "finish_onboarding":
+        return args.get("summary", "Tudo pronto!"), {"type": "onboarding_ready", "_label": "Onboarding concluído", "data": {}}
+
     return f"Ferramenta desconhecida: {name}", {}
 
 
@@ -288,7 +342,8 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
     departments_r = supabase.table("departments").select("*").eq("company_id", company_id).order("name").execute()
     departments = departments_r.data or []
 
-    system = _build_system(company, prices, agents, departments)
+    system = _build_onboarding_system(company, prices) if body.is_onboarding else _build_system(company, prices, agents, departments)
+    tools = ONBOARDING_TOOLS if body.is_onboarding else TOOLS
 
     messages: List[dict] = [{"role": "system", "content": system}]
     for m in body.history[-20:]:
@@ -302,7 +357,7 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
         resp = await client.chat.completions.create(
             model=MODEL,
             messages=messages,
-            tools=TOOLS,
+            tools=tools,
             tool_choice="auto",
             temperature=0.5,
         )

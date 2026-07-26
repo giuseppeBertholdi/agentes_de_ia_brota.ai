@@ -3,6 +3,7 @@ Integração com o Stripe — plano único de R$127/mês.
 """
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 
 from app.api.auth import get_current_user, require_company
 from app.config import settings
@@ -20,6 +21,12 @@ _STRIPE_STATUS_MAP = {
     "incomplete_expired": "canceled",
 }
 
+_ALLOWED_RETURN_PREFIXES = ("/app/", "/onboarding")
+
+
+class CheckoutSessionRequest(BaseModel):
+    return_to: str | None = None
+
 
 @router.get("/status")
 async def billing_status(company_id: str = Depends(require_company)):
@@ -29,11 +36,17 @@ async def billing_status(company_id: str = Depends(require_company)):
 
 @router.post("/checkout-session")
 async def create_checkout_session(
+    body: CheckoutSessionRequest = CheckoutSessionRequest(),
     user: dict = Depends(get_current_user),
     company_id: str = Depends(require_company),
 ):
     company_r = supabase.table("companies").select("name,stripe_customer_id").eq("id", company_id).single().execute()
     company = company_r.data or {}
+
+    return_to = body.return_to or "/app/settings"
+    if not return_to.startswith(_ALLOWED_RETURN_PREFIXES):
+        return_to = "/app/settings"
+    sep = "&" if "?" in return_to else "?"
 
     customer_id = company.get("stripe_customer_id")
     if not customer_id:
@@ -54,7 +67,7 @@ async def create_checkout_session(
             # sem payment_method_types: a Stripe usa automaticamente os métodos
             # ativados em dashboard.stripe.com/settings/payment_methods (ex: card, pix)
             line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
-            success_url=f"{settings.frontend_url}/app/settings?checkout=success",
+            success_url=f"{settings.frontend_url}{return_to}{sep}checkout=success",
             cancel_url=f"{settings.frontend_url}/app/dashboard?checkout=cancel",
             metadata={"company_id": company_id},
             subscription_data={"metadata": {"company_id": company_id}},
