@@ -2,6 +2,10 @@
 Webhook handler para a WhatsApp Cloud API (Meta).
 Rota única: GET/POST /webhook
 """
+import hashlib
+import hmac
+import json
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
 from app.config import settings
 from app.database import supabase
@@ -20,6 +24,13 @@ async def verify_webhook(request: Request):
     ):
         return Response(content=params.get("hub.challenge", ""), media_type="text/plain")
     raise HTTPException(status_code=403, detail="Verification failed")
+
+
+def _verify_signature(payload: bytes, signature_header: str) -> bool:
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+    expected = hmac.new(settings.meta_app_secret.encode(), payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_header.removeprefix("sha256="))
 
 
 async def _handle_message(phone_number_id: str, value: dict):
@@ -52,7 +63,8 @@ async def _handle_message(phone_number_id: str, value: dict):
 
         from_number = msg.get("from", "")
         content = msg.get("text", {}).get("body", "").strip()
-        if not content or not from_number:
+        wa_message_id = msg.get("id", "")
+        if not content or not from_number or not wa_message_id:
             continue
 
         push_name = contacts.get(from_number, "")
@@ -75,7 +87,7 @@ async def _handle_message(phone_number_id: str, value: dict):
         if not conversation:
             continue
 
-        reply = await process_message(company_id, conversation["id"], content)
+        reply = await process_message(company_id, conversation["id"], content, wa_message_id)
         if not reply:
             continue
 
@@ -84,8 +96,12 @@ async def _handle_message(phone_number_id: str, value: dict):
 
 @router.post("")
 async def whatsapp_webhook(request: Request, background: BackgroundTasks):
+    raw_body = await request.body()
+    if not _verify_signature(raw_body, request.headers.get("x-hub-signature-256", "")):
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
     try:
-        payload = await request.json()
+        payload = json.loads(raw_body)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 

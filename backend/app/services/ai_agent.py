@@ -199,11 +199,24 @@ async def run_quote_agent(
 # Orquestrador principal — chamado pelo webhook handler
 # ---------------------------------------------------------------------------
 
-async def process_message(company_id: str, conversation_id: str, user_message: str) -> str:
+async def process_message(company_id: str, conversation_id: str, user_message: str, message_id: str) -> str:
     """
     Retorna a resposta a ser enviada ao cliente.
     Salva a mensagem do usuário e a resposta no banco.
     """
+    # a Meta reentrega o mesmo evento em at-least-once delivery — sem isso,
+    # um reenvio gera resposta e cotação duplicadas
+    existing = (
+        supabase.table("messages")
+        .select("id")
+        .eq("company_id", company_id)
+        .eq("message_id", message_id)
+        .limit(1)
+        .execute()
+    )
+    if existing.data:
+        return ""
+
     # carrega contexto
     company_r = supabase.table("companies").select("*").eq("id", company_id).single().execute()
     company = company_r.data
@@ -230,6 +243,7 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         "company_id": company_id,
         "role": "user",
         "content": user_message,
+        "message_id": message_id,
     }).execute()
 
     # verifica se conversa está em modo human
