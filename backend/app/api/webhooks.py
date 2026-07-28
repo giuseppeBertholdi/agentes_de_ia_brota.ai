@@ -5,6 +5,7 @@ Rota única: GET/POST /webhook
 import hashlib
 import hmac
 import json
+import logging
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
 from app.config import settings
@@ -13,6 +14,7 @@ from app.services import whatsapp_cloud_api
 from app.services.ai_agent import process_message
 
 router = APIRouter()
+logger = logging.getLogger("webhook")
 
 
 @router.get("")
@@ -91,7 +93,10 @@ async def _handle_message(phone_number_id: str, value: dict):
         if not reply:
             continue
 
-        await whatsapp_cloud_api.send_text(phone_number_id, from_number, reply)
+        try:
+            await whatsapp_cloud_api.send_text(phone_number_id, from_number, reply)
+        except Exception:
+            logger.exception("Falha ao enviar resposta via WhatsApp (company_id=%s)", company_id)
 
 
 @router.post("")
