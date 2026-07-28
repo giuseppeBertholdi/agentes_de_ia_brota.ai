@@ -101,13 +101,18 @@ Descrição do negócio: {business_desc}
 
 Sua função:
 1. Receber qualquer mensagem do cliente com cordialidade.
-2. Entender a intenção: saudação, cotação/orçamento, agendamento, dúvida, reclamação, pedido para falar com um setor específico, ou outro.
-3. Se o cliente quer um orçamento/cotação, responda APENAS com o JSON:
+2. Entender a intenção: saudação, cotação/orçamento, dúvida, reclamação, pedido para falar com um setor específico, ou outro.
+3. Se o cliente quer um orçamento/cotação, responda com o JSON:
    {{"action": "quote", "reason": "<resumo breve do que o cliente quer>"}}
-4. Para qualquer outra intenção, responda normalmente e inclua ao final:
+4. Para qualquer outra intenção, responda normalmente e inclua:
    {{"action": "reply", "message": "<sua resposta aqui>"}}
 
-Responda sempre em português brasileiro. Seja breve e humano."""
+Importante: você NÃO tem acesso a nenhuma agenda ou sistema de horários. Se o cliente
+pedir pra marcar/agendar algo, nunca diga que confirmou um horário — apenas anote o que
+ele pediu e informe que a equipe vai entrar em contato para confirmar o horário.
+
+Responda sempre em português brasileiro, com um objeto JSON válido no formato acima —
+nada de texto fora do JSON. Seja breve e humano no campo "message"."""
 
 
 async def run_receptionist(
@@ -130,28 +135,27 @@ async def run_receptionist(
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
-    resp = await client.chat.completions.create(model=MODEL, messages=messages, temperature=0.4)
+    resp = await client.chat.completions.create(
+        model=MODEL, messages=messages, temperature=0.4,
+        response_format={"type": "json_object"},
+    )
     raw = resp.choices[0].message.content.strip()
 
-    # tenta extrair JSON embutido
     try:
-        start = raw.rfind("{")
-        end = raw.rfind("}") + 1
-        if start != -1:
-            data = json.loads(raw[start:end])
-            if data.get("action") == "quote":
-                return {"action": "quote", "reason": data.get("reason", ""), "message": ""}
-            if data.get("action") == "transfer":
-                return {
-                    "action": "transfer",
-                    "department": data.get("department", ""),
-                    "message": data.get("message", raw),
-                    "reason": "",
-                }
-            if data.get("action") == "accept_quote" and pending_quote:
-                return {"action": "accept_quote", "message": data.get("message", DEFAULT_ACCEPT_MESSAGE), "reason": ""}
-            if data.get("action") == "reply":
-                return {"action": "reply", "message": data.get("message", raw), "reason": ""}
+        data = json.loads(raw)
+        if data.get("action") == "quote":
+            return {"action": "quote", "reason": data.get("reason", ""), "message": ""}
+        if data.get("action") == "transfer":
+            return {
+                "action": "transfer",
+                "department": data.get("department", ""),
+                "message": data.get("message", raw),
+                "reason": "",
+            }
+        if data.get("action") == "accept_quote" and pending_quote:
+            return {"action": "accept_quote", "message": data.get("message", DEFAULT_ACCEPT_MESSAGE), "reason": ""}
+        if data.get("action") == "reply":
+            return {"action": "reply", "message": data.get("message", raw), "reason": ""}
     except (json.JSONDecodeError, ValueError):
         pass
 
@@ -169,17 +173,19 @@ Tom de voz: {voice_tone}.
 
 Sua missão:
 1. Conduzir uma conversa amigável para entender exatamente o que o cliente precisa —
-   incluindo a QUANTIDADE de cada item (ex: quantas horas, quantas unidades). Nunca
-   gere uma cotação sem saber a quantidade; se o preço for por hora/unidade e o
-   cliente não disse quantas, pergunte antes de fechar a cotação.
-2. Quando tiver informações suficientes, gere a cotação formatada e inclua no final:
+   incluindo a QUANTIDADE de cada item, SEMPRE na mesma unidade cadastrada na tabela de
+   preços (ex: se o preço é por hora, pergunte quantas horas — nunca estime nem converta
+   de uma unidade pra outra por conta própria, ex: metros quadrados virando horas).
+   Nunca gere uma cotação sem essa quantidade confirmada pelo cliente.
+2. Quando tiver informações suficientes, gere a cotação formatada:
    {{"action": "quote_ready", "items": [{{"name":"...", "qty":1, "unit_price":0.0, "subtotal":0.0}}], "total": 0.0, "message": "<resumo direto da cotação, sem saudação nem introdução>"}}
-   subtotal de cada item = qty × unit_price. total = soma dos subtotais. Confira a conta
-   antes de responder.
-3. Se ainda precisar de mais informações, responda normalmente e inclua:
+   subtotal de cada item = qty × unit_price. total = soma dos subtotais.
+3. Se ainda precisar de mais informações, responda:
    {{"action": "collecting", "message": "<sua pergunta>"}}
 
-Responda sempre em português brasileiro, direto ao ponto — sem frases de abertura como "Claro!" ou "Ótima pergunta"."""
+Responda sempre em português brasileiro, com um objeto JSON válido no formato acima —
+nada de texto fora do JSON. No campo "message", vá direto ao ponto — sem frases de
+abertura como "Claro!" ou "Ótima pergunta"."""
 
 
 async def run_quote_agent(
@@ -198,28 +204,28 @@ async def run_quote_agent(
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
-    resp = await client.chat.completions.create(model=MODEL, messages=messages, temperature=0.3)
+    resp = await client.chat.completions.create(
+        model=MODEL, messages=messages, temperature=0.3,
+        response_format={"type": "json_object"},
+    )
     raw = resp.choices[0].message.content.strip()
 
     try:
-        start = raw.rfind("{")
-        end = raw.rfind("}") + 1
-        if start != -1:
-            data = json.loads(raw[start:end])
-            action = data.get("action", "collecting")
-            items = data.get("items", [])
-            if action == "quote_ready":
-                for item in items:
-                    item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
-                total = round(sum(item["subtotal"] for item in items), 2)
-            else:
-                total = data.get("total", 0.0)
-            return {
-                "action": action,
-                "message": data.get("message", raw),
-                "items": items,
-                "total": total,
-            }
+        data = json.loads(raw)
+        action = data.get("action", "collecting")
+        items = data.get("items", [])
+        if action == "quote_ready":
+            for item in items:
+                item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
+            total = round(sum(item["subtotal"] for item in items), 2)
+        else:
+            total = data.get("total", 0.0)
+        return {
+            "action": action,
+            "message": data.get("message", raw),
+            "items": items,
+            "total": total,
+        }
     except (json.JSONDecodeError, ValueError):
         pass
 

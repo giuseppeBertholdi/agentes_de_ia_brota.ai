@@ -50,6 +50,7 @@ async def suggest_price_questions(body: PriceQuestionsRequest, company_id: str =
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.5,
+        response_format={"type": "json_object"},
     )
     try:
         data = json.loads(resp.choices[0].message.content.strip())

@@ -59,6 +59,7 @@ export default function Settings() {
   const [priceQuestions, setPriceQuestions] = useState<string[]>([])
   const [priceAnswers,   setPriceAnswers]   = useState<Record<number, string>>({})
   const [askingAi,       setAskingAi]       = useState(false)
+  const [askAiError,     setAskAiError]     = useState(false)
 
   const { active: subscriptionActive, loading: subLoading } = useSubscription()
   const { start: startCheckout, loading: startingCheckout } = useCheckout()
@@ -111,10 +112,14 @@ export default function Settings() {
   const askPriceQuestions = async () => {
     if (!newItem.name) return
     setAskingAi(true)
+    setAskAiError(false)
     try {
       const r = await api.post<{ questions: string[] }>('/settings/prices/questions', { name: newItem.name })
       setPriceQuestions(r.questions)
       setPriceAnswers({})
+      if (r.questions.length === 0) setAskAiError(true)
+    } catch {
+      setAskAiError(true)
     } finally {
       setAskingAi(false)
     }
@@ -421,6 +426,10 @@ export default function Settings() {
               {askingAi ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
               Perguntar à IA o que é importante saber sobre esse item
             </Button>
+
+            {askAiError && (
+              <p className="text-red-600 text-xs font-body">Não consegui gerar sugestões agora, tenta de novo.</p>
+            )}
 
             {priceQuestions.length > 0 && (
               <div className="flex flex-col gap-2 p-3 bg-cream-2 border border-ink/10 rounded-md">
