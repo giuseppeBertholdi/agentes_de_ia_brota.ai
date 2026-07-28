@@ -95,7 +95,8 @@ async def _handle_message(phone_number_id: str, value: dict):
             continue
 
         try:
-            await whatsapp_cloud_api.send_text(phone_number_id, from_number, reply)
+            to = whatsapp_cloud_api.normalize_br_number(from_number)
+            await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
         except httpx.HTTPStatusError as e:
             logger.error(
                 "Falha ao enviar resposta via WhatsApp (company_id=%s): %s",

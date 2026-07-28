@@ -76,7 +76,7 @@ async def send_message(
     try:
         await whatsapp_cloud_api.send_text(
             instance_r.data["phone_number_id"],
-            conv.data["remote_jid"],
+            whatsapp_cloud_api.normalize_br_number(conv.data["remote_jid"]),
             body.content,
         )
     except httpx.HTTPStatusError as e:

@@ -16,6 +16,17 @@ GRAPH_BASE = f"https://graph.facebook.com/{settings.graph_api_version}"
 SYSTEM_USER_HEADERS = {"Authorization": f"Bearer {settings.meta_system_user_token}"}
 
 
+def normalize_br_number(number: str) -> str:
+    """
+    A Meta entrega o campo 'from' de webhooks de celulares brasileiros sem o 9º
+    dígito (ex: 554792231586), mas exige o número completo com o 9 pra enviar
+    (5547992231586) — sem isso o envio falha com 131030 mesmo pro mesmo contato.
+    """
+    if number.startswith("55") and len(number) == 12:
+        return number[:4] + "9" + number[4:]
+    return number
+
+
 async def exchange_code_for_token(code: str) -> dict:
     """Troca o code do Embedded Signup por um access token (usado apenas para validar a concessão)."""
     async with httpx.AsyncClient(timeout=15) as client:
