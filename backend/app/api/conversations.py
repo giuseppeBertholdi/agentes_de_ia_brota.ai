@@ -1,4 +1,5 @@
 from typing import Optional
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.auth import require_company, get_current_user
 from app.database import supabase
@@ -72,11 +73,14 @@ async def send_message(
     if not instance_r.data:
         raise HTTPException(400, "WhatsApp não conectado")
 
-    await whatsapp_cloud_api.send_text(
-        instance_r.data["phone_number_id"],
-        conv.data["remote_jid"],
-        body.content,
-    )
+    try:
+        await whatsapp_cloud_api.send_text(
+            instance_r.data["phone_number_id"],
+            conv.data["remote_jid"],
+            body.content,
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(400, f"Falha ao enviar via WhatsApp: {e.response.text}")
 
     supabase.table("messages").insert({
         "conversation_id": body.conversation_id,
