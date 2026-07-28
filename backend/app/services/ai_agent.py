@@ -149,13 +149,18 @@ Tom de voz: {voice_tone}.
 {price_table}
 
 Sua missão:
-1. Conduzir uma conversa amigável para entender exatamente o que o cliente precisa.
+1. Conduzir uma conversa amigável para entender exatamente o que o cliente precisa —
+   incluindo a QUANTIDADE de cada item (ex: quantas horas, quantas unidades). Nunca
+   gere uma cotação sem saber a quantidade; se o preço for por hora/unidade e o
+   cliente não disse quantas, pergunte antes de fechar a cotação.
 2. Quando tiver informações suficientes, gere a cotação formatada e inclua no final:
-   {{"action": "quote_ready", "items": [{{"name":"...", "qty":1, "unit_price":0.0, "subtotal":0.0}}], "total": 0.0, "message": "<texto amigável com o resumo>"}}
+   {{"action": "quote_ready", "items": [{{"name":"...", "qty":1, "unit_price":0.0, "subtotal":0.0}}], "total": 0.0, "message": "<resumo direto da cotação, sem saudação nem introdução>"}}
+   subtotal de cada item = qty × unit_price. total = soma dos subtotais. Confira a conta
+   antes de responder.
 3. Se ainda precisar de mais informações, responda normalmente e inclua:
    {{"action": "collecting", "message": "<sua pergunta>"}}
 
-Responda sempre em português brasileiro."""
+Responda sempre em português brasileiro, direto ao ponto — sem frases de abertura como "Claro!" ou "Ótima pergunta"."""
 
 
 async def run_quote_agent(
@@ -183,11 +188,18 @@ async def run_quote_agent(
         if start != -1:
             data = json.loads(raw[start:end])
             action = data.get("action", "collecting")
+            items = data.get("items", [])
+            if action == "quote_ready":
+                for item in items:
+                    item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
+                total = round(sum(item["subtotal"] for item in items), 2)
+            else:
+                total = data.get("total", 0.0)
             return {
                 "action": action,
                 "message": data.get("message", raw),
-                "items": data.get("items", []),
-                "total": data.get("total", 0.0),
+                "items": items,
+                "total": total,
             }
     except (json.JSONDecodeError, ValueError):
         pass
