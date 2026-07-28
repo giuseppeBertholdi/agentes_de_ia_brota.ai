@@ -17,6 +17,10 @@ class TakeOverRequest(BaseModel):
     conversation_id: str
 
 
+class PriceQuestionsRequest(BaseModel):
+    name: str
+
+
 class PriceItem(BaseModel):
     id: Optional[str] = None
     name: str

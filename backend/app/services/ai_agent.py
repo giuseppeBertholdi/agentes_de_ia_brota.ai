@@ -76,6 +76,21 @@ def _departments_text(departments: list[dict]) -> str:
     return "\n".join(lines)
 
 
+DEFAULT_ACCEPT_MESSAGE = "Perfeito! Já vamos dar andamento e entraremos em contato em breve. Obrigado! 🙌"
+
+
+def _pending_quote_text(quote: dict | None) -> str:
+    if not quote:
+        return ""
+    return (
+        f"\nExiste uma cotação pendente enviada a esse cliente, no valor de R$ {quote.get('total', 0):.2f}. "
+        'Se o cliente confirmar que aceita/fecha negócio (ex: "fechado", "aceito", "pode fazer", "vamos '
+        'nessa"), responda APENAS com o JSON:\n'
+        '{"action": "accept_quote", "message": "<mensagem curta confirmando e avisando que a equipe vai '
+        'entrar em contato/dar seguimento>"}'
+    )
+
+
 # ---------------------------------------------------------------------------
 # Receptionist agent
 # ---------------------------------------------------------------------------
@@ -101,14 +116,16 @@ async def run_receptionist(
     user_message: str,
     custom_prompt: str | None = None,
     departments: list[dict] | None = None,
+    pending_quote: dict | None = None,
 ) -> dict:
-    """Retorna {'action': 'reply'|'quote'|'transfer', 'message': str, 'reason': str, 'department': str}"""
+    """Retorna {'action': 'reply'|'quote'|'transfer'|'accept_quote', 'message': str, 'reason': str, 'department': str}"""
     system = (custom_prompt or RECEPTIONIST_BASE).format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
     system += _departments_text(departments or [])
+    system += _pending_quote_text(pending_quote)
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
@@ -131,6 +148,8 @@ async def run_receptionist(
                     "message": data.get("message", raw),
                     "reason": "",
                 }
+            if data.get("action") == "accept_quote" and pending_quote:
+                return {"action": "accept_quote", "message": data.get("message", DEFAULT_ACCEPT_MESSAGE), "reason": ""}
             if data.get("action") == "reply":
                 return {"action": "reply", "message": data.get("message", raw), "reason": ""}
     except (json.JSONDecodeError, ValueError):
@@ -249,6 +268,17 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
     departments_r = supabase.table("departments").select("id,name,description").eq("company_id", company_id).execute()
     departments = departments_r.data or []
 
+    pending_quote_r = (
+        supabase.table("quotes")
+        .select("id,total")
+        .eq("conversation_id", conversation_id)
+        .eq("status", "sent")
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    pending_quote = (pending_quote_r.data or [None])[0]
+
     # salva mensagem do usuário
     supabase.table("messages").insert({
         "conversation_id": conversation_id,
@@ -284,11 +314,15 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         user_message=user_message,
         custom_prompt=receptionist_cfg.get("system_prompt"),
         departments=departments,
+        pending_quote=pending_quote,
     )
 
     reply_text = ""
 
-    if rec_result["action"] == "transfer":
+    if rec_result["action"] == "accept_quote":
+        supabase.table("quotes").update({"status": "accepted"}).eq("id", pending_quote["id"]).execute()
+        reply_text = rec_result.get("message") or DEFAULT_ACCEPT_MESSAGE
+    elif rec_result["action"] == "transfer":
         dept_name = (rec_result.get("department") or "").strip().lower()
         dept = next((d for d in departments if d["name"].strip().lower() == dept_name), None)
         if dept:

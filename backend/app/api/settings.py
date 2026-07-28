@@ -1,9 +1,11 @@
+import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.auth import require_company, require_active_subscription
 from app.database import supabase
 from app.services import whatsapp_cloud_api
-from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback
+from app.services.ai_agent import client as openai_client, MODEL
+from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback, PriceQuestionsRequest
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -29,6 +31,31 @@ async def update_company(body: CompanyUpdate, company_id: str = Depends(require_
 async def list_prices(company_id: str = Depends(require_company)):
     r = supabase.table("price_items").select("*").eq("company_id", company_id).order("name").execute()
     return r.data or []
+
+
+@router.post("/prices/questions")
+async def suggest_price_questions(body: PriceQuestionsRequest, company_id: str = Depends(require_company)):
+    """
+    Sugere perguntas pra fazer ao cadastrar um produto/serviço — as respostas viram
+    parte da descrição, que o agente de Cotação usa como contexto nas conversas.
+    """
+    prompt = (
+        f'Um dono de negócio está cadastrando o item "{body.name}" na tabela de preços dele. '
+        "Sugira de 2 a 4 perguntas curtas e práticas que, se respondidas, ajudariam um "
+        "atendente de IA a montar cotações precisas pra esse item no futuro (ex: o que faz o "
+        "preço variar, informações que precisa pedir ao cliente, prazos, condições especiais). "
+        'Responda APENAS com JSON: {"questions": ["...", "..."]}'
+    )
+    resp = await openai_client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5,
+    )
+    try:
+        data = json.loads(resp.choices[0].message.content.strip())
+        return {"questions": data.get("questions", [])}
+    except (json.JSONDecodeError, ValueError):
+        return {"questions": []}
 
 
 @router.post("/prices")

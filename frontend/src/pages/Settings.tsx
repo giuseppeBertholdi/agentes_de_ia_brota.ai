@@ -56,6 +56,9 @@ export default function Settings() {
   const [editingItem, setEditingItem] = useState<PriceItem | null>(null)
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
+  const [priceQuestions, setPriceQuestions] = useState<string[]>([])
+  const [priceAnswers,   setPriceAnswers]   = useState<Record<number, string>>({})
+  const [askingAi,       setAskingAi]       = useState(false)
 
   const { active: subscriptionActive, loading: subLoading } = useSubscription()
   const { start: startCheckout, loading: startingCheckout } = useCheckout()
@@ -105,10 +108,35 @@ export default function Settings() {
   }
 
   // ── Prices ────────────────────────────────────────────────────────────────
+  const askPriceQuestions = async () => {
+    if (!newItem.name) return
+    setAskingAi(true)
+    try {
+      const r = await api.post<{ questions: string[] }>('/settings/prices/questions', { name: newItem.name })
+      setPriceQuestions(r.questions)
+      setPriceAnswers({})
+    } finally {
+      setAskingAi(false)
+    }
+  }
+
+  const applyPriceAnswers = () => {
+    const qa = priceQuestions
+      .map((q, i) => (priceAnswers[i]?.trim() ? `${q} ${priceAnswers[i].trim()}` : null))
+      .filter(Boolean)
+      .join(' | ')
+    if (!qa) return
+    setNewItem(i => ({ ...i, description: i.description ? `${i.description} | ${qa}` : qa }))
+    setPriceQuestions([])
+    setPriceAnswers({})
+  }
+
   const addPrice = async () => {
     if (!newItem.name || !newItem.price) return
     await api.post('/settings/prices', newItem)
     setNewItem({ name: '', price: 0, unit: 'un', active: true })
+    setPriceQuestions([])
+    setPriceAnswers({})
     await load()
   }
 
@@ -388,6 +416,30 @@ export default function Settings() {
               <Input type="number" placeholder="Preço (R$)"  value={newItem.price || ''}       onChange={e => setNewItem(i => ({ ...i, price: Number(e.target.value) }))} />
               <Input placeholder="Unidade (un, m², hora…)"   value={newItem.unit}              onChange={e => setNewItem(i => ({ ...i, unit:  e.target.value }))} />
             </div>
+
+            <Button variant="ghost" size="sm" onClick={askPriceQuestions} disabled={!newItem.name || askingAi} className="self-start">
+              {askingAi ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              Perguntar à IA o que é importante saber sobre esse item
+            </Button>
+
+            {priceQuestions.length > 0 && (
+              <div className="flex flex-col gap-2 p-3 bg-cream-2 border border-ink/10 rounded-md">
+                {priceQuestions.map((q, i) => (
+                  <div key={i} className="flex flex-col gap-1">
+                    <label className="text-xs font-body text-ink-soft">{q}</label>
+                    <Input
+                      value={priceAnswers[i] || ''}
+                      onChange={e => setPriceAnswers(a => ({ ...a, [i]: e.target.value }))}
+                      placeholder="Sua resposta"
+                    />
+                  </div>
+                ))}
+                <Button variant="ghost" size="sm" onClick={applyPriceAnswers} className="self-start">
+                  Adicionar respostas à descrição
+                </Button>
+              </div>
+            )}
+
             <Button variant="primary" size="sm" onClick={addPrice} disabled={!newItem.name || !newItem.price}>
               <Plus size={15} /> Adicionar item
             </Button>
