@@ -7,6 +7,7 @@ import hmac
 import json
 import logging
 
+import httpx
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
 from app.config import settings
 from app.database import supabase
@@ -95,6 +96,11 @@ async def _handle_message(phone_number_id: str, value: dict):
 
         try:
             await whatsapp_cloud_api.send_text(phone_number_id, from_number, reply)
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                "Falha ao enviar resposta via WhatsApp (company_id=%s): %s",
+                company_id, e.response.text,
+            )
         except Exception:
             logger.exception("Falha ao enviar resposta via WhatsApp (company_id=%s)", company_id)
 
