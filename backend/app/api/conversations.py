@@ -22,6 +22,20 @@ async def list_conversations(department_id: Optional[str] = None, company_id: st
     return r.data or []
 
 
+@router.get("/handoff-count")
+async def handoff_count(company_id: str = Depends(require_company)):
+    """Conversas com cotação fechada aguardando um humano cobrar o pagamento —
+    o ponto em que o atendimento sai da IA e precisa de alguém agindo agora."""
+    r = (
+        supabase.table("conversations")
+        .select("id", count="exact")
+        .eq("company_id", company_id)
+        .eq("status", "awaiting_payment")
+        .execute()
+    )
+    return {"count": r.count or 0}
+
+
 @router.get("/{conversation_id}/messages")
 async def get_messages(conversation_id: str, company_id: str = Depends(require_company)):
     # valida que a conversa pertence à empresa
@@ -74,7 +88,7 @@ async def send_message(
         raise HTTPException(400, "WhatsApp não conectado")
 
     try:
-        await whatsapp_cloud_api.send_text(
+        resp = await whatsapp_cloud_api.send_text(
             instance_r.data["phone_number_id"],
             whatsapp_cloud_api.normalize_br_number(conv.data["remote_jid"]),
             body.content,
@@ -82,12 +96,14 @@ async def send_message(
     except httpx.HTTPStatusError as e:
         raise HTTPException(400, f"Falha ao enviar via WhatsApp: {e.response.text}")
 
+    wa_id = (resp.get("messages") or [{}])[0].get("id")
     supabase.table("messages").insert({
         "conversation_id": body.conversation_id,
         "company_id": company_id,
         "role": "assistant",
         "content": body.content,
         "sent_by_human": True,
+        "wa_message_id": wa_id,
     }).execute()
 
     return {"ok": True}
@@ -111,6 +127,23 @@ async def release_to_bot(conversation_id: str, company_id: str = Depends(require
 
 @router.post("/{conversation_id}/resolve")
 async def resolve(conversation_id: str, company_id: str = Depends(require_company)):
+    # se a conversa estava aguardando pagamento, resolver = pagamento confirmado —
+    # fecha o ciclo marcando a cotação aceita como paga
+    conv = (
+        supabase.table("conversations")
+        .select("status")
+        .eq("id", conversation_id)
+        .eq("company_id", company_id)
+        .maybe_single()
+        .execute()
+    )
+    if conv and conv.data and conv.data.get("status") == "awaiting_payment":
+        from datetime import datetime, timezone
+        supabase.table("quotes").update({
+            "status": "paid",
+            "paid_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("conversation_id", conversation_id).eq("status", "accepted").execute()
+
     supabase.table("conversations").update({"status": "resolved"}).eq(
         "id", conversation_id
     ).eq("company_id", company_id).execute()

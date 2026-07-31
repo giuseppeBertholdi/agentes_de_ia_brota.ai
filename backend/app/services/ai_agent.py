@@ -14,13 +14,18 @@ from openai import AsyncOpenAI
 from app.config import settings
 from app.database import supabase
 
-client = AsyncOpenAI(api_key=settings.openai_api_key)
+client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=20.0, max_retries=2)
 
 MODEL = "gpt-4o-mini"
 
 USAGE_LIMIT_MESSAGE = (
     "No momento nosso atendimento automático atingiu o limite de mensagens deste mês. "
     "Já avisamos a equipe — alguém te responde por aqui em breve. Obrigado pela paciência!"
+)
+
+AI_UNAVAILABLE_MESSAGE = (
+    "Desculpe, tive um problema técnico agora. Já chamei alguém da equipe para te "
+    "responder por aqui — só um momento!"
 )
 
 
@@ -61,6 +66,37 @@ def _history_text(messages: list[dict]) -> list[dict]:
     return [{"role": m["role"], "content": m["content"]} for m in messages]
 
 
+def _normalize(s: str) -> str:
+    return " ".join((s or "").strip().lower().split())
+
+
+def _match_price_item(name: str, price_items: list[dict]) -> dict | None:
+    """Casa o nome de um item de cotação gerado pela IA com um item real da
+    tabela de preços, para nunca confiar cegamente no preço que a IA disse."""
+    norm = _normalize(name)
+    if not norm:
+        return None
+    for it in price_items:
+        it_norm = _normalize(it.get("name", ""))
+        if it_norm and (it_norm == norm or it_norm in norm or norm in it_norm):
+            return it
+    return None
+
+
+def _enforce_pricing(items: list[dict], price_items: list[dict], max_discount_pct: float) -> list[dict]:
+    """Corrige o unit_price de itens que batem com a tabela de preços (a IA
+    pode 'lembrar' errado) e limita qualquer desconto ao teto configurado."""
+    for item in items:
+        match = _match_price_item(item.get("name", ""), price_items)
+        if not match:
+            continue
+        official_price = float(match.get("price", 0))
+        unit_price = float(item.get("unit_price", official_price))
+        floor = official_price * (1 - max(0.0, min(100.0, max_discount_pct)) / 100)
+        item["unit_price"] = round(min(max(unit_price, floor), official_price), 2)
+    return items
+
+
 def _departments_text(departments: list[dict]) -> str:
     if not departments:
         return ""
@@ -77,6 +113,45 @@ def _departments_text(departments: list[dict]) -> str:
 
 
 DEFAULT_ACCEPT_MESSAGE = "Perfeito! Já vamos dar andamento e entraremos em contato em breve. Obrigado! 🙌"
+
+ESCALATION_MESSAGE = "Entendo — já vou te colocar em contato com alguém da equipe. Só um instante!"
+
+
+def _save_assistant_message(conversation_id: str, company_id: str, content: str) -> str | None:
+    r = (
+        supabase.table("messages")
+        .insert({
+            "conversation_id": conversation_id,
+            "company_id": company_id,
+            "role": "assistant",
+            "content": content,
+        })
+        .execute()
+    )
+    return r.data[0]["id"] if r.data else None
+
+
+def _matches_escalation_keyword(user_message: str, keywords_csv: str | None) -> bool:
+    if not keywords_csv:
+        return False
+    msg = _normalize(user_message)
+    for kw in keywords_csv.split(","):
+        kw = _normalize(kw)
+        if kw and kw in msg:
+            return True
+    return False
+
+
+def _customer_context_text(conversation: dict | None) -> str:
+    today = datetime.now(timezone.utc).strftime("%d/%m/%Y")
+    lines = [f"\nData de hoje: {today}."]
+    name = (conversation or {}).get("contact_name")
+    phone = (conversation or {}).get("contact_phone")
+    if name:
+        lines.append(f"Nome do cliente (já confirmado — não pergunte de novo): {name}.")
+    if phone:
+        lines.append(f"Telefone do cliente (já confirmado — não pergunte de novo): {phone}.")
+    return "\n".join(lines)
 
 
 def _pending_quote_text(quote: dict | None) -> str:
@@ -122,6 +197,7 @@ async def run_receptionist(
     custom_prompt: str | None = None,
     departments: list[dict] | None = None,
     pending_quote: dict | None = None,
+    conversation: dict | None = None,
 ) -> dict:
     """Retorna {'action': 'reply'|'quote'|'transfer'|'accept_quote', 'message': str, 'reason': str, 'department': str}"""
     system = (custom_prompt or RECEPTIONIST_BASE).format(
@@ -131,14 +207,18 @@ async def run_receptionist(
     )
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
+    system += _customer_context_text(conversation)
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
-    resp = await client.chat.completions.create(
-        model=MODEL, messages=messages, temperature=0.4,
-        response_format={"type": "json_object"},
-    )
+    try:
+        resp = await client.chat.completions.create(
+            model=MODEL, messages=messages, temperature=0.4,
+            response_format={"type": "json_object"},
+        )
+    except Exception:
+        return {"action": "error", "message": "", "reason": ""}
     raw = resp.choices[0].message.content.strip()
 
     try:
@@ -188,26 +268,48 @@ nada de texto fora do JSON. No campo "message", vá direto ao ponto — sem fras
 abertura como "Claro!" ou "Ótima pergunta"."""
 
 
+def _negotiation_text(max_discount_pct: float) -> str:
+    if max_discount_pct <= 0:
+        return (
+            "\nVocê NÃO tem autorização para dar desconto. Se o cliente pedir um preço "
+            "menor, explique educadamente que os preços são fixos — nunca ofereça ou "
+            "aceite um valor abaixo da tabela."
+        )
+    return (
+        f"\nVocê pode negociar até {max_discount_pct:.0f}% de desconto sobre o preço de "
+        "tabela de cada item, se o cliente pedir ou parecer hesitante com o preço. Nunca "
+        f"ofereça mais que {max_discount_pct:.0f}% de desconto, mesmo que o cliente insista — "
+        "nesse caso, diga que esse é o melhor valor que pode oferecer."
+    )
+
+
 async def run_quote_agent(
     company: dict,
     price_items: list[dict],
     history: list[dict],
     user_message: str,
     custom_prompt: str | None = None,
+    conversation: dict | None = None,
+    max_discount_pct: float = 0.0,
 ) -> dict:
-    """Retorna {'action': 'collecting'|'quote_ready', 'message': str, 'items': list, 'total': float}"""
+    """Retorna {'action': 'collecting'|'quote_ready'|'error', 'message': str, 'items': list, 'total': float}"""
     system = (custom_prompt or QUOTE_BASE).format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         price_table=_price_table_text(price_items),
     )
+    system += _negotiation_text(max_discount_pct)
+    system += _customer_context_text(conversation)
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
-    resp = await client.chat.completions.create(
-        model=MODEL, messages=messages, temperature=0.3,
-        response_format={"type": "json_object"},
-    )
+    try:
+        resp = await client.chat.completions.create(
+            model=MODEL, messages=messages, temperature=0.3,
+            response_format={"type": "json_object"},
+        )
+    except Exception:
+        return {"action": "error", "message": "", "items": [], "total": 0.0}
     raw = resp.choices[0].message.content.strip()
 
     try:
@@ -215,6 +317,7 @@ async def run_quote_agent(
         action = data.get("action", "collecting")
         items = data.get("items", [])
         if action == "quote_ready":
+            items = _enforce_pricing(items, price_items, max_discount_pct)
             for item in items:
                 item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
             total = round(sum(item["subtotal"] for item in items), 2)
@@ -236,10 +339,13 @@ async def run_quote_agent(
 # Orquestrador principal — chamado pelo webhook handler
 # ---------------------------------------------------------------------------
 
-async def process_message(company_id: str, conversation_id: str, user_message: str, message_id: str) -> str:
+async def process_message(
+    company_id: str, conversation_id: str, user_message: str, message_id: str
+) -> tuple[str, str | None]:
     """
-    Retorna a resposta a ser enviada ao cliente.
-    Salva a mensagem do usuário e a resposta no banco.
+    Retorna (resposta a ser enviada ao cliente, id da linha salva em `messages`)
+    — o id é usado pelo webhook pra marcar o status de entrega depois de tentar
+    enviar pelo WhatsApp. Salva a mensagem do usuário e a resposta no banco.
     """
     # a Meta reentrega o mesmo evento em at-least-once delivery — sem isso,
     # um reenvio gera resposta e cotação duplicadas
@@ -252,21 +358,24 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         .execute()
     )
     if existing.data:
-        return ""
+        return "", None
 
     # carrega contexto
     company_r = supabase.table("companies").select("*").eq("id", company_id).single().execute()
     company = company_r.data
 
+    # as 30 mensagens mais RECENTES, em ordem cronológica — buscar em ordem
+    # ascendente sem desc=True pegaria as mais antigas e "congelaria" o
+    # contexto da IA no começo da conversa
     history_r = (
         supabase.table("messages")
         .select("role,content")
         .eq("conversation_id", conversation_id)
-        .order("created_at")
+        .order("created_at", desc=True)
         .limit(30)
         .execute()
     )
-    history = history_r.data or []
+    history = list(reversed(history_r.data or []))
 
     agents_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).execute()
     agents = {a["agent_type"]: a for a in (agents_r.data or [])}
@@ -285,6 +394,15 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
     )
     pending_quote = (pending_quote_r.data or [None])[0]
 
+    conversation_r = (
+        supabase.table("conversations")
+        .select("status,contact_name,contact_phone")
+        .eq("id", conversation_id)
+        .single()
+        .execute()
+    )
+    conversation = conversation_r.data
+
     # salva mensagem do usuário
     supabase.table("messages").insert({
         "conversation_id": conversation_id,
@@ -294,25 +412,28 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         "message_id": message_id,
     }).execute()
 
-    # verifica se conversa está em modo human
-    conv_r = supabase.table("conversations").select("status").eq("id", conversation_id).single().execute()
-    if conv_r.data and conv_r.data["status"] == "human":
-        return ""  # humano assumiu — não responder
+    # só a IA responde quando a conversa está em modo bot — 'human' (assumida
+    # manualmente) e 'awaiting_payment' (cotação fechada, aguardando humano
+    # cobrar) ficam sem resposta automática
+    if conversation and conversation["status"] != "bot":
+        return "", None
 
     # teto de uso mensal — protege a margem do plano contra picos de custo de IA
     if _monthly_ai_usage(company_id) >= settings.ai_monthly_message_limit:
-        supabase.table("messages").insert({
-            "conversation_id": conversation_id,
-            "company_id": company_id,
-            "role": "assistant",
-            "content": USAGE_LIMIT_MESSAGE,
-        }).execute()
-        return USAGE_LIMIT_MESSAGE
+        msg_id = _save_assistant_message(conversation_id, company_id, USAGE_LIMIT_MESSAGE)
+        return USAGE_LIMIT_MESSAGE, msg_id
 
     # Recepcionista
     receptionist_cfg = agents.get("receptionist", {})
     if not receptionist_cfg.get("enabled", True):
-        return ""
+        return "", None
+
+    # palavras-chave de escalonamento (ex: "cancelar", "reclamação", "advogado")
+    # pulam a IA inteiramente e chamam um humano — configurável por empresa
+    if _matches_escalation_keyword(user_message, receptionist_cfg.get("escalation_keywords")):
+        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+        msg_id = _save_assistant_message(conversation_id, company_id, ESCALATION_MESSAGE)
+        return ESCALATION_MESSAGE, msg_id
 
     rec_result = await run_receptionist(
         company=company,
@@ -321,13 +442,23 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
         custom_prompt=receptionist_cfg.get("system_prompt"),
         departments=departments,
         pending_quote=pending_quote,
+        conversation=conversation,
     )
 
     reply_text = ""
 
-    if rec_result["action"] == "accept_quote":
+    if rec_result["action"] == "error":
+        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+        reply_text = AI_UNAVAILABLE_MESSAGE
+    elif rec_result["action"] == "accept_quote":
         supabase.table("quotes").update({"status": "accepted"}).eq("id", pending_quote["id"]).execute()
+        # entrega para um humano cobrar o pagamento — a IA para de responder
+        # automaticamente a partir daqui, ver checagem de status acima
+        supabase.table("conversations").update({"status": "awaiting_payment"}).eq("id", conversation_id).execute()
         reply_text = rec_result.get("message") or DEFAULT_ACCEPT_MESSAGE
+        payment_instructions = (company or {}).get("payment_instructions")
+        if payment_instructions:
+            reply_text = f"{reply_text}\n\n{payment_instructions}"
     elif rec_result["action"] == "transfer":
         dept_name = (rec_result.get("department") or "").strip().lower()
         dept = next((d for d in departments if d["name"].strip().lower() == dept_name), None)
@@ -353,14 +484,29 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
                 history=history,
                 user_message=user_message,
                 custom_prompt=quote_cfg.get("system_prompt"),
+                conversation=conversation,
+                max_discount_pct=float(quote_cfg.get("max_discount_pct") or 0),
             )
-            reply_text = q_result["message"]
+
+            if q_result["action"] == "error":
+                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                reply_text = AI_UNAVAILABLE_MESSAGE
+            else:
+                reply_text = q_result["message"]
 
             if q_result["action"] == "quote_ready":
-                # persiste a cotação
+                # uma cotação nova substitui qualquer cotação anterior ainda
+                # pendente nessa conversa — evita "fechar" a cotação errada
+                # quando o cliente pediu uma segunda cotação diferente
+                supabase.table("quotes").update({"status": "superseded"}).eq(
+                    "conversation_id", conversation_id
+                ).eq("status", "sent").execute()
+
                 supabase.table("quotes").insert({
                     "company_id": company_id,
                     "conversation_id": conversation_id,
+                    "contact_name": (conversation or {}).get("contact_name"),
+                    "contact_phone": (conversation or {}).get("contact_phone"),
                     "items": q_result["items"],
                     "total": q_result["total"],
                     "status": "sent",
@@ -370,12 +516,5 @@ async def process_message(company_id: str, conversation_id: str, user_message: s
     else:
         reply_text = rec_result["message"]
 
-    if reply_text:
-        supabase.table("messages").insert({
-            "conversation_id": conversation_id,
-            "company_id": company_id,
-            "role": "assistant",
-            "content": reply_text,
-        }).execute()
-
-    return reply_text
+    msg_id = _save_assistant_message(conversation_id, company_id, reply_text) if reply_text else None
+    return reply_text, msg_id

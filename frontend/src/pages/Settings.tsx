@@ -16,9 +16,15 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useCheckout } from '@/hooks/useCheckout'
 import { useWhatsappConnection } from '@/hooks/useWhatsappConnection'
 
-interface Company { id: string; name: string; voice_tone: string; business_desc: string }
+interface Company { id: string; name: string; voice_tone: string; business_desc: string; payment_instructions?: string }
 interface PriceItem { id?: string; name: string; description?: string; price: number; unit: string; active: boolean }
-interface AgentConfig { agent_type: string; enabled: boolean; system_prompt?: string }
+interface AgentConfig {
+  agent_type: string
+  enabled: boolean
+  system_prompt?: string
+  max_discount_pct?: number
+  escalation_keywords?: string
+}
 
 const WA_STATUS_MAP: Record<string, { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }> = {
   connected: { label: 'Conectado', variant: 'green' },
@@ -95,6 +101,7 @@ export default function Settings() {
     setSaving(true)
     await api.patch('/settings/company', {
       name: company.name, voice_tone: company.voice_tone, business_desc: company.business_desc,
+      payment_instructions: company.payment_instructions,
     })
     setSaving(false)
     setSaved(true)
@@ -103,8 +110,15 @@ export default function Settings() {
   }
 
   // ── Agents ────────────────────────────────────────────────────────────────
-  const saveAgent = async (type: string, enabled: boolean, prompt?: string) => {
-    await api.put(`/settings/agents/${type}`, { enabled, system_prompt: prompt })
+  const saveAgent = async (type: string, patch: Partial<AgentConfig>) => {
+    const current = agents.find(a => a.agent_type === type)
+    await api.put(`/settings/agents/${type}`, {
+      enabled: current?.enabled ?? true,
+      system_prompt: current?.system_prompt,
+      max_discount_pct: current?.max_discount_pct ?? 0,
+      escalation_keywords: current?.escalation_keywords ?? '',
+      ...patch,
+    })
     await load()
   }
 
@@ -306,6 +320,20 @@ export default function Settings() {
                   onChange={e => setCompany(c => c ? { ...c, business_desc: e.target.value } : c)}
                 />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                  Instruções de pagamento
+                </label>
+                <Textarea
+                  placeholder="Ex: Chave Pix: contato@empresa.com.br — ou link de pagamento"
+                  rows={2}
+                  value={company.payment_instructions || ''}
+                  onChange={e => setCompany(c => c ? { ...c, payment_instructions: e.target.value } : c)}
+                />
+                <p className="text-ink-faint text-[11px] font-body">
+                  Enviado automaticamente ao cliente assim que ele aceita uma cotação.
+                </p>
+              </div>
               <div className="flex items-center gap-3">
                 <Button variant="primary" onClick={saveCompany} disabled={saving}>
                   {saving ? <><Loader2 size={14} className="animate-spin" /> Salvando…</> : 'Salvar'}
@@ -505,7 +533,7 @@ export default function Settings() {
                             setAgents(prev => prev.map(a =>
                               a.agent_type === agent.agent_type ? { ...a, enabled: !a.enabled } : a
                             ))
-                            saveAgent(agent.agent_type, !agent.enabled, agent.system_prompt)
+                            saveAgent(agent.agent_type, { enabled: !agent.enabled })
                           }}
                         >
                           <div className={cn(
@@ -539,10 +567,53 @@ export default function Settings() {
                         onChange={e => setAgents(prev => prev.map(a =>
                           a.agent_type === agent.agent_type ? { ...a, system_prompt: e.target.value } : a
                         ))}
-                        onBlur={() => saveAgent(agent.agent_type, agent.enabled, agent.system_prompt)}
+                        onBlur={() => saveAgent(agent.agent_type, { system_prompt: agent.system_prompt })}
                       />
                       <p className="text-ink-faint text-[11px] font-body">Salvo automaticamente ao sair do campo.</p>
                     </div>
+
+                    {/* Negociação — só faz sentido pro agente de cotação */}
+                    {agent.agent_type === 'quote' && (
+                      <div className="px-4 pb-4 flex flex-col gap-1.5 border-t border-ink/10 pt-3">
+                        <label className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-faint">
+                          Desconto máximo que a IA pode oferecer
+                        </label>
+                        <div className="flex items-center gap-2 max-w-[160px]">
+                          <Input
+                            type="number" min={0} max={100}
+                            value={agent.max_discount_pct ?? 0}
+                            onChange={e => setAgents(prev => prev.map(a =>
+                              a.agent_type === agent.agent_type ? { ...a, max_discount_pct: Number(e.target.value) } : a
+                            ))}
+                            onBlur={() => saveAgent(agent.agent_type, { max_discount_pct: agent.max_discount_pct ?? 0 })}
+                          />
+                          <span className="text-ink-soft text-sm font-body">%</span>
+                        </div>
+                        <p className="text-ink-faint text-[11px] font-body">
+                          {agent.max_discount_pct ? 'A IA pode negociar até esse percentual sozinha.' : 'A IA não negocia — preços fixos da tabela.'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Escalonamento — só faz sentido pro recepcionista */}
+                    {agent.agent_type === 'receptionist' && (
+                      <div className="px-4 pb-4 flex flex-col gap-1.5 border-t border-ink/10 pt-3">
+                        <label className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-faint">
+                          Palavras que chamam um humano na hora
+                        </label>
+                        <Input
+                          placeholder="Ex: cancelar, reclamação, advogado, processar"
+                          value={agent.escalation_keywords || ''}
+                          onChange={e => setAgents(prev => prev.map(a =>
+                            a.agent_type === agent.agent_type ? { ...a, escalation_keywords: e.target.value } : a
+                          ))}
+                          onBlur={() => saveAgent(agent.agent_type, { escalation_keywords: agent.escalation_keywords || '' })}
+                        />
+                        <p className="text-ink-faint text-[11px] font-body">
+                          Separe por vírgula. Se o cliente mandar uma dessas palavras, a IA para na hora e chama alguém da equipe.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )
               })}

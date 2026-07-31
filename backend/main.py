@@ -3,10 +3,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant, team, billing
+from app.services.scheduler import start_scheduler, stop_scheduler
 
 # redirect_slashes=False evita que o FastAPI faça 307 para trailing slash,
 # o que quebraria o preflight CORS
 app = FastAPI(title="Brota API", version="1.0.0", redirect_slashes=False)
+
+app.add_event_handler("startup", start_scheduler)
+app.add_event_handler("shutdown", stop_scheduler)
 
 # Garante que tanto http:// quanto https:// do frontend sejam aceitos,
 # independente de como FRONTEND_URL foi configurada no Render

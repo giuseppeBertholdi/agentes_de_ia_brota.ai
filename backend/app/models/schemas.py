@@ -33,12 +33,15 @@ class PriceItem(BaseModel):
 class AgentConfigUpdate(BaseModel):
     enabled: bool
     system_prompt: Optional[str] = None
+    max_discount_pct: Optional[float] = None
+    escalation_keywords: Optional[str] = None
 
 
 class CompanyUpdate(BaseModel):
     name: Optional[str] = None
     voice_tone: Optional[str] = None
     business_desc: Optional[str] = None
+    payment_instructions: Optional[str] = None
 
 
 class FollowUpStatusUpdate(BaseModel):

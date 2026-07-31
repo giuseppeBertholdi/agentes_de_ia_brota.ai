@@ -15,7 +15,8 @@ interface Quote {
   contact_phone: string
   items: { name: string; qty: number; unit_price: number; subtotal: number }[]
   total: number
-  status: 'pending' | 'sent' | 'accepted' | 'rejected'
+  status: 'pending' | 'sent' | 'superseded' | 'accepted' | 'paid' | 'rejected'
+  paid_at: string | null
   created_at: string
   notes: string
 }
@@ -23,17 +24,20 @@ interface Quote {
 const statusConfig = {
   pending: { label: 'Pendente', variant: 'yellow' as const },
   sent: { label: 'Enviada', variant: 'green' as const },
+  superseded: { label: 'Substituída', variant: 'gray' as const },
   accepted: { label: 'Aceita', variant: 'lime' as const },
+  paid: { label: 'Paga', variant: 'lime' as const },
   rejected: { label: 'Recusada', variant: 'red' as const },
 }
 
-type FilterStatus = 'all' | 'pending' | 'sent' | 'accepted' | 'rejected'
+type FilterStatus = 'all' | 'pending' | 'sent' | 'accepted' | 'paid' | 'rejected'
 
 const filters: { key: FilterStatus; label: string }[] = [
   { key: 'all', label: 'Todas' },
   { key: 'pending', label: 'Pendentes' },
   { key: 'sent', label: 'Enviadas' },
   { key: 'accepted', label: 'Aceitas' },
+  { key: 'paid', label: 'Pagas' },
   { key: 'rejected', label: 'Recusadas' },
 ]
 
@@ -53,7 +57,7 @@ export default function Quotes() {
   }
 
   const total = quotes.reduce((s, q) => s + (q.total || 0), 0)
-  const accepted = quotes.filter(q => q.status === 'accepted')
+  const accepted = quotes.filter(q => q.status === 'accepted' || q.status === 'paid')
   const conversionRate = quotes.length > 0 ? Math.round((accepted.length / quotes.length) * 100) : 0
 
   const visible = filter === 'all' ? quotes : quotes.filter(q => q.status === filter)
@@ -162,8 +166,11 @@ export default function Quotes() {
                           <p className="text-ink-soft text-xs font-body italic mb-3">"{q.notes}"</p>
                         )}
                         <div className="flex gap-2">
-                          {q.status !== 'accepted' && (
+                          {q.status !== 'accepted' && q.status !== 'paid' && (
                             <Button size="sm" variant="primary" onClick={() => updateStatus(q.id, 'accepted')}>Marcar aceita</Button>
+                          )}
+                          {q.status === 'accepted' && (
+                            <Button size="sm" variant="primary" onClick={() => updateStatus(q.id, 'paid')}>Marcar paga</Button>
                           )}
                           {q.status !== 'rejected' && (
                             <Button size="sm" variant="danger" onClick={() => updateStatus(q.id, 'rejected')}>Recusada</Button>

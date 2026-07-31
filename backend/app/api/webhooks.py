@@ -90,20 +90,49 @@ async def _handle_message(phone_number_id: str, value: dict):
         if not conversation:
             continue
 
-        reply = await process_message(company_id, conversation["id"], content, wa_message_id)
+        saved_message_id = None
+        try:
+            reply, saved_message_id = await process_message(company_id, conversation["id"], content, wa_message_id)
+        except Exception:
+            logger.exception("Falha ao processar mensagem com a IA (company_id=%s)", company_id)
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation["id"]).execute()
+            reply = (
+                "Desculpe, tive um problema técnico agora. Já chamei alguém da equipe "
+                "para te responder por aqui — só um momento!"
+            )
         if not reply:
             continue
 
         try:
             to = whatsapp_cloud_api.normalize_br_number(from_number)
-            await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
+            resp = await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
+            sent_wa_id = (resp.get("messages") or [{}])[0].get("id")
+            if saved_message_id:
+                supabase.table("messages").update(
+                    {"wa_message_id": sent_wa_id, "delivery_status": "sent"}
+                ).eq("id", saved_message_id).execute()
         except httpx.HTTPStatusError as e:
             logger.error(
                 "Falha ao enviar resposta via WhatsApp (company_id=%s): %s",
                 company_id, e.response.text,
             )
+            if saved_message_id:
+                supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute()
         except Exception:
             logger.exception("Falha ao enviar resposta via WhatsApp (company_id=%s)", company_id)
+            if saved_message_id:
+                supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute()
+
+
+async def _handle_status_update(value: dict):
+    """Atualiza o status de entrega (sent/delivered/read/failed) das mensagens
+    do bot, a partir dos callbacks de status que a própria Meta envia."""
+    for status in value.get("statuses", []):
+        wa_id = status.get("id")
+        new_status = status.get("status")
+        if not wa_id or new_status not in ("sent", "delivered", "read", "failed"):
+            continue
+        supabase.table("messages").update({"delivery_status": new_status}).eq("wa_message_id", wa_id).execute()
 
 
 @router.post("")
@@ -120,10 +149,14 @@ async def whatsapp_webhook(request: Request, background: BackgroundTasks):
     for entry in payload.get("entry", []):
         for change in entry.get("changes", []):
             value = change.get("value", {})
-            if change.get("field") != "messages" or not value.get("messages"):
+            if change.get("field") != "messages":
                 continue
             phone_number_id = value.get("metadata", {}).get("phone_number_id", "")
-            if phone_number_id:
+            if not phone_number_id:
+                continue
+            if value.get("messages"):
                 background.add_task(_handle_message, phone_number_id, value)
+            if value.get("statuses"):
+                background.add_task(_handle_status_update, value)
 
     return {"ok": True}

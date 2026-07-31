@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Bot, User, CheckCheck, RefreshCw, ArrowLeft } from 'lucide-react'
+import { Send, Bot, User, Check, CheckCheck, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { cn, fmtDate, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,7 @@ interface Conversation {
   id: string
   contact_name: string
   contact_phone: string
-  status: 'bot' | 'human' | 'resolved'
+  status: 'bot' | 'human' | 'awaiting_payment' | 'resolved'
   last_message_at: string
   remote_jid: string
   department_id: string | null
@@ -27,11 +27,13 @@ interface Message {
   content: string
   created_at: string
   sent_by_human: boolean
+  delivery_status?: 'sent' | 'delivered' | 'read' | 'failed'
 }
 
 const statusBadge: Record<string, { label: string; variant: 'green' | 'yellow' | 'gray' }> = {
   bot: { label: 'Bot', variant: 'green' },
   human: { label: 'Humano', variant: 'yellow' },
+  awaiting_payment: { label: 'Aguardando pagamento', variant: 'yellow' },
   resolved: { label: 'Resolvido', variant: 'gray' },
 }
 
@@ -93,6 +95,13 @@ export default function Inbox() {
     await api.post(`/conversations/${active.id}/release`)
     loadConvs()
     setActive(a => a ? { ...a, status: 'bot' } : a)
+  }
+
+  const resolve = async () => {
+    if (!active) return
+    await api.post(`/conversations/${active.id}/resolve`)
+    loadConvs()
+    setActive(a => a ? { ...a, status: 'resolved' } : a)
   }
 
   return (
@@ -203,6 +212,15 @@ export default function Inbox() {
                 <Button variant="ghost" size="sm" onClick={takeover}>
                   <User size={14} /> Assumir conversa
                 </Button>
+              ) : active.status === 'awaiting_payment' ? (
+                <>
+                  <Button variant="primary" size="sm" onClick={resolve}>
+                    Marcar pagamento recebido
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={release}>
+                    <Bot size={14} /> Devolver ao bot
+                  </Button>
+                </>
               ) : active.status === 'human' ? (
                 <Button variant="ghost" size="sm" onClick={release}>
                   <Bot size={14} /> Devolver ao bot
@@ -227,7 +245,13 @@ export default function Inbox() {
                     {m.role === 'assistant' && (
                       <>
                         {m.sent_by_human ? <User size={10} className="opacity-60" /> : <Bot size={10} className="opacity-60" />}
-                        <CheckCheck size={12} className="opacity-60" />
+                        {m.delivery_status === 'failed' ? (
+                          <AlertCircle size={12} className="text-red-300" aria-label="Falha no envio" />
+                        ) : m.delivery_status === 'delivered' || m.delivery_status === 'read' ? (
+                          <CheckCheck size={12} className="opacity-60" />
+                        ) : (
+                          <Check size={12} className="opacity-60" />
+                        )}
                       </>
                     )}
                   </div>
@@ -238,7 +262,7 @@ export default function Inbox() {
           </div>
 
           {/* Input */}
-          {active.status === 'human' && (
+          {(active.status === 'human' || active.status === 'awaiting_payment') && (
             <div className="bg-white border-t-2 border-ink p-4 flex gap-3 items-end">
               <textarea
                 className="flex-1 resize-none border border-ink/10 rounded-md px-3 py-2.5 text-sm font-body text-ink bg-white shadow-soft focus:outline-none focus:shadow-soft-md transition-all min-h-[44px] max-h-32"
@@ -258,6 +282,14 @@ export default function Inbox() {
             <div className="bg-green-tint border-t-2 border-ink p-4 text-center">
               <p className="text-sm text-green-deep font-body font-bold inline-flex items-center gap-2">
                 <Bot size={15} /> O bot está atendendo. Clique em <span className="font-mono">"Assumir conversa"</span> para digitar.
+              </p>
+            </div>
+          )}
+
+          {active.status === 'awaiting_payment' && (
+            <div className="bg-yellow-50 border-t-2 border-ink px-4 pt-3 text-center">
+              <p className="text-sm text-ink font-body font-bold inline-flex items-center gap-2">
+                Cliente aceitou a cotação — cobre o pagamento e depois marque como resolvido.
               </p>
             </div>
           )}

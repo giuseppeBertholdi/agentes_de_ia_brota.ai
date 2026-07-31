@@ -20,12 +20,16 @@ async def list_quotes(company_id: str = Depends(require_company)):
 
 @router.patch("/{quote_id}/status")
 async def update_status(quote_id: str, status: str, company_id: str = Depends(require_company)):
-    allowed = ("pending", "sent", "accepted", "rejected")
+    allowed = ("pending", "sent", "accepted", "paid", "rejected")
     if status not in allowed:
         return {"error": "status inválido"}
+    data = {"status": status}
+    if status == "paid":
+        from datetime import datetime, timezone
+        data["paid_at"] = datetime.now(timezone.utc).isoformat()
     r = (
         supabase.table("quotes")
-        .update({"status": status})
+        .update(data)
         .eq("id", quote_id)
         .eq("company_id", company_id)
         .execute()

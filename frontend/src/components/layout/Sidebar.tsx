@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -6,7 +6,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useWhatsapp } from '@/hooks/useWhatsapp'
 import { useCheckout } from '@/hooks/useCheckout'
+import { useHandoffCount } from '@/hooks/useHandoffCount'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+
+const BASE_TITLE = 'Plimpost'
 
 const mainNav = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', gated: false },
@@ -39,7 +42,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { start, loading: starting } = useCheckout()
+  const handoffCount = useHandoffCount()
   const [confirmOpen, setConfirmOpen] = useState(false)
+
+  useEffect(() => {
+    document.title = handoffCount > 0 ? `(${handoffCount}) ${BASE_TITLE} — cobrar pagamento` : BASE_TITLE
+  }, [handoffCount])
 
   const statusReady = !statusLoading && !waLoading
   const gateStage: GateStage = !statusReady
@@ -161,6 +169,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   <span className={cn('absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-green', isActive ? 'opacity-100' : 'opacity-0')} />
                   <Icon size={16} />
                   {label}
+                  {to === '/app/inbox' && handoffCount > 0 && (
+                    <span className="ml-auto flex-none min-w-[18px] h-[18px] px-1 rounded-full bg-lime text-ink text-[10px] font-mono font-bold flex items-center justify-center">
+                      {handoffCount}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>
