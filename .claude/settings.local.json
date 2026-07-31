@@ -39,7 +39,16 @@
       "Bash(git -C /home/giuseppe/brota diff)",
       "Bash(git -C /home/giuseppe/brota add frontend/src/pages/Settings.tsx backend/app/api/assistant.py)",
       "Bash(git -C /home/giuseppe/brota add supabase/migrations/005_fixes_backfill_realtime.sql backend/app/api/post_sale.py backend/app/api/assistant.py)",
-      "Bash(git -C /home/giuseppe/brota diff --cached --stat)"
+      "Bash(git -C /home/giuseppe/brota diff --cached --stat)",
+      "Bash(gh repo *)",
+      "Bash(stripe config *)",
+      "Bash(stripe webhook_endpoints *)",
+      "Bash(stripe events *)",
+      "Bash(supabase projects *)",
+      "Bash(cp \"/tmp/claude-1001/-home-giuseppe-brota/d9b1269f-91eb-4dc4-b16b-ea25e90f8267/scratchpad/como-funciona-brota.md\" /home/giuseppe/como-funciona-brota.md)",
+      "Read(//home/giuseppe/**)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(env)"
     ]
   }
 }
