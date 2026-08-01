@@ -32,9 +32,33 @@ async def deliver_follow_up(follow_up: dict) -> None:
         raise ValueError("WhatsApp não conectado")
 
     to = whatsapp_cloud_api.normalize_br_number(conv_r.data["remote_jid"])
-    resp = await whatsapp_cloud_api.send_text(
-        instance_r.data["phone_number_id"], to, follow_up["message"]
+
+    # follow-up de pós-venda quase sempre chega dias depois da última mensagem
+    # do cliente — fora da janela de 24h a Cloud API rejeita texto livre, só
+    # aceita uma Message Template aprovada pela Meta. Sem template configurado,
+    # tenta o texto livre mesmo assim (funciona só se o cliente respondeu algo
+    # recentemente) — comportamento anterior, mantido como fallback.
+    company_r = (
+        supabase.table("companies")
+        .select("followup_template_name,followup_template_language")
+        .eq("id", follow_up["company_id"])
+        .maybe_single()
+        .execute()
     )
+    template_name = (company_r.data or {}).get("followup_template_name") if company_r else None
+
+    if template_name:
+        resp = await whatsapp_cloud_api.send_template(
+            instance_r.data["phone_number_id"],
+            to,
+            template_name,
+            (company_r.data or {}).get("followup_template_language") or "pt_BR",
+            body_params=[follow_up.get("contact_name") or "cliente"],
+        )
+    else:
+        resp = await whatsapp_cloud_api.send_text(
+            instance_r.data["phone_number_id"], to, follow_up["message"]
+        )
     wa_id = (resp.get("messages") or [{}])[0].get("id")
 
     supabase.table("messages").insert({

@@ -8,6 +8,7 @@ import OnboardingVideo from '@/pages/OnboardingVideo'
 import OnboardingActivate from '@/pages/OnboardingActivate'
 import Dashboard from '@/pages/Dashboard'
 import Inbox from '@/pages/Inbox'
+import Approvals from '@/pages/Approvals'
 import Quotes from '@/pages/Quotes'
 import Reports from '@/pages/Reports'
 import PostSale from '@/pages/PostSale'
@@ -52,6 +53,7 @@ export default function App() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="inbox" element={<Inbox />} />
+          <Route path="approvals" element={<Approvals />} />
           <Route path="quotes" element={<Quotes />} />
           <Route path="reports" element={<Reports />} />
           <Route path="post-sale" element={<PostSale />} />

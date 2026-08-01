@@ -11,6 +11,7 @@ import { useRealtimeTable } from '@/hooks/useRealtime'
 import { useAuth } from '@/hooks/useAuth'
 import { AiChatPanel, useAiChat, CAPABILITIES } from '@/components/AiAssistant'
 import PaywallModal from '@/components/PaywallModal'
+import AgendaCard from '@/components/AgendaCard'
 
 interface Stats {
   conversations_total: number
@@ -176,6 +177,8 @@ export default function Dashboard() {
             <StatTile key={tile.label} {...tile} />
           ))}
         </div>
+
+        <AgendaCard />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2">

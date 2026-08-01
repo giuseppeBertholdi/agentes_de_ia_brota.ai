@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends
 from app.api.auth import require_company
 from app.database import supabase
+from app.services.ai_agent import WON_QUOTE_STATUSES
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -46,7 +47,7 @@ def _week_stats(company_id: str, start: datetime, end: datetime) -> dict:
         .execute()
     )
     quotes = quotes_r.data or []
-    accepted = [q for q in quotes if q.get("status") == "accepted"]
+    accepted = [q for q in quotes if q.get("status") in WON_QUOTE_STATUSES]
 
     product_totals: dict[str, dict] = defaultdict(lambda: {"qty": 0, "revenue": 0.0})
     for q in quotes:

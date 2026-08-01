@@ -8,7 +8,7 @@ import { useWhatsapp } from '@/hooks/useWhatsapp'
 import { useSubscription } from '@/hooks/useSubscription'
 
 // páginas que só fazem sentido com o bot realmente atendendo (assinatura ativa + WhatsApp conectado)
-const GATED_PATHS = ['/app/inbox', '/app/quotes', '/app/reports', '/app/post-sale']
+const GATED_PATHS = ['/app/inbox', '/app/approvals', '/app/quotes', '/app/reports', '/app/post-sale']
 
 export default function AppLayout() {
   const [onboardingDone, setOnboardingDone] = useState(false)

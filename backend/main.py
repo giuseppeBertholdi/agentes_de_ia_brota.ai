@@ -2,7 +2,7 @@ from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant, team, billing
+from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant, team, billing, approvals, dashboard
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 # redirect_slashes=False evita que o FastAPI faça 307 para trailing slash,
@@ -44,6 +44,8 @@ app.include_router(post_sale.router)
 app.include_router(assistant.router)
 app.include_router(team.router)
 app.include_router(billing.router)
+app.include_router(approvals.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health")

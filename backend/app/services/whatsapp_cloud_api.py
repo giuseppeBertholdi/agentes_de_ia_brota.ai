@@ -9,6 +9,8 @@ Modelo adotado:
   acesso à própria WABA — por isso não armazenamos token por empresa,
   apenas phone_number_id / waba_id.
 """
+from __future__ import annotations
+
 import httpx
 from app.config import settings
 
@@ -75,6 +77,42 @@ async def send_text(phone_number_id: str, to: str, text: str) -> dict:
                 "to": to,
                 "type": "text",
                 "text": {"body": text},
+            },
+        )
+        r.raise_for_status()
+        return r.json()
+
+
+async def send_template(
+    phone_number_id: str, to: str, template_name: str, language: str = "pt_BR",
+    body_params: list[str] | None = None,
+) -> dict:
+    """
+    Reengaja um cliente fora da janela de 24h — a Cloud API proíbe texto livre
+    nesse caso, só aceita uma Message Template pré-aprovada pela Meta. Usado
+    pelo pós-venda automático (follow-ups de +3/+30 dias quase sempre caem
+    fora da janela).
+    """
+    components = []
+    if body_params:
+        components.append({
+            "type": "body",
+            "parameters": [{"type": "text", "text": p} for p in body_params],
+        })
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{GRAPH_BASE}/{phone_number_id}/messages",
+            headers=SYSTEM_USER_HEADERS,
+            json={
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": to,
+                "type": "template",
+                "template": {
+                    "name": template_name,
+                    "language": {"code": language},
+                    **({"components": components} if components else {}),
+                },
             },
         )
         r.raise_for_status()

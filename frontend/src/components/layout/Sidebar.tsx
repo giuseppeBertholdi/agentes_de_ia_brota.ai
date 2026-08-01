@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight, ShieldAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useWhatsapp } from '@/hooks/useWhatsapp'
 import { useCheckout } from '@/hooks/useCheckout'
 import { useHandoffCount } from '@/hooks/useHandoffCount'
+import { useApprovalsCount } from '@/hooks/useApprovalsCount'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const BASE_TITLE = 'Plimpost'
@@ -14,6 +15,7 @@ const BASE_TITLE = 'Plimpost'
 const mainNav = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', gated: false },
   { to: '/app/inbox', icon: MessageSquare, label: 'Inbox', gated: true },
+  { to: '/app/approvals', icon: ShieldAlert, label: 'Aprovações', gated: true },
   { to: '/app/quotes', icon: FileText, label: 'Cotações', gated: true },
   { to: '/app/reports', icon: BarChart3, label: 'Relatórios', gated: true },
   { to: '/app/post-sale', icon: Heart, label: 'Pós-venda', gated: true },
@@ -43,11 +45,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { start, loading: starting } = useCheckout()
   const handoffCount = useHandoffCount()
+  const approvalsCount = useApprovalsCount()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
-    document.title = handoffCount > 0 ? `(${handoffCount}) ${BASE_TITLE} — cobrar pagamento` : BASE_TITLE
-  }, [handoffCount])
+    const total = handoffCount + approvalsCount
+    document.title = total > 0 ? `(${total}) ${BASE_TITLE} — precisa de atenção` : BASE_TITLE
+  }, [handoffCount, approvalsCount])
 
   const statusReady = !statusLoading && !waLoading
   const gateStage: GateStage = !statusReady
@@ -172,6 +176,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   {to === '/app/inbox' && handoffCount > 0 && (
                     <span className="ml-auto flex-none min-w-[18px] h-[18px] px-1 rounded-full bg-lime text-ink text-[10px] font-mono font-bold flex items-center justify-center">
                       {handoffCount}
+                    </span>
+                  )}
+                  {to === '/app/approvals' && approvalsCount > 0 && (
+                    <span className="ml-auto flex-none min-w-[18px] h-[18px] px-1 rounded-full bg-lime text-ink text-[10px] font-mono font-bold flex items-center justify-center">
+                      {approvalsCount}
                     </span>
                   )}
                 </>

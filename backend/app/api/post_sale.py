@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.api.auth import require_company
 from app.database import supabase
 from app.models.schemas import FollowUpStatusUpdate
+from app.services.ai_agent import WON_QUOTE_STATUSES
 from app.services.post_sale_delivery import deliver_follow_up
 
 router = APIRouter(prefix="/post-sale", tags=["post-sale"])
@@ -69,7 +70,7 @@ async def churn_risks(company_id: str = Depends(require_company)):
         supabase.table("quotes")
         .select("conversation_id")
         .eq("company_id", company_id)
-        .eq("status", "accepted")
+        .in_("status", list(WON_QUOTE_STATUSES))
         .execute()
     )
     conversation_ids = list({q["conversation_id"] for q in (accepted_r.data or []) if q.get("conversation_id")})

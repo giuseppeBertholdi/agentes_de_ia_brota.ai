@@ -7,6 +7,7 @@ Fluxo:
 """
 from __future__ import annotations
 
+import copy
 import json
 from datetime import datetime, timezone
 from typing import Any
@@ -18,6 +19,12 @@ client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=20.0, max_retries=
 
 MODEL = "gpt-4o-mini"
 
+# uma cotação "ganha" pode estar em qualquer um desses estágios — usado em
+# todo lugar que precisa contar/filtrar cotações fechadas (relatórios,
+# dashboard), pra nunca ter dois lugares com critérios diferentes do que
+# conta como "aceita"
+WON_QUOTE_STATUSES = {"accepted", "paid"}
+
 USAGE_LIMIT_MESSAGE = (
     "No momento nosso atendimento automático atingiu o limite de mensagens deste mês. "
     "Já avisamos a equipe — alguém te responde por aqui em breve. Obrigado pela paciência!"
@@ -26,6 +33,10 @@ USAGE_LIMIT_MESSAGE = (
 AI_UNAVAILABLE_MESSAGE = (
     "Desculpe, tive um problema técnico agora. Já chamei alguém da equipe para te "
     "responder por aqui — só um momento!"
+)
+
+DISCOUNT_APPROVAL_MESSAGE = (
+    "Vou verificar esse valor com a equipe e já te retorno por aqui, só um instante!"
 )
 
 
@@ -97,6 +108,21 @@ def _enforce_pricing(items: list[dict], price_items: list[dict], max_discount_pc
     return items
 
 
+def _detect_out_of_policy(items: list[dict], price_items: list[dict], max_discount_pct: float) -> bool:
+    """True se algum item pedir um preço abaixo do piso de desconto permitido —
+    nesse caso a cotação não deve ser enviada direto, precisa de aprovação humana."""
+    for item in items:
+        match = _match_price_item(item.get("name", ""), price_items)
+        if not match:
+            continue
+        official_price = float(match.get("price", 0))
+        unit_price = float(item.get("unit_price", official_price))
+        floor = official_price * (1 - max(0.0, min(100.0, max_discount_pct)) / 100)
+        if unit_price < floor - 0.005:  # tolerância de arredondamento
+            return True
+    return False
+
+
 def _departments_text(departments: list[dict]) -> str:
     if not departments:
         return ""
@@ -104,10 +130,9 @@ def _departments_text(departments: list[dict]) -> str:
     for d in departments:
         lines.append(f"- {d['name']}" + (f": {d['description']}" if d.get("description") else ""))
     lines.append(
-        '\nSe o cliente pedir para falar com um desses setores (ex: "quero falar com o RH"), '
-        'responda APENAS com o JSON:\n'
-        '{"action": "transfer", "department": "<nome exato do setor>", '
-        '"message": "<mensagem curta avisando que vai transferir>"}'
+        '\nSe o cliente pedir para falar com um desses setores específicos (ex: "quero falar '
+        'com o RH"), use o nome exato do setor no campo "department" da ação "transfer" — em '
+        'vez de deixá-lo em branco/nulo.'
     )
     return "\n".join(lines)
 
@@ -151,7 +176,34 @@ def _customer_context_text(conversation: dict | None) -> str:
         lines.append(f"Nome do cliente (já confirmado — não pergunte de novo): {name}.")
     if phone:
         lines.append(f"Telefone do cliente (já confirmado — não pergunte de novo): {phone}.")
+
+    status = (conversation or {}).get("status")
+    if status == "awaiting_payment":
+        lines.append(
+            "O cliente já aceitou uma cotação e está com pagamento pendente. Se ele tiver "
+            "dúvidas ou quiser conversar sobre outra coisa, responda normalmente — não repita "
+            "a cotação nem tente fechar negócio de novo, a equipe já está cuidando do "
+            "pagamento dessa. Você continua disponível para qualquer outro assunto."
+        )
+    elif status == "resolved":
+        lines.append(
+            "Esta conversa já foi marcada como resolvida anteriormente. Se o cliente voltar a "
+            "falar agora, trate normalmente como uma nova solicitação — não aja como se a "
+            "conversa tivesse acabado."
+        )
     return "\n".join(lines)
+
+
+def _pending_approval_text(pending_approval: dict | None) -> str:
+    if not pending_approval:
+        return ""
+    return (
+        f"\nExiste uma solicitação de desconto (R$ {pending_approval.get('requested_total', 0):.2f}) "
+        "aguardando aprovação da equipe para esse cliente. Se ele perguntar sobre ESSA cotação/"
+        "desconto específico, apenas diga que ainda está sendo verificado e que você retorna assim "
+        "que tiver resposta — não repita a negociação nem gere uma nova cotação para o mesmo pedido. "
+        "Para qualquer OUTRO assunto, continue respondendo normalmente."
+    )
 
 
 def _pending_quote_text(quote: dict | None) -> str:
@@ -176,15 +228,24 @@ Descrição do negócio: {business_desc}
 
 Sua função:
 1. Receber qualquer mensagem do cliente com cordialidade.
-2. Entender a intenção: saudação, cotação/orçamento, dúvida, reclamação, pedido para falar com um setor específico, ou outro.
+2. Entender a intenção: saudação, cotação/orçamento, dúvida, reclamação, pedido para falar
+   com um setor específico ou com uma pessoa/atendente humano, ou outro.
 3. Se o cliente quer um orçamento/cotação, responda com o JSON:
    {{"action": "quote", "reason": "<resumo breve do que o cliente quer>"}}
-4. Para qualquer outra intenção, responda normalmente e inclua:
+4. Se o cliente pedir explicitamente para falar com um humano/atendente/pessoa real —
+   mesmo sem mencionar um setor específico —, responda APENAS com o JSON:
+   {{"action": "transfer", "department": null, "message": "<mensagem curta avisando que vai transferir>"}}
+5. Para qualquer outra intenção, responda normalmente e inclua:
    {{"action": "reply", "message": "<sua resposta aqui>"}}
 
 Importante: você NÃO tem acesso a nenhuma agenda ou sistema de horários. Se o cliente
 pedir pra marcar/agendar algo, nunca diga que confirmou um horário — apenas anote o que
 ele pediu e informe que a equipe vai entrar em contato para confirmar o horário.
+
+Depois que o cliente já aceitou uma cotação, pagou, ou uma conversa foi resolvida, você
+continua disponível — nunca pare de responder por conta disso. Só pare de agir sozinho
+quando o cliente pedir um humano ou quando as instruções abaixo mandarem esperar uma
+aprovação.
 
 Responda sempre em português brasileiro, com um objeto JSON válido no formato acima —
 nada de texto fora do JSON. Seja breve e humano no campo "message"."""
@@ -198,6 +259,7 @@ async def run_receptionist(
     departments: list[dict] | None = None,
     pending_quote: dict | None = None,
     conversation: dict | None = None,
+    pending_approval: dict | None = None,
 ) -> dict:
     """Retorna {'action': 'reply'|'quote'|'transfer'|'accept_quote', 'message': str, 'reason': str, 'department': str}"""
     system = (custom_prompt or RECEPTIONIST_BASE).format(
@@ -207,6 +269,7 @@ async def run_receptionist(
     )
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
+    system += _pending_approval_text(pending_approval)
     system += _customer_context_text(conversation)
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
@@ -291,14 +354,16 @@ async def run_quote_agent(
     custom_prompt: str | None = None,
     conversation: dict | None = None,
     max_discount_pct: float = 0.0,
+    pending_approval: dict | None = None,
 ) -> dict:
-    """Retorna {'action': 'collecting'|'quote_ready'|'error', 'message': str, 'items': list, 'total': float}"""
+    """Retorna {'action': 'collecting'|'quote_ready'|'needs_approval'|'error', 'message': str, 'items': list, 'total': float}"""
     system = (custom_prompt or QUOTE_BASE).format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         price_table=_price_table_text(price_items),
     )
     system += _negotiation_text(max_discount_pct)
+    system += _pending_approval_text(pending_approval)
     system += _customer_context_text(conversation)
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
@@ -317,6 +382,24 @@ async def run_quote_agent(
         action = data.get("action", "collecting")
         items = data.get("items", [])
         if action == "quote_ready":
+            if _detect_out_of_policy(items, price_items, max_discount_pct):
+                # o desconto pedido passa do limite configurado — não envia
+                # direto, cria uma aprovação pendente pra um humano decidir
+                clamped_items = _enforce_pricing(copy.deepcopy(items), price_items, max_discount_pct)
+                for item in clamped_items:
+                    item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
+                clamped_total = round(sum(item["subtotal"] for item in clamped_items), 2)
+                for item in items:
+                    item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
+                total = round(sum(item["subtotal"] for item in items), 2)
+                return {
+                    "action": "needs_approval",
+                    "message": "",
+                    "items": items,
+                    "total": total,
+                    "clamped_items": clamped_items,
+                    "clamped_total": clamped_total,
+                }
             items = _enforce_pricing(items, price_items, max_discount_pct)
             for item in items:
                 item["subtotal"] = round(float(item.get("qty", 0)) * float(item.get("unit_price", 0)), 2)
@@ -394,6 +477,17 @@ async def process_message(
     )
     pending_quote = (pending_quote_r.data or [None])[0]
 
+    pending_approval_r = (
+        supabase.table("ai_pending_approvals")
+        .select("id,requested_total")
+        .eq("conversation_id", conversation_id)
+        .eq("status", "pending")
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    pending_approval = (pending_approval_r.data or [None])[0]
+
     conversation_r = (
         supabase.table("conversations")
         .select("status,contact_name,contact_phone")
@@ -412,10 +506,10 @@ async def process_message(
         "message_id": message_id,
     }).execute()
 
-    # só a IA responde quando a conversa está em modo bot — 'human' (assumida
-    # manualmente) e 'awaiting_payment' (cotação fechada, aguardando humano
-    # cobrar) ficam sem resposta automática
-    if conversation and conversation["status"] != "bot":
+    # a IA só para de responder quando um humano assumiu de fato a conversa —
+    # 'awaiting_payment' e 'resolved' são só rótulos de estágio, não silenciam
+    # a IA: o cliente continua podendo tirar dúvidas normalmente
+    if conversation and conversation["status"] == "human":
         return "", None
 
     # teto de uso mensal — protege a margem do plano contra picos de custo de IA
@@ -443,6 +537,7 @@ async def process_message(
         departments=departments,
         pending_quote=pending_quote,
         conversation=conversation,
+        pending_approval=pending_approval,
     )
 
     reply_text = ""
@@ -460,17 +555,19 @@ async def process_message(
         if payment_instructions:
             reply_text = f"{reply_text}\n\n{payment_instructions}"
     elif rec_result["action"] == "transfer":
+        # transferência sempre acontece — com departamento específico quando o
+        # cliente citou um setor configurado, ou genérica (sem departamento)
+        # quando ele só pediu por "um humano/atendente"
         dept_name = (rec_result.get("department") or "").strip().lower()
-        dept = next((d for d in departments if d["name"].strip().lower() == dept_name), None)
+        dept = next((d for d in departments if d["name"].strip().lower() == dept_name), None) if dept_name else None
+        update = {"status": "human"}
         if dept:
-            supabase.table("conversations").update({
-                "status": "human",
-                "department_id": dept["id"],
-            }).eq("id", conversation_id).execute()
-            reply_text = rec_result.get("message") or f"Vou te transferir para o setor de {dept['name']}, aguarde um instante."
-        else:
-            # setor não reconhecido — não transfere, apenas responde normalmente
-            reply_text = rec_result.get("message") or "Pode me contar um pouco mais sobre o que você precisa?"
+            update["department_id"] = dept["id"]
+        supabase.table("conversations").update(update).eq("id", conversation_id).execute()
+        reply_text = rec_result.get("message") or (
+            f"Vou te transferir para o setor de {dept['name']}, aguarde um instante."
+            if dept else "Vou te colocar em contato com alguém da equipe, só um instante!"
+        )
     elif rec_result["action"] == "quote":
         # aciona agente de cotação
         quote_cfg = agents.get("quote", {})
@@ -486,11 +583,29 @@ async def process_message(
                 custom_prompt=quote_cfg.get("system_prompt"),
                 conversation=conversation,
                 max_discount_pct=float(quote_cfg.get("max_discount_pct") or 0),
+                pending_approval=pending_approval,
             )
 
             if q_result["action"] == "error":
                 supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
                 reply_text = AI_UNAVAILABLE_MESSAGE
+            elif q_result["action"] == "needs_approval":
+                if pending_approval:
+                    # já existe uma aprovação em aberto pra essa conversa — não
+                    # duplica, só reforça que ainda está em análise
+                    reply_text = "Ainda estou verificando esse valor com a equipe, te aviso assim que tiver retorno!"
+                else:
+                    supabase.table("ai_pending_approvals").insert({
+                        "company_id": company_id,
+                        "conversation_id": conversation_id,
+                        "requested_items": q_result["items"],
+                        "requested_total": q_result["total"],
+                        "max_allowed_items": q_result["clamped_items"],
+                        "max_allowed_total": q_result["clamped_total"],
+                        "customer_message": DISCOUNT_APPROVAL_MESSAGE,
+                        "status": "pending",
+                    }).execute()
+                    reply_text = DISCOUNT_APPROVAL_MESSAGE
             else:
                 reply_text = q_result["message"]
 
