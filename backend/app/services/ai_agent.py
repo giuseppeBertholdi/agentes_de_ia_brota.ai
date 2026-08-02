@@ -39,6 +39,11 @@ DISCOUNT_APPROVAL_MESSAGE = (
     "Vou verificar esse valor com a equipe e já te retorno por aqui, só um instante!"
 )
 
+STUCK_ESCALATION_MESSAGE = (
+    "Acho que não estou conseguindo te ajudar direito com isso por aqui — já vou chamar "
+    "alguém da equipe pra continuar com você, só um instante!"
+)
+
 
 def _month_start_iso() -> str:
     now = datetime.now(timezone.utc)
@@ -154,6 +159,19 @@ def _save_assistant_message(conversation_id: str, company_id: str, content: str)
         .execute()
     )
     return r.data[0]["id"] if r.data else None
+
+
+def _is_repeating_last_reply(reply_text: str, history: list[dict]) -> bool:
+    """True quando a resposta que a IA está prestes a mandar é essencialmente igual à
+    última mensagem que ela mesma mandou — sinal de que ela travou numa pergunta/resposta
+    e não está progredindo com o que o cliente pediu. Nesse caso é melhor chamar um humano
+    do que insistir repetindo a mesma coisa por cima da mensagem nova do cliente."""
+    if not reply_text or not history:
+        return False
+    last = history[-1]
+    if last.get("role") != "assistant":
+        return False
+    return _normalize(last.get("content", "")) == _normalize(reply_text)
 
 
 def _matches_escalation_keyword(user_message: str, keywords_csv: str | None) -> bool:
@@ -325,6 +343,13 @@ Sua missão:
    subtotal de cada item = qty × unit_price. total = soma dos subtotais.
 3. Se ainda precisar de mais informações, responda:
    {{"action": "collecting", "message": "<sua pergunta>"}}
+4. Se o cliente pedir algo que você não tem como fazer (ex: analisar um site, uma foto, um
+   documento, ou qualquer coisa fora de coletar dados e montar a cotação), NUNCA ignore o pedido
+   repetindo a mesma pergunta de antes — reconheça que não consegue fazer aquilo especificamente
+   e peça a informação necessária de outra forma (ex: pedir pra o cliente mesmo informar a
+   quantidade/medida). Se ainda assim o cliente não conseguir ou não quiser responder, ou você
+   perceber que está travado sem conseguir avançar a conversa, um humano deve assumir — responda:
+   {{"action": "escalate", "message": "<mensagem curta avisando que vai chamar alguém da equipe>"}}
 
 Responda sempre em português brasileiro, com um objeto JSON válido no formato acima —
 nada de texto fora do JSON. No campo "message", vá direto ao ponto — sem frases de
@@ -589,6 +614,9 @@ async def process_message(
             if q_result["action"] == "error":
                 supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
                 reply_text = AI_UNAVAILABLE_MESSAGE
+            elif q_result["action"] == "escalate":
+                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                reply_text = q_result.get("message") or ESCALATION_MESSAGE
             elif q_result["action"] == "needs_approval":
                 if pending_approval:
                     # já existe uma aprovação em aberto pra essa conversa — não
@@ -608,6 +636,11 @@ async def process_message(
                     reply_text = DISCOUNT_APPROVAL_MESSAGE
             else:
                 reply_text = q_result["message"]
+                if q_result["action"] == "collecting" and _is_repeating_last_reply(reply_text, history):
+                    # a IA ficou travada repetindo a mesma pergunta em vez de avançar
+                    # ou reconhecer que não sabe responder o que o cliente pediu
+                    supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                    reply_text = STUCK_ESCALATION_MESSAGE
 
             if q_result["action"] == "quote_ready":
                 # uma cotação nova substitui qualquer cotação anterior ainda
@@ -630,6 +663,9 @@ async def process_message(
             reply_text = rec_result.get("message") or "Posso te ajudar com um orçamento! Pode me contar mais?"
     else:
         reply_text = rec_result["message"]
+        if _is_repeating_last_reply(reply_text, history):
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+            reply_text = STUCK_ESCALATION_MESSAGE
 
     msg_id = _save_assistant_message(conversation_id, company_id, reply_text) if reply_text else None
     return reply_text, msg_id

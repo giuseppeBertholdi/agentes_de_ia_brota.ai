@@ -100,10 +100,11 @@ export default function Settings() {
     if (cRes.status === 'fulfilled') setCompany(cRes.value)
     if (pRes.status === 'fulfilled') setPrices(pRes.value)
     if (aRes.status === 'fulfilled') {
-      setAgents(aRes.value.length ? aRes.value : [
-        { agent_type: 'receptionist', enabled: true },
-        { agent_type: 'quote',        enabled: true },
-      ])
+      const loaded = aRes.value
+      const defaults = ['receptionist', 'quote']
+        .filter(type => !loaded.some(a => a.agent_type === type))
+        .map(type => ({ agent_type: type, enabled: true }))
+      setAgents([...loaded, ...defaults])
     }
     setLoading(false)
   }

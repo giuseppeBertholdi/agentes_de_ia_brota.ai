@@ -24,13 +24,13 @@ async def list_conversations(department_id: Optional[str] = None, company_id: st
 
 @router.get("/handoff-count")
 async def handoff_count(company_id: str = Depends(require_company)):
-    """Conversas com cotação fechada aguardando um humano cobrar o pagamento —
-    o ponto em que o atendimento sai da IA e precisa de alguém agindo agora."""
+    """Conversas que precisam de alguém agindo agora — transferidas pra um humano
+    (a IA parou de responder) ou com cotação fechada aguardando cobrança de pagamento."""
     r = (
         supabase.table("conversations")
         .select("id", count="exact")
         .eq("company_id", company_id)
-        .eq("status", "awaiting_payment")
+        .in_("status", ["human", "awaiting_payment"])
         .execute()
     )
     return {"count": r.count or 0}

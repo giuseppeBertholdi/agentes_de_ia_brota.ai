@@ -81,13 +81,15 @@ TOOLS: List[dict] = [
         "type": "function",
         "function": {
             "name": "update_agent",
-            "description": "Ativa, desativa ou personaliza o prompt de um agente de IA.",
+            "description": "Ativa, desativa ou personaliza o prompt de um agente de IA, define o desconto máximo que o agente de cotação pode oferecer sozinho, e/ou as palavras-chave que acionam transferência automática para um humano.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "agent_type": {"type": "string", "enum": ["receptionist", "quote"], "description": "Tipo do agente"},
                     "enabled": {"type": "boolean", "description": "Se o agente deve estar ativo"},
                     "system_prompt": {"type": "string", "description": "Prompt personalizado. Omita para manter o atual ou use null para resetar ao padrão."},
+                    "max_discount_pct": {"type": "number", "description": "Desconto máximo (%) que o agente de cotação pode oferecer sozinho sem aprovação humana. Use 0 se a empresa não trabalha com desconto."},
+                    "escalation_keywords": {"type": "string", "description": "Lista de palavras/expressões separadas por vírgula que, se ditas pelo cliente, transferem a conversa direto para um humano (ex: cancelar, reclamação, advogado)."},
                 },
                 "required": ["agent_type"],
             },
@@ -140,7 +142,7 @@ FINISH_ONBOARDING_TOOL: dict = {
 # Durante o onboarding, a IA só deve mexer no que é relevante pra deixar o atendimento pronto —
 # nada de estatísticas, agentes ou exclusão de itens ainda.
 ONBOARDING_TOOLS: List[dict] = [
-    t for t in TOOLS if t["function"]["name"] in ("update_company", "create_price_item", "create_department")
+    t for t in TOOLS if t["function"]["name"] in ("update_company", "create_price_item", "create_department", "update_agent")
 ] + [FINISH_ONBOARDING_TOOL]
 
 
@@ -201,7 +203,9 @@ def _build_onboarding_system(company: dict, prices: List[dict]) -> str:
     ) or "  (nenhum ainda)"
 
     return f"""Você é a assistente de onboarding da Plimpost, plataforma de agentes de IA para WhatsApp.
-Sua única missão nesta conversa é conhecer o negócio da pessoa pra deixar a IA de atendimento pronta pra funcionar.
+Sua única missão nesta conversa é entender como o atendimento dessa empresa funciona NA VIDA REAL, pra
+deixar a IA configurada de um jeito que reproduza esse atendimento da forma mais humana e fiel possível —
+não é só cadastro de dados, é entender o processo.
 
 O que já sabemos até agora:
 Nome: {company.get('name') or 'não informado'}
@@ -212,10 +216,30 @@ Produtos/serviços:
 
 Regras muito importantes:
 1. Faça UMA pergunta principal por vez — nunca uma lista de perguntas. Converse como uma pessoa real, não como um formulário.
-2. Comece (ou continue, se já tiver algo acima) entendendo o que a empresa vende/oferece. Depois vá aprofundando o necessário: produtos/serviços e preços, tom de atendimento desejado, e se fizer sentido, setores de transferência (RH, financeiro, vendas etc.) — só pergunte sobre setores se o tipo de negócio sugerir que faz sentido.
-3. Assim que uma informação for confirmada pela pessoa, salve na hora com a ferramenta certa (update_company, create_price_item, create_department). Não espere o fim da conversa pra salvar tudo de uma vez.
-4. NUNCA pergunte sobre conectar o WhatsApp nem sobre pagamento/assinatura — isso acontece em uma etapa separada, depois desta conversa.
-5. Quando já tiver o essencial — descrição do negócio, tom de voz e ao menos um produto/serviço com preço — chame finish_onboarding com um resumo curto e caloroso. Não prolongue a conversa além do necessário.
+2. Cubra, na ordem que fizer sentido pela conversa, estes pontos (pule os que não se aplicarem ao negócio):
+   a. O que a empresa vende/oferece, e como costuma ser o primeiro contato com um cliente novo.
+   b. Produtos/serviços com preços (para a tabela de preços).
+   c. Tom de voz desejado no atendimento (formal, descontraído, técnico etc.).
+   d. Política de desconto: a empresa costuma negociar preço? Se sim, até quanto (%) o atendimento pode
+      ceder sozinho sem precisar checar com alguém? Se a resposta for que nunca há desconto, confirme isso
+      e salve com update_agent (agent_type="quote", max_discount_pct=0) — é uma configuração válida e
+      esperada, não pule essa pergunta.
+   e. Quando o atendimento humano normalmente entra na conversa: existe algum tipo de pedido, palavra ou
+      situação (ex: reclamação, cancelamento, assunto jurídico, pedido específico fora do que a IA resolve)
+      que deveria transferir direto para uma pessoa? Salve as palavras-chave com update_agent
+      (agent_type="receptionist", escalation_keywords="...").
+   f. Se fizer sentido pelo tipo de negócio, setores de transferência (RH, financeiro, vendas, suporte etc.)
+      via create_department.
+   g. Como funciona o pagamento depois que o cliente fecha (chave PIX, link, condições) — salve com
+      update_company (payment_instructions).
+3. Assim que uma informação for confirmada pela pessoa, salve na hora com a ferramenta certa. Não espere o
+   fim da conversa pra salvar tudo de uma vez.
+4. NUNCA pergunte sobre conectar o WhatsApp nem sobre assinatura — isso acontece em uma etapa separada,
+   depois desta conversa.
+5. Quando já tiver o essencial — descrição do negócio, tom de voz, ao menos um produto/serviço com preço, e
+   a política de desconto e de transferência para humano (mesmo que a resposta seja "não há desconto" ou
+   "nunca precisa transferir") — chame finish_onboarding com um resumo curto e caloroso. Não prolongue a
+   conversa além do necessário nem insista em pontos que a pessoa já disse não se aplicarem.
 6. Seja breve: no máximo 2-3 frases por resposta.
 Responda sempre em português brasileiro."""
 
@@ -273,10 +297,26 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
         elif current.get("system_prompt"):
             payload["system_prompt"] = current["system_prompt"]
 
+        if "max_discount_pct" in args:
+            payload["max_discount_pct"] = args["max_discount_pct"]
+        elif current.get("max_discount_pct") is not None:
+            payload["max_discount_pct"] = current["max_discount_pct"]
+
+        if "escalation_keywords" in args:
+            payload["escalation_keywords"] = args["escalation_keywords"]
+        elif current.get("escalation_keywords"):
+            payload["escalation_keywords"] = current["escalation_keywords"]
+
         supabase.table("agent_configs").upsert(payload, on_conflict="company_id,agent_type").execute()
         status = "ativado" if payload.get("enabled", True) else "desativado"
+        details = []
+        if "max_discount_pct" in args:
+            details.append(f"desconto máximo → {args['max_discount_pct']}%")
+        if "escalation_keywords" in args:
+            details.append("palavras de transferência atualizadas")
+        detail_text = f" ({', '.join(details)})" if details else ""
         return (
-            f"Agente {agent_type} {status}",
+            f"Agente {agent_type} {status}{detail_text}",
             {"type": "update_agent", "data": payload},
         )
 
