@@ -49,10 +49,10 @@ async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_co
         .select("*")
         .eq("id", follow_up_id)
         .eq("company_id", company_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not fu_r.data:
+    if not fu_r or not fu_r.data:
         raise HTTPException(404, "Follow-up não encontrado")
 
     try:
@@ -60,8 +60,8 @@ async def send_follow_up(follow_up_id: str, company_id: str = Depends(require_co
     except Exception as e:
         raise HTTPException(502, f"Falha ao enviar mensagem: {e}")
 
-    r = supabase.table("post_sale_follow_ups").select("*").eq("id", follow_up_id).single().execute()
-    return r.data if r.data else {}
+    r = supabase.table("post_sale_follow_ups").select("*").eq("id", follow_up_id).maybe_single().execute()
+    return r.data if r and r.data else {}
 
 
 @router.get("/churn-risks")
