@@ -225,6 +225,10 @@ export default function Inbox() {
                 <Button variant="ghost" size="sm" onClick={release}>
                   <Bot size={14} /> Devolver ao bot
                 </Button>
+              ) : active.status === 'resolved' ? (
+                <Button variant="ghost" size="sm" onClick={takeover}>
+                  <User size={14} /> Falar com o cliente
+                </Button>
               ) : null}
             </div>
           </div>

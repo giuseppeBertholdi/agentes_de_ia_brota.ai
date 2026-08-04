@@ -20,6 +20,7 @@ export default function AppLayout() {
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
 
   const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
+  const isInbox = location.pathname === '/app/inbox'
   const statusReady = !waLoading && !statusLoading
 
   useEffect(() => { setNavOpen(false) }, [location.pathname])
@@ -55,7 +56,7 @@ export default function AppLayout() {
           <Outlet key={configVersion} />
         </div>
       </main>
-      {!isDashboard && (
+      {!isDashboard && !isInbox && (
         <AiAssistant onConfigChanged={handleConfigChanged} />
       )}
     </div>
