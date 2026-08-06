@@ -35,3 +35,9 @@ services:
         sync: false
       - key: BACKEND_URL
         sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO

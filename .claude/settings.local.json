@@ -48,7 +48,10 @@
       "Bash(cp \"/tmp/claude-1001/-home-giuseppe-brota/d9b1269f-91eb-4dc4-b16b-ea25e90f8267/scratchpad/como-funciona-brota.md\" /home/giuseppe/como-funciona-brota.md)",
       "Read(//home/giuseppe/**)",
       "Bash(echo \"exit:$?\")",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(npm install *)",
+      "Bash(gh run *)",
+      "Bash(git remote *)"
     ]
   }
 }

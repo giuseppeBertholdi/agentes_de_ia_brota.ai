@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     # contra picos de custo de OpenAI. Passado o limite, o bot avisa e para de
     # responder automaticamente até o próximo mês (ou upgrade manual do dono).
     ai_monthly_message_limit: int = 2000
+    # Observabilidade — Sentry fica inativo se sentry_dsn não for configurado
+    sentry_dsn: str = ""
+    environment: str = "development"
+    log_level: str = "INFO"
 
 
 settings = Settings()
