@@ -156,7 +156,7 @@ export default function Landing() {
           </div>
           <div className="l-nav-cta">
             <Link to="/login" className="btn btn-ghost" style={{ padding: '11px 20px' }}>Entrar</Link>
-            <a href="#cta" className="btn btn-primary" style={{ padding: '12px 22px' }}>Começar de graça</a>
+            <Link to="/register" className="btn btn-primary" style={{ padding: '12px 22px' }}>Começar de graça</Link>
           </div>
         </div>
       </nav>
@@ -171,7 +171,7 @@ export default function Landing() {
             <h1>Uma equipe de IA cuidando do seu <span className="hl">negócio inteiro</span>.</h1>
             <p className="hero-sub">Você conta pra IA como seu negócio funciona — ela cria os agentes, monta a tabela de preços, organiza os setores de atendimento e já sai atendendo no WhatsApp, fechando vendas, cobrando quem deve e cuidando do pós-venda. 24h, sem time de TI.</p>
             <div className="hero-cta">
-              <a href="#cta" className="btn btn-primary btn-lg">Começar de graça {IC.arrow}</a>
+              <Link to="/register" className="btn btn-primary btn-lg">Começar de graça {IC.arrow}</Link>
               <a href="#demo" className="btn btn-ghost btn-lg">Ver funcionando</a>
             </div>
             <div className="hero-trust">
