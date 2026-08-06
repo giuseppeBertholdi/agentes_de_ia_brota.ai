@@ -224,6 +224,12 @@ def _pending_approval_text(pending_approval: dict | None) -> str:
     )
 
 
+def _business_hours_text(business_hours: str | None) -> str:
+    if not business_hours:
+        return ""
+    return f"\nHorário de funcionamento da loja: {business_hours}."
+
+
 def _pending_quote_text(quote: dict | None) -> str:
     if not quote:
         return ""
@@ -285,6 +291,7 @@ async def run_receptionist(
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
+    system += _business_hours_text(company.get("business_hours"))
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
     system += _pending_approval_text(pending_approval)

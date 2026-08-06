@@ -24,6 +24,7 @@ interface Company {
   name: string
   voice_tone: string
   business_desc: string
+  business_hours?: string
   payment_instructions?: string
   followup_template_name?: string
   followup_template_language?: string
@@ -122,6 +123,7 @@ export default function Settings() {
       name: company.name,
       voice_tone: company.voice_tone,
       business_desc: company.business_desc,
+      business_hours: company.business_hours,
       payment_instructions: company.payment_instructions,
       followup_template_name: company.followup_template_name,
       followup_template_language: company.followup_template_language,
@@ -433,6 +435,17 @@ export default function Settings() {
                       onChange={e => setCompany(c => c ? { ...c, business_desc: e.target.value } : c)}
                     />
                     <p className="text-ink-faint text-[11px] font-body">O que a IA sabe sobre o seu negócio pra responder dúvidas gerais.</p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                      Horário de funcionamento
+                    </label>
+                    <Input
+                      placeholder="Ex: Seg a Sex, 8h às 18h · Sáb 8h às 12h"
+                      value={company.business_hours || ''}
+                      onChange={e => setCompany(c => c ? { ...c, business_hours: e.target.value } : c)}
+                    />
+                    <p className="text-ink-faint text-[11px] font-body">A IA usa isso pra responder quando o cliente perguntar se você está aberto.</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button variant="primary" onClick={saveCompany} disabled={saving}>

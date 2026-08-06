@@ -41,6 +41,7 @@ class CompanyUpdate(BaseModel):
     name: Optional[str] = None
     voice_tone: Optional[str] = None
     business_desc: Optional[str] = None
+    business_hours: Optional[str] = None
     payment_instructions: Optional[str] = None
     followup_template_name: Optional[str] = None
     followup_template_language: Optional[str] = None
