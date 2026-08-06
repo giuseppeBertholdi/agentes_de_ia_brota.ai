@@ -5,17 +5,13 @@ Rota única: GET/POST /webhook
 import hashlib
 import hmac
 import json
-import logging
 
-import httpx
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
 from app.config import settings
 from app.database import supabase
-from app.services import whatsapp_cloud_api
-from app.services.ai_agent import process_message
+from app.services import message_buffer
 
 router = APIRouter()
-logger = logging.getLogger("webhook")
 
 
 @router.get("")
@@ -90,38 +86,16 @@ async def _handle_message(phone_number_id: str, value: dict):
         if not conversation:
             continue
 
-        saved_message_id = None
-        try:
-            reply, saved_message_id = await process_message(company_id, conversation["id"], content, wa_message_id)
-        except Exception:
-            logger.exception("Falha ao processar mensagem com a IA (company_id=%s)", company_id)
-            supabase.table("conversations").update({"status": "human"}).eq("id", conversation["id"]).execute()
-            reply = (
-                "Desculpe, tive um problema técnico agora. Já chamei alguém da equipe "
-                "para te responder por aqui — só um momento!"
-            )
-        if not reply:
-            continue
-
-        try:
-            to = whatsapp_cloud_api.normalize_br_number(from_number)
-            resp = await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
-            sent_wa_id = (resp.get("messages") or [{}])[0].get("id")
-            if saved_message_id:
-                supabase.table("messages").update(
-                    {"wa_message_id": sent_wa_id, "delivery_status": "sent"}
-                ).eq("id", saved_message_id).execute()
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                "Falha ao enviar resposta via WhatsApp (company_id=%s): %s",
-                company_id, e.response.text,
-            )
-            if saved_message_id:
-                supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute()
-        except Exception:
-            logger.exception("Falha ao enviar resposta via WhatsApp (company_id=%s)", company_id)
-            if saved_message_id:
-                supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute()
+        # o processamento (IA + envio da resposta) só acontece depois de um
+        # período de silêncio do cliente — ver message_buffer.py
+        await message_buffer.enqueue_message(
+            conversation_id=conversation["id"],
+            company_id=company_id,
+            phone_number_id=phone_number_id,
+            from_number=from_number,
+            content=content,
+            wa_message_id=wa_message_id,
+        )
 
 
 async def _handle_status_update(value: dict):

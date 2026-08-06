@@ -262,7 +262,7 @@ export default function Inbox() {
                   'max-w-[72%] px-4 py-2.5 rounded-lg border border-ink/10 text-sm font-body shadow-soft',
                   m.role === 'user' ? 'bg-white text-ink' : 'bg-green text-white'
                 )}>
-                  <p className="leading-relaxed">{m.content}</p>
+                  <p className="leading-relaxed whitespace-pre-line">{m.content}</p>
                   <div className={cn('flex items-center gap-1.5 mt-1.5', m.role === 'user' ? 'justify-start' : 'justify-end')}>
                     <span className="text-[10px] font-mono opacity-60">
                       {new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
