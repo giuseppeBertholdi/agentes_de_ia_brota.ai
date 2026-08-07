@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight, ShieldAlert } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, FileText, BarChart3, Heart, Users, Settings, LogOut, Zap, Sparkles, Loader2, LifeBuoy, X, Lock, Smartphone, ArrowRight, ShieldAlert, Library } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -14,6 +14,7 @@ const BASE_TITLE = 'Plimpost'
 
 const mainNav = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', gated: false },
+  { to: '/app/context', icon: Library, label: 'Contexto', gated: false },
   { to: '/app/inbox', icon: MessageSquare, label: 'Inbox', gated: true },
   { to: '/app/approvals', icon: ShieldAlert, label: 'Aprovações', gated: true },
   { to: '/app/quotes', icon: FileText, label: 'Cotações', gated: true },

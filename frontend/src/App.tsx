@@ -13,6 +13,7 @@ import Approvals from '@/pages/Approvals'
 import Quotes from '@/pages/Quotes'
 import Reports from '@/pages/Reports'
 import PostSale from '@/pages/PostSale'
+import ContextLibrary from '@/pages/Context'
 import Team from '@/pages/Team'
 import Settings from '@/pages/Settings'
 import Landing from '@/pages/Landing'
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="quotes" element={<Quotes />} />
           <Route path="reports" element={<Reports />} />
           <Route path="post-sale" element={<PostSale />} />
+          <Route path="context" element={<ContextLibrary />} />
           <Route path="team" element={<Team />} />
           <Route path="settings" element={<Settings />} />
         </Route>

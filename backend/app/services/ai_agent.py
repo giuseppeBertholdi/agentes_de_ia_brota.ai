@@ -133,6 +133,32 @@ def _detect_out_of_policy(items: list[dict], price_items: list[dict], max_discou
     return False
 
 
+MAX_CONTEXT_DOCS_CHARS = 12_000  # orçamento de caracteres injetados no prompt, entre todos os documentos
+
+
+def _context_documents_text(documents: list[dict]) -> str:
+    """Material que a empresa enviou pra Central de Contexto (tabela de preços,
+    política da loja, FAQ etc.) — entra como fonte de verdade adicional, com um
+    teto de caracteres pra não estourar o prompt quando tiver muito material."""
+    if not documents:
+        return ""
+    lines = [
+        "\nMaterial de apoio enviado pela empresa (use como fonte de verdade "
+        "adicional, junto com a tabela de preços — se algo daqui contradizer o "
+        "que o cliente disse, prevalece o que está aqui):"
+    ]
+    budget = MAX_CONTEXT_DOCS_CHARS
+    for doc in documents:
+        if budget <= 0:
+            break
+        chunk = f"\n--- {doc['filename']} ---\n{doc.get('content_text', '')}"
+        if len(chunk) > budget:
+            chunk = chunk[:budget] + "\n[...conteúdo truncado...]"
+        lines.append(chunk)
+        budget -= len(chunk)
+    return "\n".join(lines)
+
+
 def _departments_text(departments: list[dict]) -> str:
     if not departments:
         return ""
@@ -289,6 +315,7 @@ async def run_receptionist(
     pending_quote: dict | None = None,
     conversation: dict | None = None,
     pending_approval: dict | None = None,
+    context_documents: list[dict] | None = None,
 ) -> dict:
     """Retorna {'action': 'reply'|'quote'|'transfer'|'accept_quote', 'message': str, 'reason': str, 'department': str}"""
     system = (custom_prompt or RECEPTIONIST_BASE).format(
@@ -301,6 +328,7 @@ async def run_receptionist(
     system += _pending_quote_text(pending_quote)
     system += _pending_approval_text(pending_approval)
     system += _customer_context_text(conversation)
+    system += _context_documents_text(context_documents or [])
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
@@ -408,6 +436,7 @@ async def run_quote_agent(
     conversation: dict | None = None,
     max_discount_pct: float = 0.0,
     pending_approval: dict | None = None,
+    context_documents: list[dict] | None = None,
 ) -> dict:
     """Retorna {'action': 'collecting'|'quote_ready'|'needs_approval'|'error', 'message': str, 'items': list, 'total': float}"""
     system = (custom_prompt or QUOTE_BASE).format(
@@ -418,6 +447,7 @@ async def run_quote_agent(
     system += _negotiation_text(max_discount_pct)
     system += _pending_approval_text(pending_approval)
     system += _customer_context_text(conversation)
+    system += _context_documents_text(context_documents or [])
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
@@ -541,6 +571,15 @@ async def process_message(
     )
     pending_approval = (pending_approval_r.data or [None])[0]
 
+    context_docs_r = (
+        supabase.table("context_documents")
+        .select("filename,content_text")
+        .eq("company_id", company_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    context_documents = context_docs_r.data or []
+
     conversation_r = (
         supabase.table("conversations")
         .select("status,contact_name,contact_phone")
@@ -603,6 +642,7 @@ async def process_message(
         pending_quote=pending_quote,
         conversation=conversation,
         pending_approval=pending_approval,
+        context_documents=context_documents,
     )
 
     reply_text = ""
@@ -649,6 +689,7 @@ async def process_message(
                 conversation=conversation,
                 max_discount_pct=float(quote_cfg.get("max_discount_pct") or 0),
                 pending_approval=pending_approval,
+                context_documents=context_documents,
             )
 
             if q_result["action"] == "error":

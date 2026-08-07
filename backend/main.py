@@ -25,7 +25,7 @@ if settings.sentry_dsn:
         send_default_pii=False,
     )
 
-from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant, team, billing, approvals, dashboard
+from app.api import webhooks, conversations, quotes, settings as settings_router, reports, post_sale, assistant, team, billing, approvals, dashboard, context
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 # redirect_slashes=False evita que o FastAPI faça 307 para trailing slash,
@@ -69,6 +69,7 @@ app.include_router(team.router)
 app.include_router(billing.router)
 app.include_router(approvals.router)
 app.include_router(dashboard.router)
+app.include_router(context.router)
 
 
 @app.get("/health")

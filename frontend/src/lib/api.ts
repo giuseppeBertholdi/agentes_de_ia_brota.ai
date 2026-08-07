@@ -101,4 +101,15 @@ async function download(path: string, filename: string): Promise<void> {
   URL.revokeObjectURL(url)
 }
 
-export const api = { get, post, patch, put, delete: del, download }
+// upload multipart (ex: documento da Central de Contexto) — sem Content-Type
+// manual, o navegador define o boundary do multipart sozinho.
+async function upload<T>(path: string, file: File): Promise<T> {
+  const headers = await authHeaders()
+  delete (headers as Record<string, string>)['Content-Type']
+  const form = new FormData()
+  form.append('file', file)
+  const r = await fetch(`${BASE}${path}`, { method: 'POST', headers, body: form })
+  return handle<T>(r)
+}
+
+export const api = { get, post, patch, put, delete: del, download, upload }
