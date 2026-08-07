@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Pencil, Check, X as XIcon,
   Smartphone, CheckCircle, XCircle, Loader2,
   Mail, Code2, Bot, Tag, Building2, Sparkles, Lock, ArrowRight,
-  MessageSquareText, HandHelping, Heart, Bell, Users, FileText,
+  MessageSquareText, HandHelping, Bell, Users, FileText,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -26,8 +26,6 @@ interface Company {
   business_desc: string
   business_hours?: string
   payment_instructions?: string
-  followup_template_name?: string
-  followup_template_language?: string
 }
 interface PriceItem { id?: string; name: string; description?: string; price: number; unit: string; active: boolean }
 interface AgentConfig {
@@ -125,8 +123,6 @@ export default function Settings() {
       business_desc: company.business_desc,
       business_hours: company.business_hours,
       payment_instructions: company.payment_instructions,
-      followup_template_name: company.followup_template_name,
-      followup_template_language: company.followup_template_language,
     })
     setSaving(false)
     setSaved(true)
@@ -374,7 +370,6 @@ export default function Settings() {
           <TabsTrigger value="negociacao"><MessageSquareText size={13} className="inline mr-1.5 -mt-0.5" />Negociação</TabsTrigger>
           <TabsTrigger value="humano"><HandHelping size={13} className="inline mr-1.5 -mt-0.5" />Atendimento humano</TabsTrigger>
           <TabsTrigger value="vendas"><Tag size={13} className="inline mr-1.5 -mt-0.5" />Vendas</TabsTrigger>
-          <TabsTrigger value="followups"><Heart size={13} className="inline mr-1.5 -mt-0.5" />Follow-ups</TabsTrigger>
           <TabsTrigger value="notificacoes"><Bell size={13} className="inline mr-1.5 -mt-0.5" />Notificações</TabsTrigger>
         </TabsList>
 
@@ -734,62 +729,6 @@ export default function Settings() {
                   <Button variant="primary" size="sm" onClick={saveCompany} disabled={saving} className="self-start">
                     {saving ? <><Loader2 size={14} className="animate-spin" /> Salvando…</> : 'Salvar'}
                   </Button>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ══════════════ Follow-ups ══════════════ */}
-        <TabsContent value="followups">
-          <TabIntro>
-            Mensagens automáticas de pós-venda (satisfação e recompra). Veja e envie
-            manualmente em <Link to="/app/post-sale" className="text-green-deep font-bold hover:underline">Pós-venda</Link>.
-          </TabIntro>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Heart size={18} /> Template de reengajamento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-2.5 p-3 bg-cream-2 border border-ink/10 rounded-md mb-4 text-xs font-body text-ink-soft leading-relaxed">
-                O WhatsApp só permite mandar mensagem de texto livre até 24h depois da
-                última mensagem do cliente. Passado esse prazo — o caso comum de um
-                follow-up de 3 ou 30 dias — é obrigatório usar um <b>Message Template</b> aprovado
-                pela Meta. Sem isso configurado, o follow-up só é entregue se o cliente
-                tiver falado com você recentemente.
-              </div>
-              {loading ? <SectionSkeleton /> : company ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-                      Nome do template aprovado
-                    </label>
-                    <Input
-                      placeholder="Ex: pos_venda_recompra"
-                      value={company.followup_template_name || ''}
-                      onChange={e => setCompany(c => c ? { ...c, followup_template_name: e.target.value } : c)}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-                      Idioma do template
-                    </label>
-                    <Input
-                      placeholder="pt_BR"
-                      value={company.followup_template_language || 'pt_BR'}
-                      onChange={e => setCompany(c => c ? { ...c, followup_template_language: e.target.value } : c)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2 flex items-center gap-3 mt-1">
-                    <Button variant="primary" size="sm" onClick={saveCompany} disabled={saving}>
-                      {saving ? <><Loader2 size={14} className="animate-spin" /> Salvando…</> : 'Salvar'}
-                    </Button>
-                    {saved && (
-                      <span className="flex items-center gap-1 text-green text-sm font-body font-bold">
-                        <Check size={14} /> Salvo!
-                      </span>
-                    )}
-                  </div>
                 </div>
               ) : null}
             </CardContent>

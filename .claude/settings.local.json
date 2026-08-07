@@ -51,7 +51,8 @@
       "Bash(env)",
       "Bash(npm install *)",
       "Bash(gh run *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

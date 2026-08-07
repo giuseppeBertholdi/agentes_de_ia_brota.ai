@@ -1,7 +1,7 @@
 import { Zap, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const STEPS = ['Sobre você', 'Vídeo rápido', 'Ativar WhatsApp']
+const STEPS = ['Vídeo rápido', 'Sobre você', 'Ativar WhatsApp']
 
 interface OnboardingShellProps {
   step: 1 | 2 | 3

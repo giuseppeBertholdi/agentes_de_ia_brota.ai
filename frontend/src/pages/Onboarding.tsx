@@ -17,10 +17,10 @@ export default function Onboarding() {
   const chat = useAiChat(true, undefined, true)
   const ready = chat.messages.some(m => m.actions?.some(a => a.type === 'onboarding_ready'))
 
-  const goToVideo = () => navigate('/onboarding/video')
+  const goToActivate = () => navigate('/onboarding/activate')
 
   return (
-    <OnboardingShell step={1}>
+    <OnboardingShell step={2}>
       <div className="text-center mb-5">
         <h1 className="font-display font-bold text-2xl text-ink tracking-tight">
           {firstName ? `Vamos te conhecer, ${firstName}` : 'Vamos te conhecer'}
@@ -40,7 +40,7 @@ export default function Onboarding() {
 
       <div className="flex items-center justify-between mt-4">
         <button
-          onClick={goToVideo}
+          onClick={goToActivate}
           className="text-ink-faint text-xs font-body hover:text-ink-soft transition-colors underline-offset-2 hover:underline"
         >
           Pular perguntas por enquanto
@@ -48,7 +48,7 @@ export default function Onboarding() {
 
         {ready && (
           <button
-            onClick={goToVideo}
+            onClick={goToActivate}
             className="flex items-center gap-1.5 px-4 py-2 bg-green text-white border border-ink/10 rounded-md shadow-soft font-body font-bold text-xs hover:shadow-soft-md transition-shadow"
           >
             Continuar <ArrowRight size={13} />
