@@ -5,7 +5,7 @@ from app.api.auth import require_company, require_active_subscription
 from app.database import supabase
 from app.services import whatsapp_cloud_api
 from app.services.ai_agent import client as openai_client, MODEL
-from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback, PriceQuestionsRequest
+from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback, PriceQuestionsRequest, AiModeUpdate
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -23,6 +23,22 @@ async def update_company(body: CompanyUpdate, company_id: str = Depends(require_
     data = body.model_dump(exclude_none=True)
     r = supabase.table("companies").update(data).eq("id", company_id).execute()
     return r.data[0] if r.data else {}
+
+
+# ── Interruptor geral da IA ─────────────────────────────────────────────────
+
+@router.post("/ai-mode")
+async def set_ai_mode(body: AiModeUpdate, company_id: str = Depends(require_company)):
+    """Liga/desliga os dois agentes de uma vez. Ao desligar, todas as conversas
+    em andamento (que não sejam já 'human' ou 'resolved') passam pra modo
+    humano na hora — sem isso o Inbox continuaria mostrando "Bot" numa
+    conversa que na prática já não tem mais ninguém (nem IA nem humano) respondendo."""
+    supabase.table("companies").update({"ai_enabled": body.enabled}).eq("id", company_id).execute()
+    if not body.enabled:
+        supabase.table("conversations").update({"status": "human"}).eq(
+            "company_id", company_id
+        ).in_("status", ["bot", "awaiting_payment"]).execute()
+    return {"ok": True}
 
 
 # ── Price items ───────────────────────────────────────────────────────────────

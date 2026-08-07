@@ -35,6 +35,11 @@ AI_UNAVAILABLE_MESSAGE = (
     "responder por aqui — só um momento!"
 )
 
+AI_DISABLED_MESSAGE = (
+    "No momento nosso atendimento é feito direto pela nossa equipe — já recebemos "
+    "sua mensagem e alguém te responde por aqui em breve!"
+)
+
 DISCOUNT_APPROVAL_MESSAGE = (
     "Vou verificar esse valor com a equipe e já te retorno por aqui, só um instante!"
 )
@@ -553,6 +558,18 @@ async def process_message(
         "content": user_message,
         "message_id": message_id,
     }).execute()
+
+    # interruptor geral da IA (Dashboard) — desligado, tudo vira modo humano.
+    # conversas que já estavam em 'bot'/'awaiting_payment' são migradas em
+    # bloco no momento do desligamento (ver settings.py:set_ai_mode); isso
+    # aqui cobre conversas NOVAS que chegam enquanto a IA está desligada
+    if company and not company.get("ai_enabled", True):
+        already_human = conversation and conversation.get("status") == "human"
+        if not already_human:
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+            msg_id = _save_assistant_message(conversation_id, company_id, AI_DISABLED_MESSAGE)
+            return AI_DISABLED_MESSAGE, msg_id
+        return "", None
 
     # a IA só para de responder quando um humano assumiu de fato a conversa —
     # 'awaiting_payment' e 'resolved' são só rótulos de estágio, não silenciam

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare } from 'lucide-react'
+import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download } from 'lucide-react'
 import { cn, fmtDate, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +28,8 @@ interface Message {
   created_at: string
   sent_by_human: boolean
   delivery_status?: 'sent' | 'delivered' | 'read' | 'failed'
+  media_type?: 'image' | 'audio' | 'video' | 'sticker' | 'document' | null
+  media_filename?: string | null
 }
 
 const statusBadge: Record<string, { label: string; variant: 'green' | 'yellow' | 'gray' }> = {
@@ -45,6 +47,7 @@ export default function Inbox() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const loadConvs = () =>
@@ -106,6 +109,17 @@ export default function Inbox() {
     await api.post(`/conversations/${active.id}/resolve`)
     loadConvs()
     setActive(a => a ? { ...a, status: 'resolved' } : a)
+  }
+
+  const downloadMedia = async (m: Message) => {
+    setDownloadingId(m.id)
+    try {
+      await api.download(`/conversations/messages/${m.id}/media`, m.media_filename || 'documento')
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   return (
@@ -262,7 +276,19 @@ export default function Inbox() {
                   'max-w-[72%] px-4 py-2.5 rounded-lg border border-ink/10 text-sm font-body shadow-soft',
                   m.role === 'user' ? 'bg-white text-ink' : 'bg-green text-white'
                 )}>
-                  <p className="leading-relaxed whitespace-pre-line">{m.content}</p>
+                  <p className="leading-relaxed whitespace-pre-line flex items-start gap-1.5">
+                    {m.media_type && <Paperclip size={13} className="mt-0.5 flex-none opacity-60" />}
+                    {m.content}
+                  </p>
+                  {m.media_type === 'document' && (
+                    <button
+                      onClick={() => downloadMedia(m)}
+                      disabled={downloadingId === m.id}
+                      className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-md border border-ink/15 bg-cream-2 text-ink text-xs font-body font-bold hover:bg-cream-3 transition-colors disabled:opacity-50"
+                    >
+                      <Download size={12} /> {downloadingId === m.id ? 'Baixando…' : 'Baixar documento'}
+                    </button>
+                  )}
                   <div className={cn('flex items-center gap-1.5 mt-1.5', m.role === 'user' ? 'justify-start' : 'justify-end')}>
                     <span className="text-[10px] font-mono opacity-60">
                       {new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}

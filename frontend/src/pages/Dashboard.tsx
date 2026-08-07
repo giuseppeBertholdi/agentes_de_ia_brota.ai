@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageSquare, FileText, TrendingUp, Zap, Sparkles, Send, Loader2, ArrowRight } from 'lucide-react'
+import { MessageSquare, FileText, TrendingUp, Zap, Sparkles, Send, Loader2, ArrowRight, Bot, UserRound } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { StatTile } from '@/components/ui/stat-tile'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { cn, fmtCurrency, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { useRealtimeTable } from '@/hooks/useRealtime'
@@ -45,6 +47,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [activity, setActivity] = useState<ActivityDay[]>([])
   const [recentConvs, setRecentConvs] = useState<RecentConversation[]>([])
+  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null)
+  const [savingAiMode, setSavingAiMode] = useState(false)
+  const [confirmDisable, setConfirmDisable] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
   const chat = useAiChat()
@@ -60,11 +65,23 @@ export default function Dashboard() {
     api.get<Stats>('/quotes/dashboard').then(setStats).catch(console.error)
     api.get<ActivityDay[]>('/quotes/activity').then(setActivity).catch(console.error)
     api.get<RecentConversation[]>('/conversations/').then(cs => setRecentConvs(cs.slice(0, 5))).catch(console.error)
+    api.get<{ ai_enabled?: boolean }>('/settings/company').then(c => setAiEnabled(c.ai_enabled ?? true)).catch(console.error)
   }
 
   useEffect(() => { load() }, [])
   useRealtimeTable('conversations', load)
   useRealtimeTable('quotes', load)
+
+  const setAiMode = async (enabled: boolean) => {
+    setSavingAiMode(true)
+    try {
+      await api.post('/settings/ai-mode', { enabled })
+      setAiEnabled(enabled)
+      load()
+    } finally {
+      setSavingAiMode(false)
+    }
+  }
 
   const tiles = [
     {
@@ -168,6 +185,39 @@ export default function Dashboard() {
           </div>
         )}
 
+        {aiEnabled !== null && (
+          <div className={cn(
+            'flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border shadow-soft mb-6',
+            aiEnabled ? 'bg-white border-ink/10' : 'bg-ink border-ink'
+          )}>
+            <div className={cn(
+              'w-9 h-9 rounded-full flex items-center justify-center flex-none',
+              aiEnabled ? 'bg-green-tint' : 'bg-lime'
+            )}>
+              {aiEnabled ? <Bot size={16} className="text-green-deep" /> : <UserRound size={16} className="text-ink" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={cn('font-body font-bold text-sm leading-tight', aiEnabled ? 'text-ink' : 'text-white')}>
+                {aiEnabled ? 'IA respondendo automaticamente' : 'Modo humano — IA desligada'}
+              </div>
+              <p className={cn('text-xs font-body mt-0.5', aiEnabled ? 'text-ink-soft' : 'text-white/60')}>
+                {aiEnabled
+                  ? 'Todo atendimento novo passa pelos agentes de IA, do jeito que você configurou.'
+                  : 'Nenhuma conversa é respondida automaticamente — tudo cai direto pro Inbox pra sua equipe atender.'}
+              </p>
+            </div>
+            <Button
+              variant={aiEnabled ? 'danger' : 'lime'}
+              size="sm"
+              className="flex-none"
+              disabled={savingAiMode}
+              onClick={() => aiEnabled ? setConfirmDisable(true) : setAiMode(true)}
+            >
+              {savingAiMode ? <Loader2 size={14} className="animate-spin" /> : aiEnabled ? 'Desabilitar IA' : 'Reativar IA'}
+            </Button>
+          </div>
+        )}
+
         <div className="mb-3">
           <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-faint">Resumo da operação</h2>
         </div>
@@ -268,6 +318,16 @@ export default function Dashboard() {
       </div>
 
       <PaywallModal open={chat.paywallRequired} onClose={chat.dismissPaywall} />
+
+      <ConfirmDialog
+        open={confirmDisable}
+        title="Desabilitar a IA?"
+        message="Todas as conversas em andamento passam pro modo humano agora — ninguém mais recebe resposta automática até você reativar."
+        confirmLabel="Desabilitar"
+        variant="danger"
+        onConfirm={() => { setConfirmDisable(false); setAiMode(false) }}
+        onCancel={() => setConfirmDisable(false)}
+      />
     </div>
   )
 }

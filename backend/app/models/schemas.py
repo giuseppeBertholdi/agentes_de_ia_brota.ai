@@ -47,6 +47,10 @@ class CompanyUpdate(BaseModel):
     followup_template_language: Optional[str] = None
 
 
+class AiModeUpdate(BaseModel):
+    enabled: bool
+
+
 class FollowUpStatusUpdate(BaseModel):
     status: str
 

@@ -5,13 +5,37 @@ Rota única: GET/POST /webhook
 import hashlib
 import hmac
 import json
+import logging
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
 from app.config import settings
 from app.database import supabase
-from app.services import message_buffer
+from app.services import message_buffer, whatsapp_cloud_api
 
 router = APIRouter()
+logger = logging.getLogger("webhook")
+
+# tipos de mídia que a IA não consegue interpretar — cada um recebe uma
+# resposta padrão pro cliente, mas a mensagem original fica salva (com
+# media_id) pra aparecer no Inbox
+MEDIA_LABELS = {
+    "image": "uma imagem",
+    "audio": "um áudio",
+    "video": "um vídeo",
+    "sticker": "uma figurinha",
+    "document": "um documento",
+}
+
+UNREADABLE_MEDIA_REPLY = (
+    "No momento eu só consigo ler mensagens de texto por aqui — pode me contar em "
+    "palavras o que você precisa? Se preferir, alguém da equipe pode dar uma olhada "
+    "nesse arquivo."
+)
+
+DOCUMENT_REPLY = (
+    "Recebemos o seu documento! Ainda não consigo abrir arquivos automaticamente, "
+    "mas ele já ficou registrado aqui — nossa equipe vai analisar e te retorna por aqui."
+)
 
 
 @router.get("")
@@ -57,13 +81,10 @@ async def _handle_message(phone_number_id: str, value: dict):
     contacts = {c["wa_id"]: c.get("profile", {}).get("name", "") for c in value.get("contacts", [])}
 
     for msg in messages:
-        if msg.get("type") != "text":
-            continue
-
+        msg_type = msg.get("type")
         from_number = msg.get("from", "")
-        content = msg.get("text", {}).get("body", "").strip()
         wa_message_id = msg.get("id", "")
-        if not content or not from_number or not wa_message_id:
+        if not from_number or not wa_message_id or msg_type not in ("text", *MEDIA_LABELS):
             continue
 
         push_name = contacts.get(from_number, "")
@@ -86,16 +107,80 @@ async def _handle_message(phone_number_id: str, value: dict):
         if not conversation:
             continue
 
-        # o processamento (IA + envio da resposta) só acontece depois de um
-        # período de silêncio do cliente — ver message_buffer.py
-        await message_buffer.enqueue_message(
-            conversation_id=conversation["id"],
-            company_id=company_id,
-            phone_number_id=phone_number_id,
-            from_number=from_number,
-            content=content,
-            wa_message_id=wa_message_id,
-        )
+        if msg_type == "text":
+            content = msg.get("text", {}).get("body", "").strip()
+            if not content:
+                continue
+            # o processamento (IA + envio da resposta) só acontece depois de um
+            # período de silêncio do cliente — ver message_buffer.py
+            await message_buffer.enqueue_message(
+                conversation_id=conversation["id"],
+                company_id=company_id,
+                phone_number_id=phone_number_id,
+                from_number=from_number,
+                content=content,
+                wa_message_id=wa_message_id,
+            )
+        else:
+            await _handle_media_message(
+                company_id=company_id,
+                conversation_id=conversation["id"],
+                phone_number_id=phone_number_id,
+                from_number=from_number,
+                wa_message_id=wa_message_id,
+                msg_type=msg_type,
+                media=msg.get(msg_type, {}),
+            )
+
+
+async def _handle_media_message(
+    *, company_id: str, conversation_id: str, phone_number_id: str, from_number: str,
+    wa_message_id: str, msg_type: str, media: dict,
+) -> None:
+    """Mídia que a IA não lê: registra a mensagem original (com media_id, pra
+    poder ser baixada depois) e manda uma resposta padrão — sem passar pela IA."""
+    existing = (
+        supabase.table("messages")
+        .select("id")
+        .eq("company_id", company_id)
+        .eq("message_id", wa_message_id)
+        .limit(1)
+        .execute()
+    )
+    if existing.data:
+        return
+
+    filename = media.get("filename")
+    label = MEDIA_LABELS.get(msg_type, "um arquivo")
+    placeholder = f"[Cliente enviou {label}" + (f": {filename}" if filename else "") + "]"
+
+    supabase.table("messages").insert({
+        "conversation_id": conversation_id,
+        "company_id": company_id,
+        "role": "user",
+        "content": placeholder,
+        "message_id": wa_message_id,
+        "media_type": msg_type,
+        "media_id": media.get("id"),
+        "media_filename": filename,
+        "media_mime_type": media.get("mime_type"),
+    }).execute()
+
+    reply = DOCUMENT_REPLY if msg_type == "document" else UNREADABLE_MEDIA_REPLY
+    try:
+        to = whatsapp_cloud_api.normalize_br_number(from_number)
+        resp = await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
+        sent_wa_id = (resp.get("messages") or [{}])[0].get("id")
+        supabase.table("messages").insert({
+            "conversation_id": conversation_id,
+            "company_id": company_id,
+            "role": "assistant",
+            "content": reply,
+            "wa_message_id": sent_wa_id,
+            "delivery_status": "sent",
+        }).execute()
+    except Exception:
+        logger.exception("Falha ao responder mensagem de mídia (company_id=%s)", company_id)
 
 
 async def _handle_status_update(value: dict):

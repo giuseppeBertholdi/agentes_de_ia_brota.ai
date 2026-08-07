@@ -119,6 +119,27 @@ async def send_template(
         return r.json()
 
 
+async def get_media_url(media_id: str) -> str:
+    """
+    A Meta guarda a mídia por um tempo (ligada ao media_id), mas a URL de
+    download é temporária (poucos minutos) — sempre buscar uma nova na hora
+    de baixar, nunca cachear a URL em si.
+    """
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(f"{GRAPH_BASE}/{media_id}", headers=SYSTEM_USER_HEADERS)
+        r.raise_for_status()
+        return r.json()["url"]
+
+
+async def download_media(media_id: str) -> tuple[bytes, str]:
+    """Retorna (conteúdo, content-type) de um arquivo de mídia recebido no WhatsApp."""
+    url = await get_media_url(media_id)
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.get(url, headers=SYSTEM_USER_HEADERS)
+        r.raise_for_status()
+        return r.content, r.headers.get("content-type", "application/octet-stream")
+
+
 async def unsubscribe_app_from_waba(waba_id: str) -> dict:
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.delete(

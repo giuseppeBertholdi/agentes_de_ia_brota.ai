@@ -84,4 +84,21 @@ async function del<T>(path: string): Promise<T> {
   return handle<T>(r)
 }
 
-export const api = { get, post, patch, put, delete: del }
+// baixa um arquivo binário (ex: documento recebido no WhatsApp) autenticado
+// e dispara o download no navegador — fetch simples não dá pra usar aqui
+// porque um <a href> não consegue mandar o header Authorization.
+async function download(path: string, filename: string): Promise<void> {
+  const headers = await authHeaders()
+  delete (headers as Record<string, string>)['Content-Type']
+  const r = await fetch(`${BASE}${path}`, { headers })
+  if (!r.ok) throw new ApiError(r.status, await r.text())
+  const blob = await r.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export const api = { get, post, patch, put, delete: del, download }

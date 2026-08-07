@@ -1,6 +1,6 @@
 from typing import Optional
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from app.api.auth import require_company, get_current_user
 from app.database import supabase
 from app.services import whatsapp_cloud_api
@@ -58,6 +58,34 @@ async def get_messages(conversation_id: str, company_id: str = Depends(require_c
         .execute()
     )
     return r.data or []
+
+
+@router.get("/messages/{message_id}/media")
+async def get_message_media(message_id: str, company_id: str = Depends(require_company)):
+    """Baixa (via Meta) a mídia de uma mensagem recebida — usado pelo Inbox pra
+    abrir/baixar documentos enviados pelo cliente que a IA não consegue ler."""
+    msg = (
+        supabase.table("messages")
+        .select("media_id,media_filename,media_mime_type")
+        .eq("id", message_id)
+        .eq("company_id", company_id)
+        .maybe_single()
+        .execute()
+    )
+    if not msg or not msg.data or not msg.data.get("media_id"):
+        raise HTTPException(404, "Mídia não encontrada")
+
+    try:
+        content, mime_type = await whatsapp_cloud_api.download_media(msg.data["media_id"])
+    except httpx.HTTPStatusError:
+        raise HTTPException(502, "Falha ao baixar mídia do WhatsApp")
+
+    filename = msg.data.get("media_filename") or "arquivo"
+    return Response(
+        content=content,
+        media_type=msg.data.get("media_mime_type") or mime_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/send")
