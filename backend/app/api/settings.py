@@ -5,7 +5,7 @@ from app.api.auth import require_company, require_active_subscription
 from app.database import supabase
 from app.services import whatsapp_cloud_api
 from app.services.ai_agent import client as openai_client, MODEL
-from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback, PriceQuestionsRequest, AiModeUpdate
+from app.models.schemas import PriceItem, AgentConfigUpdate, CompanyUpdate, EmbeddedSignupCallback, PriceQuestionsRequest, AiModeUpdate, TestNumberConnect
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -136,6 +136,33 @@ async def embedded_signup(body: EmbeddedSignupCallback, company_id: str = Depend
         info = await whatsapp_cloud_api.get_phone_number_info(body.phone_number_id)
     except Exception as e:
         raise HTTPException(400, f"Falha ao concluir conexão com a Meta: {e}")
+
+    data = {
+        "company_id": company_id,
+        "waba_id": body.waba_id,
+        "phone_number_id": body.phone_number_id,
+        "display_phone_number": info.get("display_phone_number"),
+        "verified_name": info.get("verified_name"),
+        "status": "connected",
+    }
+    r = supabase.table("whatsapp_instances").upsert(data, on_conflict="company_id").execute()
+    return r.data[0] if r.data else {}
+
+
+@router.post("/whatsapp/connect-test-number")
+async def connect_test_number(body: TestNumberConnect, company_id: str = Depends(require_active_subscription)):
+    """
+    Conecta o número de teste que a própria Meta disponibiliza no App Dashboard
+    (WhatsApp > Configuração da API) — diferente do Embedded Signup normal, aqui
+    não existe 'code' pra trocar: o System User do Brota já tem acesso porque
+    esse número pertence ao mesmo App/Negócio onde o token foi gerado. Só falta
+    inscrever o app nos eventos da WABA (pra receber webhook) e salvar a conexão.
+    """
+    try:
+        await whatsapp_cloud_api.subscribe_app_to_waba(body.waba_id)
+        info = await whatsapp_cloud_api.get_phone_number_info(body.phone_number_id)
+    except Exception as e:
+        raise HTTPException(400, f"Falha ao conectar número de teste: {e}")
 
     data = {
         "company_id": company_id,

@@ -53,7 +53,8 @@
       "Bash(gh run *)",
       "Bash(git remote *)",
       "Bash(git check-ignore *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(grep -n \"^import\\\\|useState\\(false\\)$\\\\|const \\\\[\" /home/giuseppe/brota/frontend/src/pages/Settings.tsx)"
     ]
   }
 }

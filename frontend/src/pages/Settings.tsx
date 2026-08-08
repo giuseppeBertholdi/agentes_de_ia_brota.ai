@@ -85,6 +85,31 @@ export default function Settings() {
   const { start: startCheckout, loading: startingCheckout } = useCheckout()
   const { wa, waLoading, waError, confirmingPayment, connectWa, disconnectWa } = useWhatsappConnection()
 
+  const [showTestForm, setShowTestForm]     = useState(false)
+  const [testWaba,     setTestWaba]         = useState('')
+  const [testPhoneId,  setTestPhoneId]      = useState('')
+  const [connectingTest, setConnectingTest] = useState(false)
+  const [testError,    setTestError]        = useState<string | null>(null)
+
+  const connectTestNumber = async () => {
+    if (!testWaba.trim() || !testPhoneId.trim()) return
+    setConnectingTest(true)
+    setTestError(null)
+    try {
+      await api.post('/settings/whatsapp/connect-test-number', {
+        waba_id: testWaba.trim(),
+        phone_number_id: testPhoneId.trim(),
+      })
+      setShowTestForm(false)
+      setTestWaba('')
+      setTestPhoneId('')
+    } catch (e) {
+      setTestError(e instanceof Error ? e.message : 'Falha ao conectar número de teste')
+    } finally {
+      setConnectingTest(false)
+    }
+  }
+
   const receptionist = agents.find(a => a.agent_type === 'receptionist')
   const quoteAgent = agents.find(a => a.agent_type === 'quote')
 
@@ -359,6 +384,53 @@ export default function Settings() {
                 {waLoading ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />}
                 {waLoading ? 'Conectando…' : 'Conectar WhatsApp'}
               </Button>
+            </div>
+          )}
+
+          {subscriptionActive && !confirmingPayment && (
+            <div className="mt-4 pt-4 border-t border-ink/10">
+              <button
+                onClick={() => setShowTestForm(s => !s)}
+                className="text-ink-faint text-xs font-body font-semibold hover:text-ink-soft underline-offset-2 hover:underline"
+              >
+                {showTestForm ? 'Cancelar conexão manual' : 'Modo desenvolvedor: conectar número de teste da Meta'}
+              </button>
+              {showTestForm && (
+                <div className="flex flex-col gap-3 mt-3 max-w-md">
+                  <p className="text-ink-faint text-xs font-body leading-relaxed">
+                    Pega o <b>WhatsApp Business Account ID</b> e o <b>Phone number ID</b> na tela
+                    "Configuração da API" do seu App no Meta Dashboard (aparecem junto com o número
+                    de teste gerado pela Meta).
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                      WhatsApp Business Account ID
+                    </label>
+                    <Input value={testWaba} onChange={e => setTestWaba(e.target.value)} placeholder="Ex: 1622535965417661" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                      Phone number ID
+                    </label>
+                    <Input value={testPhoneId} onChange={e => setTestPhoneId(e.target.value)} placeholder="Ex: 1062928000229168" />
+                  </div>
+                  {testError && (
+                    <div className="p-2.5 bg-red-50 border border-red-300 rounded-md text-red-700 text-xs font-body">
+                      {testError}
+                    </div>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-fit"
+                    onClick={connectTestNumber}
+                    disabled={connectingTest || !testWaba.trim() || !testPhoneId.trim()}
+                  >
+                    {connectingTest ? <Loader2 size={14} className="animate-spin" /> : <Smartphone size={14} />}
+                    {connectingTest ? 'Conectando…' : 'Conectar número de teste'}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

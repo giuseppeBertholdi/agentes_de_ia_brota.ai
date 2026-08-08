@@ -8,6 +8,11 @@ class EmbeddedSignupCallback(BaseModel):
     phone_number_id: str
 
 
+class TestNumberConnect(BaseModel):
+    waba_id: str
+    phone_number_id: str
+
+
 class SendMessageRequest(BaseModel):
     conversation_id: str
     content: str
