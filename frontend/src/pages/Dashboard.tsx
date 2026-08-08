@@ -206,7 +206,7 @@ export default function Dashboard() {
               ) : (
                 <div className="flex flex-col gap-2.5">
                   {approvals.map(a => (
-                    <div key={a.id} className="flex items-center gap-3.5 px-4.5 py-4 border border-ink/10 rounded-xl">
+                    <div key={a.id} className="flex items-center gap-3.5 px-4 py-4 border border-ink/10 rounded-xl">
                       <span className="w-2 h-2 rounded-full bg-green flex-none" />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-ink">
@@ -242,7 +242,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
               {kpis.map(k => (
                 <Card key={k.label} className="!shadow-xs">
-                  <CardContent className="p-4.5 pt-5">
+                  <CardContent className="p-5">
                     <div className="text-xs text-ink-soft mb-2">{k.label}</div>
                     <div className="text-[28px] font-extrabold text-ink leading-none">{k.value}</div>
                     <div className="text-xs text-green-deep mt-1.5">{k.sub}</div>
