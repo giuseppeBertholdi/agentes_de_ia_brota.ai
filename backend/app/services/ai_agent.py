@@ -136,6 +136,21 @@ def _detect_out_of_policy(items: list[dict], price_items: list[dict], max_discou
 MAX_CONTEXT_DOCS_CHARS = 12_000  # orçamento de caracteres injetados no prompt, entre todos os documentos
 
 
+def _custom_instructions_text(custom_prompt: str | None) -> str:
+    """O 'prompt customizado' configurado pela empresa entra como uma camada
+    ADICIONAL de instruções — nunca substitui as instruções internas (que
+    garantem o contrato de resposta em JSON, o roteamento pra cotação/setor e
+    as redes de segurança contra loop). Sem isso, um prompt customizado que
+    não conhece esse contrato pode fazer o agente responder fora do formato
+    esperado, ou ignorar por completo lógica como roteamento e escalonamento."""
+    if not custom_prompt:
+        return ""
+    return (
+        "\n\nInstruções específicas desta empresa — siga à risca, mas sempre "
+        "dentro do formato de resposta JSON definido acima:\n" + custom_prompt.strip()
+    )
+
+
 def _context_documents_text(documents: list[dict]) -> str:
     """Material que a empresa enviou pra Central de Contexto (tabela de preços,
     política da loja, FAQ etc.) — entra como fonte de verdade adicional, com um
@@ -318,11 +333,12 @@ async def run_receptionist(
     context_documents: list[dict] | None = None,
 ) -> dict:
     """Retorna {'action': 'reply'|'quote'|'transfer'|'accept_quote', 'message': str, 'reason': str, 'department': str}"""
-    system = (custom_prompt or RECEPTIONIST_BASE).format(
+    system = RECEPTIONIST_BASE.format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
+    system += _custom_instructions_text(custom_prompt)
     system += _business_hours_text(company.get("business_hours"))
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
@@ -439,11 +455,12 @@ async def run_quote_agent(
     context_documents: list[dict] | None = None,
 ) -> dict:
     """Retorna {'action': 'collecting'|'quote_ready'|'needs_approval'|'error', 'message': str, 'items': list, 'total': float}"""
-    system = (custom_prompt or QUOTE_BASE).format(
+    system = QUOTE_BASE.format(
         company_name=company.get("name", "a empresa"),
         voice_tone=company.get("voice_tone", "amigável"),
         price_table=_price_table_text(price_items),
     )
+    system += _custom_instructions_text(custom_prompt)
     system += _negotiation_text(max_discount_pct)
     system += _pending_approval_text(pending_approval)
     system += _customer_context_text(conversation)

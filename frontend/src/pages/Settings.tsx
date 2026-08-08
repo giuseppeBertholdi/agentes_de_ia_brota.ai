@@ -284,14 +284,16 @@ export default function Settings() {
           </div>
           <Textarea
             rows={3}
-            placeholder="Deixe em branco para usar o padrão da Plimpost…"
+            placeholder="Instruções extras pra esse agente (ex: como fazer uma triagem antes de responder). Isso se SOMA ao comportamento padrão da Plimpost — não o substitui."
             value={agent.system_prompt || ''}
             onChange={e => setAgents(prev => prev.map(a =>
               a.agent_type === agent.agent_type ? { ...a, system_prompt: e.target.value } : a
             ))}
             onBlur={() => saveAgent(agent.agent_type, { system_prompt: agent.system_prompt })}
           />
-          <p className="text-ink-faint text-[11px] font-body">Salvo automaticamente ao sair do campo.</p>
+          <p className="text-ink-faint text-[11px] font-body">
+            Salvo automaticamente ao sair do campo. O agente continua respeitando roteamento, negociação e escalonamento padrão — isso aqui só adiciona regras específicas do seu negócio por cima.
+          </p>
         </div>
       </div>
     )
