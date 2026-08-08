@@ -758,7 +758,12 @@ async def process_message(
                     "status": "sent",
                 }).execute()
         else:
-            reply_text = rec_result.get("message") or "Posso te ajudar com um orçamento! Pode me contar mais?"
+            # sem agente de Cotação ativo não existe como gerar um orçamento
+            # automático — chama um humano em vez de repetir uma mensagem
+            # genérica pra sempre (o cliente já passou pela triagem do
+            # Recepcionista, que segue valendo no histórico pra quem assumir)
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+            reply_text = "Vou chamar alguém da equipe pra te ajudar com o orçamento, só um instante!"
     else:
         reply_text = rec_result["message"]
         if _is_repeating_last_reply(reply_text, history):
