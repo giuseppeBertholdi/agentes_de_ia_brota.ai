@@ -5,7 +5,9 @@ import { initials } from '@/lib/utils'
 
 const routeMeta: Record<string, { title: string; sub: string }> = {
   '/app/dashboard': { title: 'Dashboard', sub: 'Visão geral da operação' },
+  '/app/context': { title: 'Contexto', sub: 'Documentos que alimentam a IA' },
   '/app/inbox': { title: 'Inbox', sub: 'Conversas em tempo real' },
+  '/app/approvals': { title: 'Aprovações', sub: 'Descontos fora da política' },
   '/app/quotes': { title: 'Cotações', sub: 'Orçamentos gerados pelo bot' },
   '/app/reports': { title: 'Relatórios', sub: 'Resumo semanal' },
   '/app/post-sale': { title: 'Pós-venda', sub: 'Acompanhamento pós-compra' },

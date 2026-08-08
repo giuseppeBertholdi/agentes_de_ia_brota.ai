@@ -6,35 +6,51 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
-        body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        mono: ['"Space Mono"', 'ui-monospace', 'monospace'],
+        display: ['"Archivo"', 'system-ui', 'sans-serif'],
+        body: ['"Archivo"', 'system-ui', 'sans-serif'],
+        mono: ['"Archivo"', 'system-ui', 'sans-serif'],
       },
       colors: {
+        // fundo do app e superfícies neutras
         cream: {
-          DEFAULT: '#FBF7EC',
-          2: '#F1E9D6',
-          3: '#ECE2CB',
+          DEFAULT: '#F7F9F8',
+          2: '#F0F2F5',
+          3: '#E7EAEC',
         },
+        // texto
         ink: {
-          DEFAULT: '#16241C',
-          soft: '#45564B',
-          faint: '#7C8A7F',
+          DEFAULT: '#111B21',
+          soft: '#54656F',
+          faint: '#8696A0',
         },
+        // verde WhatsApp (marca / CTA de destaque) + teal (ações/links)
         green: {
-          DEFAULT: '#1F8A4C',
-          deep: '#12693A',
-          700: '#145F36',
-          soft: '#E2F1DD',
-          tint: '#EFF7E9',
+          DEFAULT: '#25D366',
+          deep: '#0B6156',
+          700: '#094B43',
+          soft: '#E7F8EF',
+          tint: '#E7F8EF',
         },
-        lime: '#C7F25C',
+        // botão de CTA no estilo WhatsApp: fundo verde, texto verde bem escuro
+        lime: '#25D366',
+        // alerta / precisa de atenção humana
+        amber: {
+          DEFAULT: '#F2A33C',
+          text: '#9A6C1E',
+          soft: '#FEF3E2',
+        },
+        // bolha de chat (Inbox)
+        chat: {
+          bg: '#EFEAE2',
+          bubble: '#D9FDD3',
+          meta: '#667781',
+        },
       },
       boxShadow: {
-        xs: '0 1px 2px 0 rgba(22, 36, 28, 0.04)',
-        soft: '0 1px 2px 0 rgba(22, 36, 28, 0.04), 0 1px 3px 0 rgba(22, 36, 28, 0.06)',
-        'soft-md': '0 2px 4px -1px rgba(22, 36, 28, 0.05), 0 4px 10px -2px rgba(22, 36, 28, 0.07)',
-        'soft-lg': '0 8px 16px -4px rgba(22, 36, 28, 0.09), 0 4px 6px -3px rgba(22, 36, 28, 0.05)',
+        xs: '0 1px 2px 0 rgba(17, 27, 33, 0.06)',
+        soft: '0 1px 2px 0 rgba(17, 27, 33, 0.06), 0 1px 3px 0 rgba(17, 27, 33, 0.08)',
+        'soft-md': '0 2px 4px -1px rgba(17, 27, 33, 0.06), 0 4px 10px -2px rgba(17, 27, 33, 0.08)',
+        'soft-lg': '0 8px 16px -4px rgba(17, 27, 33, 0.1), 0 4px 6px -3px rgba(17, 27, 33, 0.06)',
       },
       borderRadius: {
         sm: '6px',

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download } from 'lucide-react'
-import { cn, fmtDate, initials } from '@/lib/utils'
+import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download, Zap } from 'lucide-react'
+import { cn, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useRealtimeTable } from '@/hooks/useRealtime'
 
@@ -32,12 +31,21 @@ interface Message {
   media_filename?: string | null
 }
 
-const statusBadge: Record<string, { label: string; variant: 'green' | 'yellow' | 'gray' }> = {
-  bot: { label: 'Bot', variant: 'green' },
-  human: { label: 'Humano', variant: 'yellow' },
-  awaiting_payment: { label: 'Aguardando pagamento', variant: 'yellow' },
-  resolved: { label: 'Resolvido', variant: 'gray' },
+const microStatus: Record<string, { label: string; className: string }> = {
+  bot: { label: 'BOT', className: 'text-green-deep' },
+  human: { label: 'PEDIU HUMANO', className: 'text-amber-text' },
+  awaiting_payment: { label: 'AGUARDANDO PAGAMENTO', className: 'text-amber-text' },
+  resolved: { label: 'RESOLVIDO', className: 'text-ink-faint' },
 }
+
+const avatarColor: Record<string, string> = {
+  bot: 'bg-green-soft text-green-deep',
+  human: 'bg-amber-soft text-amber-text',
+  awaiting_payment: 'bg-amber-soft text-amber-text',
+  resolved: 'bg-cream-2 text-ink-soft',
+}
+
+const SUGGESTIONS = ['Sugerir: agendar ligação', 'Sugerir: tabela de atacado', 'Histórico de pedidos']
 
 export default function Inbox() {
   const [convs, setConvs] = useState<Conversation[]>([])
@@ -78,7 +86,6 @@ export default function Inbox() {
 
   const statusPriority: Record<Conversation['status'], number> = { awaiting_payment: 0, human: 1, bot: 2, resolved: 3 }
   const sortedConvs = [...convs].sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
-  const awaitingCount = convs.filter(c => c.status === 'awaiting_payment').length
 
   const send = async () => {
     if (!input.trim() || !active) return
@@ -126,83 +133,68 @@ export default function Inbox() {
     <div className="flex" style={{ height: '100%' }}>
       {/* Conversation list */}
       <div className={cn(
-        'w-full md:w-80 flex-none border-r border-ink/10 bg-white flex-col',
+        'w-full md:w-80 flex-none border-r border-ink/8 bg-white flex-col',
         active ? 'hidden md:flex' : 'flex'
       )}>
-        <div className="h-[64px] flex items-center px-4 border-b border-ink/10 bg-white flex-none gap-2">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-faint">Conversas</span>
-          <div className="ml-auto flex items-center gap-1.5">
-            {awaitingCount > 0 && (
-              <Badge variant="lime" className="gap-1">
-                <DollarSign size={10} /> {awaitingCount} aguardando
-              </Badge>
-            )}
-            <Badge>{convs.filter(c => c.status !== 'resolved').length} ativas</Badge>
+        <div className="px-5 pt-4 pb-3">
+          <div className="flex items-baseline justify-between mb-3">
+            <span className="text-lg font-extrabold text-ink">Inbox</span>
+            <span className="text-xs text-ink-faint">{convs.filter(c => c.status !== 'resolved').length} ativas</span>
           </div>
-        </div>
-        {departments.length > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-ink/10 bg-white overflow-x-auto">
-            <button
-              onClick={() => setDeptFilter('')}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-xs font-body font-semibold whitespace-nowrap border transition-colors',
-                deptFilter === '' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30'
-              )}
-            >
-              Todos
-            </button>
-            {departments.map(d => (
+          {departments.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto">
               <button
-                key={d.id}
-                onClick={() => setDeptFilter(d.id)}
+                onClick={() => setDeptFilter('')}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-body font-semibold whitespace-nowrap border transition-colors',
-                  deptFilter === d.id ? 'bg-green text-white border-green' : 'bg-white text-ink-soft border-ink/15 hover:border-ink/30'
+                  'px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors',
+                  deptFilter === '' ? 'bg-green-soft text-green-deep' : 'bg-cream-2 text-ink-soft hover:text-ink'
                 )}
               >
-                {d.name}
+                Todas
               </button>
-            ))}
-          </div>
-        )}
+              {departments.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => setDeptFilter(d.id)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors',
+                    deptFilter === d.id ? 'bg-green-soft text-green-deep' : 'bg-cream-2 text-ink-soft hover:text-ink'
+                  )}
+                >
+                  {d.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex-1 overflow-y-auto">
           {sortedConvs.map(c => (
             <button
               key={c.id}
               onClick={() => selectConv(c)}
               className={cn(
-                'w-full text-left px-4 py-4 border-b border-ink/10 flex items-start gap-3 hover:bg-cream transition-colors',
-                active?.id === c.id && 'bg-green-tint border-l-4 border-l-green',
-                c.status === 'awaiting_payment' && active?.id !== c.id && 'bg-lime/10'
+                'w-full text-left px-5 py-3 flex items-start gap-3 border-b border-ink/5 transition-colors',
+                active?.id === c.id ? 'bg-[#f0f7f4] border-l-[3px] border-l-green pl-[17px]' : 'hover:bg-cream-2/60'
               )}
             >
-              <div className="relative flex-none">
-                <div className="w-10 h-10 rounded-full bg-green-soft flex items-center justify-center font-display font-bold text-green-deep text-sm">
-                  {initials(c.contact_name || c.contact_phone || '?')}
-                </div>
-                {c.status === 'awaiting_payment' && (
-                  <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-lime border-2 border-white animate-pulse" aria-hidden />
-                )}
+              <div className={cn('w-10 h-10 rounded-full flex-none grid place-items-center text-[13px] font-bold', avatarColor[c.status])}>
+                {initials(c.contact_name || c.contact_phone || '?')}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-body font-bold text-sm text-ink truncate">
-                    {c.contact_name || c.contact_phone}
-                  </span>
-                  <Badge variant={statusBadge[c.status]?.variant ?? 'gray'} className="text-[9px] flex-none">
-                    {statusBadge[c.status]?.label}
-                  </Badge>
+                <div className="flex justify-between gap-2">
+                  <span className="text-[13px] font-bold text-ink truncate">{c.contact_name || c.contact_phone}</span>
+                  {c.last_message_at && (
+                    <span className="text-[11px] text-ink-faint flex-none">
+                      {new Date(c.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
                 {deptName(c.department_id) && (
-                  <span className="text-green-deep text-[10px] font-mono font-bold block mt-0.5">
-                    {deptName(c.department_id)}
-                  </span>
+                  <div className="text-[11px] text-green-deep font-semibold truncate">{deptName(c.department_id)}</div>
                 )}
-                {c.last_message_at && (
-                  <span className="text-ink-faint text-xs font-mono mt-0.5 block">
-                    {new Date(c.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
+                <span className={cn('text-[10px] font-bold', microStatus[c.status]?.className)}>
+                  {microStatus[c.status]?.label}
+                </span>
               </div>
             </button>
           ))}
@@ -211,8 +203,8 @@ export default function Inbox() {
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-cream-2 flex items-center justify-center">
                 <MessageSquare size={20} className="text-ink-faint" />
               </div>
-              <p className="text-ink-soft text-sm font-body font-semibold">Nenhuma conversa ainda</p>
-              <p className="text-ink-faint text-xs font-body mt-1">As mensagens chegam aqui automaticamente</p>
+              <p className="text-ink-soft text-sm font-semibold">Nenhuma conversa ainda</p>
+              <p className="text-ink-faint text-xs mt-1">As mensagens chegam aqui automaticamente</p>
             </div>
           )}
         </div>
@@ -222,7 +214,7 @@ export default function Inbox() {
       {active ? (
         <div className="flex-1 flex flex-col w-full">
           {/* Chat header */}
-          <div className="h-[64px] flex items-center px-3 sm:px-6 bg-white border-b border-ink/10 gap-3 sm:gap-4">
+          <div className="flex items-center px-3 sm:px-6 py-3.5 bg-white border-b border-ink/8 gap-3 sm:gap-4">
             <button
               onClick={() => setActive(null)}
               className="md:hidden p-1.5 -ml-1 rounded-md text-ink-soft hover:bg-cream-2 flex-none"
@@ -230,26 +222,26 @@ export default function Inbox() {
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="w-10 h-10 rounded-full bg-green-soft flex-none flex items-center justify-center font-display font-bold text-green-deep text-sm">
+            <div className={cn('w-10 h-10 rounded-full flex-none grid place-items-center text-[13px] font-bold', avatarColor[active.status])}>
               {initials(active.contact_name || active.contact_phone || '?')}
             </div>
-            <div className="flex-1">
-              <div className="font-body font-bold text-ink flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-[15px] font-bold text-ink flex items-center gap-2">
                 {active.contact_name || active.contact_phone}
-                {deptName(active.department_id) && (
-                  <Badge variant="green" className="text-[9px]">{deptName(active.department_id)}</Badge>
-                )}
               </div>
-              <div className="text-ink-faint text-xs font-mono">{active.contact_phone}</div>
+              <div className="text-ink-soft text-xs truncate">
+                {active.contact_phone}{deptName(active.department_id) ? ` · ${deptName(active.department_id)}` : ''}
+              </div>
             </div>
             <div className="flex flex-wrap justify-end gap-2">
               {active.status === 'bot' ? (
-                <Button variant="primary" size="sm" onClick={takeover}>
+                <Button variant="lime" size="sm" onClick={takeover}>
                   <User size={14} /> Assumir conversa
                 </Button>
               ) : active.status === 'awaiting_payment' ? (
                 <>
-                  <Button variant="lime" size="sm" onClick={resolve} className="shadow-xs font-bold">
+                  <span className="hidden sm:inline-flex items-center text-xs font-semibold text-amber-text bg-amber-soft px-3 py-1.5 rounded-full">aguardando pagamento</span>
+                  <Button variant="lime" size="sm" onClick={resolve} className="font-bold">
                     <CheckCircle2 size={14} /> Confirmar pagamento
                   </Button>
                   <Button variant="ghost" size="sm" onClick={release}>
@@ -257,9 +249,12 @@ export default function Inbox() {
                   </Button>
                 </>
               ) : active.status === 'human' ? (
-                <Button variant="ghost" size="sm" onClick={release}>
-                  <Bot size={14} /> Devolver para IA
-                </Button>
+                <>
+                  <span className="hidden sm:inline-flex items-center text-xs font-semibold text-amber-text bg-amber-soft px-3 py-1.5 rounded-full">bot pausado</span>
+                  <Button variant="ghost" size="sm" onClick={release}>
+                    <Bot size={14} /> Devolver para IA
+                  </Button>
+                </>
               ) : active.status === 'resolved' ? (
                 <Button variant="ghost" size="sm" onClick={takeover}>
                   <User size={14} /> Falar com o cliente
@@ -269,12 +264,18 @@ export default function Inbox() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 bg-cream/50">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-3 bg-chat-bg">
+            {active.status === 'human' && (
+              <div className="self-center flex items-center gap-2 bg-white rounded-2xl px-4 py-1.5 shadow-xs mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green" />
+                <span className="text-xs text-green-deep font-semibold">Bot pausou — cliente pediu atendimento humano</span>
+              </div>
+            )}
             {messages.map(m => (
               <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[72%] px-4 py-2.5 rounded-lg border border-ink/10 text-sm font-body shadow-soft',
-                  m.role === 'user' ? 'bg-white text-ink' : 'bg-green text-white'
+                  'max-w-[85%] sm:max-w-[520px] px-3.5 py-2.5 rounded-[10px] text-sm shadow-xs',
+                  m.role === 'user' ? 'bg-white text-ink rounded-tl-[2px]' : 'bg-chat-bubble text-ink rounded-tr-[2px]'
                 )}>
                   <p className="leading-relaxed whitespace-pre-line flex items-start gap-1.5">
                     {m.media_type && <Paperclip size={13} className="mt-0.5 flex-none opacity-60" />}
@@ -284,28 +285,29 @@ export default function Inbox() {
                     <button
                       onClick={() => downloadMedia(m)}
                       disabled={downloadingId === m.id}
-                      className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-md border border-ink/15 bg-cream-2 text-ink text-xs font-body font-bold hover:bg-cream-3 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-md border border-ink/15 bg-cream-2 text-ink text-xs font-bold hover:bg-cream-3 transition-colors disabled:opacity-50"
                     >
                       <Download size={12} /> {downloadingId === m.id ? 'Baixando…' : 'Baixar documento'}
                     </button>
                   )}
-                  <div className={cn('flex items-center gap-1.5 mt-1.5', m.role === 'user' ? 'justify-start' : 'justify-end')}>
-                    <span className="text-[10px] font-mono opacity-60">
+                  <div className={cn('flex items-center gap-1.5 mt-1', m.role === 'user' ? 'justify-start' : 'justify-end')}>
+                    {m.role === 'assistant' && (
+                      <span className="text-[10px] text-chat-meta flex items-center gap-1">
+                        {m.sent_by_human ? <User size={9} /> : <Zap size={9} className="text-green" fill="currentColor" />}
+                        {m.sent_by_human ? 'você' : 'agente de vendas'} ·
+                      </span>
+                    )}
+                    <span className="text-[10px] text-chat-meta">
                       {new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {m.role === 'assistant' && (
-                      <>
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/15">
-                          {m.sent_by_human ? <User size={9} /> : <Bot size={9} />}
-                        </span>
-                        {m.delivery_status === 'failed' ? (
-                          <AlertCircle size={12} className="text-red-300" aria-label="Falha no envio" />
-                        ) : m.delivery_status === 'delivered' || m.delivery_status === 'read' ? (
-                          <CheckCheck size={12} className="opacity-60" />
-                        ) : (
-                          <Check size={12} className="opacity-60" />
-                        )}
-                      </>
+                      m.delivery_status === 'failed' ? (
+                        <AlertCircle size={11} className="text-red-500" aria-label="Falha no envio" />
+                      ) : m.delivery_status === 'delivered' || m.delivery_status === 'read' ? (
+                        <CheckCheck size={12} className="text-chat-meta" />
+                      ) : (
+                        <Check size={12} className="text-chat-meta" />
+                      )
                     )}
                   </div>
                 </div>
@@ -316,28 +318,45 @@ export default function Inbox() {
 
           {/* Input */}
           {(active.status === 'human' || active.status === 'awaiting_payment') && (
-            <div className="bg-white border-t-2 border-ink p-4 flex gap-3 items-end">
-              <textarea
-                className="flex-1 resize-none border border-ink/10 rounded-md px-3 py-2.5 text-sm font-body text-ink bg-white shadow-soft focus:outline-none focus:shadow-soft-md transition-all min-h-[44px] max-h-32"
-                placeholder="Digite sua mensagem…"
-                value={input}
-                rows={1}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-              />
-              <Button variant="primary" size="md" onClick={send} disabled={sending || !input.trim()}>
-                <Send size={16} />
-              </Button>
+            <div className="bg-white border-t border-ink/8 p-3.5 flex flex-col gap-2.5">
+              <div className="flex gap-2 flex-wrap">
+                {SUGGESTIONS.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setInput(s.replace(/^Sugerir: /, ''))}
+                    className="text-xs text-ink-soft bg-cream-2 hover:bg-cream-3 transition-colors px-3 py-1.5 rounded-full"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2.5">
+                <input
+                  className="flex-1 border-0 rounded-full px-4 py-2.5 text-sm text-ink bg-cream-2 focus:outline-none focus:ring-2 focus:ring-green-deep/40 transition-all"
+                  placeholder="Responder…"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send() } }}
+                />
+                <Button variant="lime" size="md" className="rounded-full flex-none" onClick={send} disabled={sending || !input.trim()}>
+                  <Send size={15} />
+                </Button>
+                {active.status === 'human' && (
+                  <Button variant="ghost" size="md" className="rounded-full flex-none" onClick={release}>
+                    Devolver ao bot
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
           {active.status === 'bot' && (
-            <div className="bg-green-tint border-t-2 border-green/30 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
+            <div className="bg-green-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
               <span className="relative flex w-2 h-2 flex-none">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green opacity-60 animate-ping" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-green" />
               </span>
-              <p className="text-sm text-green-deep font-body font-semibold">
+              <p className="text-sm text-green-deep font-semibold">
                 A IA está atendendo esta conversa automaticamente.
               </p>
               <Button variant="link" size="sm" onClick={takeover} className="font-bold text-green-deep">
@@ -347,22 +366,22 @@ export default function Inbox() {
           )}
 
           {active.status === 'awaiting_payment' && (
-            <div className="bg-lime/15 border-t-2 border-lime px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
-              <DollarSign size={16} className="text-green-deep flex-none" />
-              <p className="text-sm text-ink font-body font-semibold">
+            <div className="bg-amber-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
+              <DollarSign size={16} className="text-amber-text flex-none" />
+              <p className="text-sm text-amber-text font-semibold">
                 Cliente aceitou a cotação — confirme o pagamento assim que ele cair.
               </p>
             </div>
           )}
         </div>
       ) : (
-        <div className="hidden md:flex flex-1 items-center justify-center bg-cream/40">
+        <div className="hidden md:flex flex-1 items-center justify-center bg-cream">
           <div className="text-center max-w-xs">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-green-tint flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-green-soft flex items-center justify-center">
               <MessageSquare size={26} className="text-green-deep opacity-70" />
             </div>
-            <p className="font-body font-bold text-sm text-ink">Selecione uma conversa</p>
-            <p className="font-body text-xs text-ink-faint mt-1">Escolha um contato na lista ao lado para ver o histórico de mensagens</p>
+            <p className="font-bold text-sm text-ink">Selecione uma conversa</p>
+            <p className="text-xs text-ink-faint mt-1">Escolha um contato na lista ao lado para ver o histórico de mensagens</p>
           </div>
         </div>
       )}

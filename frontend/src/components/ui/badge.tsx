@@ -7,9 +7,9 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const variantClasses = {
   default: 'bg-cream-2 text-ink-soft',
   green: 'bg-green-soft text-green-deep',
-  yellow: 'bg-yellow-100 text-yellow-800',
+  yellow: 'bg-amber-soft text-amber-text',
   red: 'bg-red-100 text-red-700',
-  lime: 'bg-lime text-ink',
+  lime: 'bg-lime text-[#052e22]',
   gray: 'bg-cream-3 text-ink-faint',
 }
 

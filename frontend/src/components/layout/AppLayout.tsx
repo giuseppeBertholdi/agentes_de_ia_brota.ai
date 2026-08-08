@@ -19,7 +19,6 @@ export default function AppLayout() {
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
 
-  const isDashboard = location.pathname === '/app/dashboard' || location.pathname === '/app'
   const isInbox = location.pathname === '/app/inbox'
   const statusReady = !waLoading && !statusLoading
 
@@ -56,7 +55,7 @@ export default function AppLayout() {
           <Outlet key={configVersion} />
         </div>
       </main>
-      {!isDashboard && !isInbox && (
+      {!isInbox && (
         <AiAssistant onConfigChanged={handleConfigChanged} />
       )}
     </div>

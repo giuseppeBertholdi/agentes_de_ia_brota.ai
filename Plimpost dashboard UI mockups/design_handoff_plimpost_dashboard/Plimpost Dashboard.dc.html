@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="ds/styles.css">
+<style>
+body{margin:0;background:#f3f2f2;font-family:"Archivo",system-ui,sans-serif}
+a{color:#ec3013}a:hover{color:#ae1800}
+.dv-turn{padding:40px 44px 32px;border-bottom:2px solid rgba(32,30,29,.4);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#201e1d;color:#fff;text-decoration:none}
+.dv-tname{font:600 13px/1.2 "Archivo",sans-serif;color:#201e1d}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(32,30,29,.08);color:#201e1d;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "Archivo",sans-serif;color:rgba(32,30,29,.6)}
+.dv-card{max-width:100%;background:#f3f2f2;border:1px solid rgba(32,30,29,.25);box-shadow:0 3px 10px rgba(45,43,43,.16);overflow:hidden}
+.dv-opt:target .dv-oid{background:#ec3013;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 "Archivo",sans-serif;color:rgba(32,30,29,.55)}
+</style>
+</helmet>
+<section class="dv-turn" id="t2" data-screen-label="Explorações Plimpost — turno 2 (WhatsApp, simples)">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Cores do WhatsApp + estilo mais simples — menos réguas, cantos suaves, mais respiro</span></div>
+<div class="dv-opts">
+
+<!-- ══════════ 2a — Dashboard simples verde ══════════ -->
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Dashboard simples — verde WhatsApp, cards brancos, sidebar limpa</div>
+<div class="dv-card" style="width:1240px;background:#f7f9f8;border:1px solid rgba(17,27,33,.12)">
+<div style="display:flex;min-height:760px;font-family:'Archivo',system-ui,sans-serif;color:#111b21">
+  <aside style="width:220px;flex:none;background:#fff;border-right:1px solid rgba(17,27,33,.08);display:flex;flex-direction:column;padding:24px 0">
+    <div style="padding:0 24px 24px;display:flex;align-items:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#25d366" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-0.015em">Plimpost</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:2px;padding:0 12px;flex:1">
+      <a href="#2a" style="padding:9px 12px;font-size:14px;font-weight:600;color:#0b6156;text-decoration:none;background:#e7f8ef;border-radius:8px">Dashboard</a>
+      <a href="#2c" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px;display:flex;justify-content:space-between;align-items:center">Inbox <span style="font-size:11px;font-weight:700;background:#25d366;color:#fff;border-radius:10px;padding:1px 7px">14</span></a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px;display:flex;justify-content:space-between;align-items:center">Aprovações <span style="font-size:11px;font-weight:700;color:#0b6156">3</span></a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Cotações</a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Contexto</a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Relatórios</a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Pós-venda</a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Equipe</a>
+      <a href="#2a" style="padding:9px 12px;font-size:14px;color:#54656f;text-decoration:none;border-radius:8px">Configurações</a>
+    </nav>
+    <div style="margin:0 12px;padding:12px;background:#f7f9f8;border-radius:10px;display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;background:#0b6156;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;border-radius:50%">GB</div>
+      <div style="line-height:1.2"><div style="font-size:13px;font-weight:600">Giuseppe</div><div style="font-size:11px;color:#54656f">Plano Pro</div></div>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;padding:32px 36px;display:flex;flex-direction:column;gap:24px">
+    <header style="display:flex;justify-content:space-between;align-items:center">
+      <div><h3 style="margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:-0.01em">Boa noite, Giuseppe</h3><p style="margin:0;font-size:13px;color:#54656f">Sexta, 8 de agosto · tudo rodando bem</p></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#0b6156;background:#e7f8ef;padding:6px 12px;border-radius:16px"><span style="width:7px;height:7px;background:#25d366;border-radius:50%"></span>WhatsApp conectado</span>
+        <button style="font:600 13px 'Archivo',sans-serif;background:#0b6156;color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer">Nova cotação</button>
+      </div>
+    </header>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+      <div style="background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+        <div style="font-size:12px;color:#54656f;margin-bottom:8px">Conversas ativas</div>
+        <div style="font-size:30px;font-weight:800;line-height:1">14</div>
+        <div style="font-size:12px;color:#0b6156;margin-top:6px">11 no bot · 3 com você</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+        <div style="font-size:12px;color:#54656f;margin-bottom:8px">Cotações hoje</div>
+        <div style="font-size:30px;font-weight:800;line-height:1">6</div>
+        <div style="font-size:12px;color:#54656f;margin-top:6px">R$ 9.320 em propostas</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+        <div style="font-size:12px;color:#54656f;margin-bottom:8px">Receita (semana)</div>
+        <div style="font-size:30px;font-weight:800;line-height:1">R$ 18.240</div>
+        <div style="font-size:12px;color:#0b6156;margin-top:6px">↑ 22% vs semana passada</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+        <div style="font-size:12px;color:#54656f;margin-bottom:8px">Mensagens hoje</div>
+        <div style="font-size:30px;font-weight:800;line-height:1">312</div>
+        <div style="font-size:12px;color:#54656f;margin-top:6px">94% pelo bot</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div style="background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+            <span style="font-size:15px;font-weight:700">Atividade da semana</span>
+            <div style="display:flex;gap:14px;font-size:11px;color:#54656f"><span><span style="display:inline-block;width:9px;height:9px;background:#25d366;border-radius:2px;margin-right:5px"></span>Conversas</span><span><span style="display:inline-block;width:9px;height:9px;background:#c8e6d5;border-radius:2px;margin-right:5px"></span>Cotações</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:16px;height:130px">
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:52%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:24%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:68%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:36%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:44%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:20%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:80%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:44%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:92%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:56%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:36%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:16%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#25d366;border-radius:4px 4px 0 0;height:24%"></div><div style="flex:1;background:#c8e6d5;border-radius:4px 4px 0 0;height:8%"></div></div>
+          </div>
+          <div style="display:flex;gap:16px;padding-top:8px;font-size:11px;color:#8696a0"><span style="flex:1">Sáb</span><span style="flex:1">Dom</span><span style="flex:1">Seg</span><span style="flex:1">Ter</span><span style="flex:1">Qua</span><span style="flex:1">Qui</span><span style="flex:1">Hoje</span></div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <span style="font-size:15px;font-weight:700">Conversas recentes</span><a href="#2c" style="font-size:13px;color:#0b6156;text-decoration:none;font-weight:600">Ver inbox →</a>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(17,27,33,.06)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">MV</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">Marcos Vieira</div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fecho pelos R$ 2.230 então. Pode emitir?</div></div>
+              <span style="font-size:11px;background:#e7f8ef;color:#0b6156;padding:3px 10px;border-radius:12px;flex:none">bot</span>
+              <span style="font-size:11px;color:#8696a0;flex:none">2 min</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(17,27,33,.06)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">AP</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">Ana Lúcia Prado</div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Vocês entregam no Cambuí?</div></div>
+              <span style="font-size:11px;background:#e7f8ef;color:#0b6156;padding:3px 10px;border-radius:12px;flex:none">bot</span>
+              <span style="font-size:11px;color:#8696a0;flex:none">9 min</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(17,27,33,.06)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#fef3e2;color:#9a6c1e;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">CI</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">Construtora Iveco</div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Preciso falar com um responsável.</div></div>
+              <span style="font-size:11px;background:#fef3e2;color:#9a6c1e;padding:3px 10px;border-radius:12px;flex:none">com Rafa</span>
+              <span style="font-size:11px;color:#8696a0;flex:none">14 min</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+              <div style="width:36px;height:36px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">JC</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">Juliana Castro</div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Obrigada! Chegou tudo certinho 🙂</div></div>
+              <span style="font-size:11px;background:#e7f8ef;color:#0b6156;padding:3px 10px;border-radius:12px;flex:none">bot</span>
+              <span style="font-size:11px;color:#8696a0;flex:none">31 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font-size:15px;font-weight:700">Precisa de você</span><span style="font-size:11px;font-weight:700;background:#25d366;color:#fff;border-radius:10px;padding:1px 8px">3</span></div>
+          <div style="padding:12px;background:#f7f9f8;border-radius:10px;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:600">Desconto acima do limite</div>
+            <p style="font-size:12px;color:#54656f;margin:4px 0 10px">Marcos pediu 14% — limite é 10%. Cotação #341.</p>
+            <div style="display:flex;gap:8px"><button style="font:600 12px 'Archivo',sans-serif;background:#0b6156;color:#fff;border:0;border-radius:7px;padding:7px 12px;cursor:pointer">Aprovar</button><button style="font:600 12px 'Archivo',sans-serif;background:#fff;color:#111b21;border:1px solid rgba(17,27,33,.15);border-radius:7px;padding:7px 12px;cursor:pointer">Manter 10%</button></div>
+          </div>
+          <div style="padding:12px;background:#f7f9f8;border-radius:10px;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:600">Item fora da tabela</div>
+            <p style="font-size:12px;color:#54656f;margin:4px 0 0">"Instalação em fim de semana" sem preço definido.</p>
+          </div>
+          <div style="padding:12px;background:#f7f9f8;border-radius:10px">
+            <div style="font-size:13px;font-weight:600">Follow-up sugerido</div>
+            <p style="font-size:12px;color:#54656f;margin:4px 0 0">5 clientes sem resposta há 3 dias.</p>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 2px rgba(17,27,33,.06)">
+          <span style="font-size:15px;font-weight:700">Agenda de hoje</span>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(17,27,33,.06)"><span style="font-size:12px;font-weight:700;width:42px;color:#0b6156">14:00</span><span style="font-size:12px;color:#54656f">Entrega — pedido #338, Juliana Castro</span></div>
+            <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(17,27,33,.06)"><span style="font-size:12px;font-weight:700;width:42px;color:#0b6156">16:30</span><span style="font-size:12px;color:#54656f">Ligação — Construtora Iveco</span></div>
+            <div style="display:flex;gap:12px;padding:9px 0"><span style="font-size:12px;font-weight:700;width:42px;color:#0b6156">18:00</span><span style="font-size:12px;color:#54656f">Follow-up automático — 5 clientes</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 2b — Ultra-minimal ══════════ -->
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Ultra-minimal — sem sidebar, uma coluna, só o essencial do dia</div>
+<div class="dv-card" style="width:1240px;background:#fff;border:1px solid rgba(17,27,33,.12)">
+<div style="min-height:720px;font-family:'Archivo',system-ui,sans-serif;color:#111b21;display:flex;flex-direction:column">
+  <nav style="display:flex;align-items:center;gap:28px;padding:18px 48px;border-bottom:1px solid rgba(17,27,33,.08)">
+    <span style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin-right:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="#25d366" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Plimpost</span>
+    <a href="#2b" style="font-size:14px;color:#0b6156;font-weight:600;text-decoration:none">Hoje</a>
+    <a href="#2c" style="font-size:14px;color:#54656f;text-decoration:none">Inbox</a>
+    <a href="#2b" style="font-size:14px;color:#54656f;text-decoration:none">Cotações</a>
+    <a href="#2b" style="font-size:14px;color:#54656f;text-decoration:none">Relatórios</a>
+    <a href="#2b" style="font-size:14px;color:#54656f;text-decoration:none">Ajustes</a>
+    <div style="width:30px;height:30px;background:#0b6156;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;border-radius:50%">GB</div>
+  </nav>
+  <main style="max-width:760px;width:100%;margin:0 auto;padding:48px 24px;display:flex;flex-direction:column;gap:36px">
+    <div>
+      <h2 style="margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-0.015em">Sexta, 8 de agosto</h2>
+      <p style="margin:0;font-size:14px;color:#54656f">O bot atendeu <strong style="color:#111b21">27 clientes</strong> hoje e resolveu 94% sozinho. <strong style="color:#111b21">R$ 18.240</strong> fechados na semana.</p>
+    </div>
+    <div style="display:flex;gap:32px;padding:20px 0;border-top:1px solid rgba(17,27,33,.08);border-bottom:1px solid rgba(17,27,33,.08)">
+      <div><div style="font-size:26px;font-weight:800">14</div><div style="font-size:12px;color:#54656f">conversas ativas</div></div>
+      <div><div style="font-size:26px;font-weight:800">6</div><div style="font-size:12px;color:#54656f">cotações hoje</div></div>
+      <div><div style="font-size:26px;font-weight:800">R$ 9.320</div><div style="font-size:12px;color:#54656f">em negociação</div></div>
+      <div style="margin-left:auto;align-self:center"><button style="font:600 13px 'Archivo',sans-serif;background:#25d366;color:#052e22;border:0;border-radius:20px;padding:10px 20px;cursor:pointer">Abrir inbox</button></div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#8696a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Só isso precisa de você</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid rgba(17,27,33,.1);border-radius:12px">
+          <span style="width:8px;height:8px;background:#25d366;border-radius:50%;flex:none"></span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">Marcos pediu 14% de desconto — seu limite é 10%</div><div style="font-size:12px;color:#54656f">Cotação #341 · R$ 2.230 · margem cai de 31% pra 24%</div></div>
+          <button style="font:600 12px 'Archivo',sans-serif;background:#0b6156;color:#fff;border:0;border-radius:7px;padding:8px 14px;cursor:pointer">Decidir</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid rgba(17,27,33,.1);border-radius:12px">
+          <span style="width:8px;height:8px;background:#f2a33c;border-radius:50%;flex:none"></span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">Construtora Iveco quer falar com um humano</div><div style="font-size:12px;color:#54656f">Aguardando há 14 min · negociação de fornecimento mensal</div></div>
+          <a href="#2c" style="font:600 12px 'Archivo',sans-serif;background:#0b6156;color:#fff;border-radius:7px;padding:8px 14px;text-decoration:none">Assumir</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid rgba(17,27,33,.1);border-radius:12px">
+          <span style="width:8px;height:8px;background:#8696a0;border-radius:50%;flex:none"></span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">"Instalação em fim de semana" não tem preço</div><div style="font-size:12px;color:#54656f">Citado 2× esta semana — o bot não consegue cotar</div></div>
+          <button style="font:600 12px 'Archivo',sans-serif;background:#fff;color:#111b21;border:1px solid rgba(17,27,33,.15);border-radius:7px;padding:8px 14px;cursor:pointer">Definir preço</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#8696a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">O bot cuidou do resto</div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(17,27,33,.06);font-size:13px"><span style="color:#25d366;font-weight:700">✓</span><span style="flex:1">Cotação de R$ 2.480 enviada pra Marcos Vieira</span><span style="color:#8696a0;font-size:12px">19:44</span></div>
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(17,27,33,.06);font-size:13px"><span style="color:#25d366;font-weight:700">✓</span><span style="flex:1">Dúvida de entrega respondida pra Ana Lúcia (Cambuí)</span><span style="color:#8696a0;font-size:12px">19:31</span></div>
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(17,27,33,.06);font-size:13px"><span style="color:#25d366;font-weight:700">✓</span><span style="flex:1">Follow-up pós-venda — Juliana confirmou a entrega</span><span style="color:#8696a0;font-size:12px">19:09</span></div>
+        <div style="display:flex;gap:12px;padding:10px 0;font-size:13px"><span style="color:#25d366;font-weight:700">✓</span><span style="flex:1">Desconto de 8% negociado com Otávio — fechado em R$ 1.190</span><span style="color:#8696a0;font-size:12px">18:52</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 2c — Inbox verde ══════════ -->
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Inbox — bolhas de chat familiares, takeover em verde (combina com <a class="dv-oid" href="#2a">2a</a>)</div>
+<div class="dv-card" style="width:1240px;background:#fff;border:1px solid rgba(17,27,33,.12)">
+<div style="display:flex;min-height:720px;font-family:'Archivo',system-ui,sans-serif;color:#111b21">
+  <aside style="width:320px;flex:none;border-right:1px solid rgba(17,27,33,.08);display:flex;flex-direction:column;background:#fff">
+    <div style="padding:20px 20px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font-size:18px;font-weight:800">Inbox</span><span style="font-size:12px;color:#8696a0">14 ativas</span></div>
+      <div style="display:flex;gap:6px">
+        <span style="font-size:12px;font-weight:600;background:#e7f8ef;color:#0b6156;padding:5px 14px;border-radius:16px">Todas</span>
+        <span style="font-size:12px;color:#54656f;padding:5px 14px;border-radius:16px;background:#f0f2f5">Bot</span>
+        <span style="font-size:12px;color:#54656f;padding:5px 14px;border-radius:16px;background:#f0f2f5">Humano</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow:auto">
+      <div style="display:flex;gap:12px;padding:12px 20px;background:#f0f7f4;border-left:3px solid #25d366">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fef3e2;color:#9a6c1e;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">CI</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">Construtora Iveco</span><span style="font-size:11px;color:#8696a0">19:52</span></div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Preciso falar com um responsável.</div><span style="font-size:10px;font-weight:700;color:#9a6c1e">PEDIU HUMANO</span></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(17,27,33,.05)">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">MV</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">Marcos Vieira</span><span style="font-size:11px;color:#8696a0">19:58</span></div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fecho pelos R$ 2.230 então. Pode emitir?</div><span style="font-size:10px;font-weight:700;color:#0b6156">BOT · NEGOCIANDO</span></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(17,27,33,.05)">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">AP</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">Ana Lúcia Prado</span><span style="font-size:11px;color:#8696a0">19:51</span></div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Vocês entregam no Cambuí?</div><span style="font-size:10px;font-weight:700;color:#0b6156">BOT</span></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(17,27,33,.05)">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">JC</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">Juliana Castro</span><span style="font-size:11px;color:#8696a0">19:29</span></div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Obrigada! Chegou tudo certinho 🙂</div><span style="font-size:10px;font-weight:700;color:#8696a0">PÓS-VENDA</span></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(17,27,33,.05)">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e7f8ef;color:#0b6156;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">OR</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">Otávio Ramos</span><span style="font-size:11px;color:#8696a0">18:52</span></div><div style="font-size:12px;color:#54656f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Combinado, faço o PIX ainda hoje.</div><span style="font-size:10px;font-weight:700;color:#0b6156">BOT · FECHADO</span></div>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid rgba(17,27,33,.08);background:#fff">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fef3e2;color:#9a6c1e;display:grid;place-items:center;font-size:13px;font-weight:700">CI</div>
+        <div><div style="font-size:15px;font-weight:700">Construtora Iveco</div><div style="font-size:12px;color:#54656f">+55 19 98123-4455 · 4 pedidos · cliente desde mar 2026</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="font-size:12px;color:#9a6c1e;background:#fef3e2;padding:5px 12px;border-radius:14px;font-weight:600">bot pausado</span>
+        <button style="font:600 13px 'Archivo',sans-serif;background:#25d366;color:#052e22;border:0;border-radius:8px;padding:9px 16px;cursor:pointer">Assumir conversa</button>
+      </div>
+    </header>
+    <div style="flex:1;padding:24px 32px;display:flex;flex-direction:column;gap:12px;background:#efeae2">
+      <span style="align-self:center;font-size:11px;background:#fff;color:#54656f;padding:4px 12px;border-radius:8px;box-shadow:0 1px 1px rgba(17,27,33,.08)">hoje</span>
+      <div style="max-width:520px;background:#fff;padding:10px 14px;border-radius:10px;border-top-left-radius:2px;box-shadow:0 1px 1px rgba(17,27,33,.1)">
+        <div style="font-size:13.5px;line-height:1.45">Boa noite! Vocês fazem entrega de 40 sacos de argamassa pra obra no Taquaral? Precisa ser sexta de manhã.</div>
+        <div style="font-size:10px;color:#8696a0;margin-top:3px;text-align:right">19:48</div>
+      </div>
+      <div style="max-width:520px;align-self:flex-end;background:#d9fdd3;padding:10px 14px;border-radius:10px;border-top-right-radius:2px;box-shadow:0 1px 1px rgba(17,27,33,.1)">
+        <div style="font-size:13.5px;line-height:1.45">Fazemos sim! 40 sacos de argamassa AC-II ficam em R$ 1.240 com entrega inclusa pro Taquaral. Sexta às 8h está dentro da nossa rota. Quer que eu emita a cotação?</div>
+        <div style="font-size:10px;color:#667781;margin-top:3px;text-align:right">⚡ agente de vendas · 19:48</div>
+      </div>
+      <div style="max-width:520px;background:#fff;padding:10px 14px;border-radius:10px;border-top-left-radius:2px;box-shadow:0 1px 1px rgba(17,27,33,.1)">
+        <div style="font-size:13.5px;line-height:1.45">Preciso falar com um responsável. É pra negociar um fornecimento mensal, coisa maior.</div>
+        <div style="font-size:10px;color:#8696a0;margin-top:3px;text-align:right">19:52</div>
+      </div>
+      <div style="align-self:center;display:flex;align-items:center;gap:8px;background:#fff;border-radius:16px;padding:7px 16px;box-shadow:0 1px 1px rgba(17,27,33,.08)">
+        <span style="width:7px;height:7px;background:#25d366;border-radius:50%"></span>
+        <span style="font-size:12px;color:#0b6156;font-weight:600">Bot pausou — cliente pediu atendimento humano</span>
+      </div>
+    </div>
+    <div style="padding:12px 24px;background:#fff;border-top:1px solid rgba(17,27,33,.08);display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px">
+        <span style="font-size:12px;color:#54656f;background:#f0f2f5;padding:5px 12px;border-radius:14px;cursor:pointer">Sugerir: agendar ligação</span>
+        <span style="font-size:12px;color:#54656f;background:#f0f2f5;padding:5px 12px;border-radius:14px;cursor:pointer">Sugerir: tabela de atacado</span>
+        <span style="font-size:12px;color:#54656f;background:#f0f2f5;padding:5px 12px;border-radius:14px;cursor:pointer">Histórico de pedidos</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <input placeholder="Responder como Giuseppe…" style="flex:1;font:400 14px 'Archivo',sans-serif;padding:11px 16px;border:1px solid rgba(17,27,33,.12);border-radius:22px;background:#f0f2f5;outline:none">
+        <button style="font:600 13px 'Archivo',sans-serif;background:#25d366;color:#052e22;border:0;border-radius:22px;padding:0 20px;cursor:pointer">Enviar</button>
+        <button style="font:600 13px 'Archivo',sans-serif;background:#fff;color:#54656f;border:1px solid rgba(17,27,33,.12);border-radius:22px;padding:0 16px;cursor:pointer">Devolver ao bot</button>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Tente: "aplica o verde de <a class="dv-oid" href="#2a">2a</a> no layout <a class="dv-oid" href="#1a">1a</a>" · "escurece o verde primário" · "mais telas nesse estilo — Cotações e Relatórios"</p>
+</section>
+<section class="dv-turn" id="t1" data-screen-label="Explorações Plimpost — turno 1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Dashboard Plimpost — 3 direções + Inbox + Cotações (design system Modernist)</span></div>
+<div class="dv-opts">
+
+<!-- ══════════ 1a — Dashboard Operacional ══════════ -->
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Dashboard operacional — sidebar clara, KPIs grandes, aprovações em destaque</div>
+<div class="dv-card" style="width:1240px">
+<div style="display:flex;min-height:780px">
+  <aside style="width:216px;flex:none;border-right:2px solid rgba(32,30,29,.4);display:flex;flex-direction:column;padding:20px 0">
+    <div style="padding:0 20px 18px;border-bottom:2px solid rgba(32,30,29,.4);display:flex;align-items:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#ec3013" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-0.015em">Plimpost</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;padding:14px 0;flex:1">
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5);padding:6px 20px">Menu</div>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;font-weight:800;color:#ec3013;text-decoration:none;border-left:3px solid #ec3013;background:#fff2ef">Dashboard</a>
+      <a href="#1d" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none;display:flex;justify-content:space-between;align-items:center">Inbox <span class="tag tag-accent" style="font-size:10px">14</span></a>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none;display:flex;justify-content:space-between;align-items:center">Aprovações <span class="tag tag-outline" style="font-size:10px">3</span></a>
+      <a href="#1e" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Cotações</a>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Contexto</a>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Relatórios</a>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Pós-venda</a>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Equipe</a>
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5);padding:18px 20px 6px;border-top:1px solid rgba(32,30,29,.25);margin-top:14px">Sistema</div>
+      <a href="#1a" style="padding:9px 20px;font-size:14px;color:#201e1d;text-decoration:none">Configurações</a>
+    </nav>
+    <div style="padding:14px 20px;border-top:2px solid rgba(32,30,29,.4);display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;background:#201e1d;color:#f3f2f2;display:grid;place-items:center;font-size:12px;font-weight:800">GB</div>
+      <div style="line-height:1.2"><div style="font-size:13px;font-weight:800">Giuseppe</div><div style="font-size:11px;color:rgba(32,30,29,.55)">Plano Pro</div></div>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;padding:28px 32px;display:flex;flex-direction:column;gap:24px">
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:18px;border-bottom:2px solid rgba(32,30,29,.4)">
+      <div><h2 style="margin:0 0 4px">Dashboard</h2><p style="margin:0;font-size:13px;color:rgba(32,30,29,.55)">Quinta-feira, 7 de agosto — operação normal</p></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="tag tag-accent" style="gap:6px"><span style="width:7px;height:7px;background:#ec3013;border-radius:50%;display:inline-block"></span>WhatsApp conectado</span>
+        <button class="btn btn-primary">Nova cotação</button>
+      </div>
+    </header>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid rgba(32,30,29,.4)">
+      <div style="padding:18px 20px;border-right:1px solid rgba(32,30,29,.4)">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ec3013;margin-bottom:8px">Conversas ativas</div>
+        <div style="font-size:38px;font-weight:800;letter-spacing:-0.02em;line-height:1">14</div>
+        <div style="font-size:12px;color:rgba(32,30,29,.55);margin-top:6px">11 no bot · 3 com humano</div>
+      </div>
+      <div style="padding:18px 20px;border-right:1px solid rgba(32,30,29,.4)">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ec3013;margin-bottom:8px">Cotações hoje</div>
+        <div style="font-size:38px;font-weight:800;letter-spacing:-0.02em;line-height:1">6</div>
+        <div style="font-size:12px;color:rgba(32,30,29,.55);margin-top:6px">R$ 9.320 em propostas</div>
+      </div>
+      <div style="padding:18px 20px;border-right:1px solid rgba(32,30,29,.4)">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ec3013;margin-bottom:8px">Receita (semana)</div>
+        <div style="font-size:38px;font-weight:800;letter-spacing:-0.02em;line-height:1">R$ 18.240</div>
+        <div style="font-size:12px;color:rgba(32,30,29,.55);margin-top:6px">8 cotações aceitas</div>
+      </div>
+      <div style="padding:18px 20px">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#ec3013;margin-bottom:8px">Mensagens hoje</div>
+        <div style="font-size:38px;font-weight:800;letter-spacing:-0.02em;line-height:1">312</div>
+        <div style="font-size:12px;color:rgba(32,30,29,.55);margin-top:6px">94% respondidas pelo bot</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+            <h4 style="margin:0">Atividade da semana</h4>
+            <div style="display:flex;gap:14px;font-size:11px;color:rgba(32,30,29,.6)"><span><span style="display:inline-block;width:10px;height:10px;background:#ec3013;margin-right:5px"></span>Conversas</span><span><span style="display:inline-block;width:10px;height:10px;background:#bab6b6;margin-right:5px"></span>Cotações</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:18px;height:150px;border-bottom:2px solid rgba(32,30,29,.4);padding:0 4px">
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:52%"></div><div style="flex:1;background:#bab6b6;height:24%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:68%"></div><div style="flex:1;background:#bab6b6;height:36%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:44%"></div><div style="flex:1;background:#bab6b6;height:20%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:80%"></div><div style="flex:1;background:#bab6b6;height:44%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:92%"></div><div style="flex:1;background:#bab6b6;height:56%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:36%"></div><div style="flex:1;background:#bab6b6;height:16%"></div></div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;height:100%"><div style="flex:1;background:#ec3013;height:24%"></div><div style="flex:1;background:#bab6b6;height:8%"></div></div>
+          </div>
+          <div style="display:flex;gap:18px;padding:6px 4px 0;font-size:11px;color:rgba(32,30,29,.55)"><span style="flex:1">Sex</span><span style="flex:1">Sáb</span><span style="flex:1">Dom</span><span style="flex:1">Seg</span><span style="flex:1">Ter</span><span style="flex:1">Qua</span><span style="flex:1">Hoje</span></div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+            <h4 style="margin:0">Conversas recentes</h4><a class="btn btn-ghost" href="#1d" style="font-size:13px">Ver inbox →</a>
+          </div>
+          <table class="table">
+            <thead><tr><th>Cliente</th><th>Última mensagem</th><th>Atendimento</th><th>Há</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:800">Marcos Vieira</td><td style="color:rgba(32,30,29,.7)">Fecho pelos R$ 2.230 então. Pode emitir?</td><td><span class="tag tag-accent">Bot</span></td><td>2 min</td></tr>
+              <tr><td style="font-weight:800">Ana Lúcia Prado</td><td style="color:rgba(32,30,29,.7)">Vocês entregam no Cambuí?</td><td><span class="tag tag-accent">Bot</span></td><td>9 min</td></tr>
+              <tr><td style="font-weight:800">Construtora Iveco</td><td style="color:rgba(32,30,29,.7)">Preciso falar com um responsável.</td><td><span class="tag tag-neutral">Humano · Rafa</span></td><td>14 min</td></tr>
+              <tr><td style="font-weight:800">Juliana Castro</td><td style="color:rgba(32,30,29,.7)">Obrigada! Chegou tudo certinho 🙂</td><td><span class="tag tag-accent">Bot</span></td><td>31 min</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div style="border:1px solid #ec3013">
+          <div style="padding:12px 16px;background:#fff2ef;display:flex;justify-content:space-between;align-items:baseline"><h5 style="margin:0">Aprovações pendentes</h5><span style="font-size:11px;color:#ae1800;font-weight:800">3</span></div>
+          <div style="padding:14px 16px;border-top:1px solid rgba(32,30,29,.25)">
+            <div style="font-size:13px;font-weight:800">Desconto acima do limite</div>
+            <p style="font-size:12px;color:rgba(32,30,29,.65);margin:4px 0 10px">Marcos Vieira pediu 14% — seu limite é 10%. Cotação #341, R$ 2.230.</p>
+            <div style="display:flex;gap:8px"><button class="btn btn-primary" style="font-size:12px;padding:6px 12px">Aprovar</button><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Manter 10%</button></div>
+          </div>
+          <div style="padding:14px 16px;border-top:1px solid rgba(32,30,29,.25)">
+            <div style="font-size:13px;font-weight:800">Item fora da tabela</div>
+            <p style="font-size:12px;color:rgba(32,30,29,.65);margin:4px 0 10px">"Instalação em fim de semana" não tem preço definido. Conversa com Construtora Iveco.</p>
+            <div style="display:flex;gap:8px"><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Definir preço</button></div>
+          </div>
+          <div style="padding:14px 16px;border-top:1px solid rgba(32,30,29,.25)">
+            <div style="font-size:13px;font-weight:800">Follow-up sugerido</div>
+            <p style="font-size:12px;color:rgba(32,30,29,.65);margin:4px 0 10px">5 clientes sem resposta há 3 dias. Enviar mensagem de retomada?</p>
+            <div style="display:flex;gap:8px"><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Revisar lista</button></div>
+          </div>
+        </div>
+        <div>
+          <h5 style="margin:0 0 10px">Agenda de hoje</h5>
+          <div style="border-top:2px solid rgba(32,30,29,.4)">
+            <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid rgba(32,30,29,.25)"><span style="font-size:12px;font-weight:800;width:42px">14:00</span><span style="font-size:12px;color:rgba(32,30,29,.7)">Entrega — pedido #338, Juliana Castro</span></div>
+            <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid rgba(32,30,29,.25)"><span style="font-size:12px;font-weight:800;width:42px">16:30</span><span style="font-size:12px;color:rgba(32,30,29,.7)">Ligação — Construtora Iveco (pedido pelo bot)</span></div>
+            <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid rgba(32,30,29,.25)"><span style="font-size:12px;font-weight:800;width:42px">18:00</span><span style="font-size:12px;color:rgba(32,30,29,.7)">Follow-up automático — 5 clientes</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 1b — Dashboard Comando IA ══════════ -->
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Comando IA — mantém o prompt central da UI atual, sidebar em tinta, stats em régua</div>
+<div class="dv-card" style="width:1240px">
+<div style="display:flex;min-height:780px">
+  <aside style="width:200px;flex:none;background:#201e1d;color:#f3f2f2;display:flex;flex-direction:column;padding:20px 0">
+    <div style="padding:0 20px 20px;display:flex;align-items:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#ec3013" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-0.015em">Plimpost</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;flex:1">
+      <a href="#1b" style="padding:10px 20px;font-size:14px;font-weight:800;color:#f3f2f2;text-decoration:none;background:#ec3013">Dashboard</a>
+      <a href="#1d" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none;display:flex;justify-content:space-between">Inbox <span style="font-size:11px;color:#ff9783;font-weight:800">14</span></a>
+      <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none;display:flex;justify-content:space-between">Aprovações <span style="font-size:11px;color:#ff9783;font-weight:800">3</span></a>
+      <a href="#1e" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none">Cotações</a>
+      <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none">Contexto</a>
+      <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none">Relatórios</a>
+      <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none">Pós-venda</a>
+      <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.75);text-decoration:none">Equipe</a>
+    </nav>
+    <a href="#1b" style="padding:10px 20px;font-size:14px;color:rgba(243,242,242,.6);text-decoration:none;border-top:1px solid rgba(243,242,242,.2)">Configurações</a>
+  </aside>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 32px;border-bottom:2px solid rgba(32,30,29,.4)">
+      <span style="font-size:13px;color:rgba(32,30,29,.55)">plimpost.com/app/dashboard</span>
+      <div style="display:flex;align-items:center;gap:10px"><span class="tag tag-accent">WhatsApp · online</span><div style="width:30px;height:30px;background:#201e1d;color:#f3f2f2;display:grid;place-items:center;font-size:11px;font-weight:800">GB</div></div>
+    </header>
+    <div style="padding:56px 64px 40px;border-bottom:2px solid rgba(32,30,29,.4)">
+      <h1 style="margin:0 0 8px;max-width:640px">Boa noite, Giuseppe.<br>O que vamos fazer hoje?</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:rgba(32,30,29,.6);max-width:520px">Peça pra IA criar setores, ajustar preços, configurar agentes ou tirar qualquer dúvida — ela faz na hora, sem formulário.</p>
+      <div style="display:flex;max-width:680px;border:2px solid #201e1d;background:#fff">
+        <input class="input" style="border:0;background:transparent;font-size:15px;padding:14px 16px" placeholder="Ex: crie um setor de RH e ative o agente de cotação…">
+        <button class="btn btn-primary" style="border-radius:0;padding-inline:22px">Enviar</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Gerenciar agentes</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Tabela de preços</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Criar setor</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Ver estatísticas</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px">Configurar empresa</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid rgba(32,30,29,.4)">
+      <div style="padding:16px 24px;border-right:1px solid rgba(32,30,29,.25);display:flex;align-items:baseline;gap:10px"><span style="font-size:28px;font-weight:800">14</span><span style="font-size:12px;color:rgba(32,30,29,.6)">conversas ativas</span></div>
+      <div style="padding:16px 24px;border-right:1px solid rgba(32,30,29,.25);display:flex;align-items:baseline;gap:10px"><span style="font-size:28px;font-weight:800">6</span><span style="font-size:12px;color:rgba(32,30,29,.6)">cotações hoje</span></div>
+      <div style="padding:16px 24px;border-right:1px solid rgba(32,30,29,.25);display:flex;align-items:baseline;gap:10px"><span style="font-size:28px;font-weight:800">R$ 18,2 mil</span><span style="font-size:12px;color:rgba(32,30,29,.6)">receita na semana</span></div>
+      <div style="padding:16px 24px;display:flex;align-items:baseline;gap:10px"><span style="font-size:28px;font-weight:800">94%</span><span style="font-size:12px;color:rgba(32,30,29,.6)">resolvido pelo bot</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;flex:1">
+      <div style="padding:24px 32px;border-right:1px solid rgba(32,30,29,.25)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px"><h5 style="margin:0">Precisa de você</h5><span class="tag tag-outline">3 pendências</span></div>
+        <div style="display:flex;flex-direction:column">
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25);display:flex;gap:12px;align-items:flex-start">
+            <span style="width:8px;height:8px;background:#ec3013;margin-top:5px;flex:none"></span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:800">Desconto de 14% pedido — limite é 10%</div><div style="font-size:12px;color:rgba(32,30,29,.6)">Marcos Vieira · Cotação #341 · R$ 2.230</div></div>
+            <button class="btn btn-ghost" style="font-size:12px">Decidir</button>
+          </div>
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25);display:flex;gap:12px;align-items:flex-start">
+            <span style="width:8px;height:8px;background:#ec3013;margin-top:5px;flex:none"></span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:800">Cliente pediu atendimento humano</div><div style="font-size:12px;color:rgba(32,30,29,.6)">Construtora Iveco · aguardando há 14 min</div></div>
+            <a class="btn btn-ghost" href="#1d" style="font-size:12px">Assumir</a>
+          </div>
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25);display:flex;gap:12px;align-items:flex-start">
+            <span style="width:8px;height:8px;background:#bab6b6;margin-top:5px;flex:none"></span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:800">Item sem preço na tabela</div><div style="font-size:12px;color:rgba(32,30,29,.6)">"Instalação em fim de semana" · citado 2× esta semana</div></div>
+            <button class="btn btn-ghost" style="font-size:12px">Definir</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding:24px 32px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px"><h5 style="margin:0">O bot resolveu sozinho hoje</h5><a class="btn btn-ghost" href="#1d" style="font-size:12px">Ver tudo</a></div>
+        <div style="display:flex;flex-direction:column">
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25)"><div style="font-size:13px"><strong>Cotação enviada</strong> — 200 un. de bloco estrutural, R$ 2.480 <span style="color:rgba(32,30,29,.5)">· Marcos Vieira</span></div></div>
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25)"><div style="font-size:13px"><strong>Dúvida de entrega respondida</strong> — prazo e frete para o Cambuí <span style="color:rgba(32,30,29,.5)">· Ana Lúcia</span></div></div>
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25)"><div style="font-size:13px"><strong>Follow-up pós-venda</strong> — pedido #338 confirmado entregue <span style="color:rgba(32,30,29,.5)">· Juliana Castro</span></div></div>
+          <div style="padding:12px 0;border-top:1px solid rgba(32,30,29,.25)"><div style="font-size:13px"><strong>Desconto negociado</strong> — 8% dentro do limite, fechado em R$ 1.190 <span style="color:rgba(32,30,29,.5)">· Otávio Ramos</span></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 1c — Grid modular ══════════ -->
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Grid modular — nav superior, células iguais, o layout mais "Modernist" dos três</div>
+<div class="dv-card" style="width:1240px">
+<div style="min-height:760px;display:flex;flex-direction:column">
+  <nav class="nav">
+    <span class="nav-brand" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ec3013" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Plimpost</span>
+    <a href="#1c" aria-current="page">Dashboard</a>
+    <a href="#1d">Inbox</a>
+    <a href="#1e">Cotações</a>
+    <a href="#1c">Relatórios</a>
+    <a href="#1c">Equipe</a>
+    <a href="#1c">Configurações</a>
+    <div style="width:30px;height:30px;background:#201e1d;color:#f3f2f2;display:grid;place-items:center;font-size:11px;font-weight:800">GB</div>
+  </nav>
+  <div style="padding:32px 36px 20px;display:flex;justify-content:space-between;align-items:flex-end">
+    <h1 style="margin:0">Operação<span style="color:#ec3013">.</span></h1>
+    <span style="font-size:13px;color:rgba(32,30,29,.55)">Qui, 7 ago · WhatsApp conectado · 2 agentes ativos</span>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr;border-top:2px solid rgba(32,30,29,.4)">
+    <div style="padding:24px 36px;border-right:1px solid rgba(32,30,29,.4);border-bottom:2px solid rgba(32,30,29,.4)">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:10px">Conversas ativas</div>
+      <div style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-0.03em">14</div>
+      <div style="font-size:13px;margin-top:10px">3 com humano · <a href="#1d">assumir fila</a></div>
+    </div>
+    <div style="padding:24px 36px;border-right:1px solid rgba(32,30,29,.4);border-bottom:2px solid rgba(32,30,29,.4)">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:10px">Receita da semana</div>
+      <div style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-0.03em">18.240</div>
+      <div style="font-size:13px;margin-top:10px">R$ · 8 cotações aceitas de 21 enviadas</div>
+    </div>
+    <div style="padding:24px 36px;border-bottom:2px solid rgba(32,30,29,.4);background:#ec3013;color:#f3f2f2">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-bottom:10px">Aprovações pendentes</div>
+      <div style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-0.03em">3</div>
+      <div style="font-size:13px;margin-top:10px;font-weight:800">Descontos e itens fora da tabela →</div>
+    </div>
+    <div style="padding:24px 36px;border-right:1px solid rgba(32,30,29,.4)">
+      <h6 style="margin:0 0 14px;color:rgba(32,30,29,.6)">Fila de atendimento</h6>
+      <div style="display:flex;flex-direction:column">
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font-size:13px;font-weight:800">Marcos Vieira <span class="tag tag-accent" style="margin-left:6px">bot</span></div><div style="font-size:12px;color:rgba(32,30,29,.6);margin-top:2px">Fecho pelos R$ 2.230 então. Pode emitir?</div></div>
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font-size:13px;font-weight:800">Construtora Iveco <span class="tag tag-neutral" style="margin-left:6px">humano</span></div><div style="font-size:12px;color:rgba(32,30,29,.6);margin-top:2px">Preciso falar com um responsável.</div></div>
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font-size:13px;font-weight:800">Ana Lúcia Prado <span class="tag tag-accent" style="margin-left:6px">bot</span></div><div style="font-size:12px;color:rgba(32,30,29,.6);margin-top:2px">Vocês entregam no Cambuí?</div></div>
+      </div>
+    </div>
+    <div style="padding:24px 36px;border-right:1px solid rgba(32,30,29,.4)">
+      <h6 style="margin:0 0 14px;color:rgba(32,30,29,.6)">Cotações em aberto</h6>
+      <div style="display:flex;flex-direction:column">
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);display:flex;justify-content:space-between"><span style="font-size:13px">#341 · Marcos Vieira</span><span style="font-size:13px;font-weight:800">R$ 2.230</span></div>
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);display:flex;justify-content:space-between"><span style="font-size:13px">#340 · Construtora Iveco</span><span style="font-size:13px;font-weight:800">R$ 4.870</span></div>
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);display:flex;justify-content:space-between"><span style="font-size:13px">#339 · Otávio Ramos</span><span style="font-size:13px;font-weight:800">R$ 1.190</span></div>
+        <div style="padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);display:flex;justify-content:space-between"><span style="font-size:13px">#337 · Dep. Casa Forte</span><span style="font-size:13px;font-weight:800">R$ 3.640</span></div>
+      </div>
+      <a class="btn btn-ghost" href="#1e" style="margin-top:10px;font-size:13px">Todas as cotações →</a>
+    </div>
+    <div style="padding:24px 36px">
+      <h6 style="margin:0 0 14px;color:rgba(32,30,29,.6)">Ritmo · mensagens por dia</h6>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:120px;border-bottom:2px solid rgba(32,30,29,.4)">
+        <div style="flex:1;background:#201e1d;height:40%"></div>
+        <div style="flex:1;background:#201e1d;height:56%"></div>
+        <div style="flex:1;background:#201e1d;height:34%"></div>
+        <div style="flex:1;background:#201e1d;height:66%"></div>
+        <div style="flex:1;background:#201e1d;height:84%"></div>
+        <div style="flex:1;background:#201e1d;height:28%"></div>
+        <div style="flex:1;background:#ec3013;height:74%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(32,30,29,.55);padding-top:6px"><span>Sex</span><span>Sáb</span><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span style="color:#ec3013;font-weight:800">Hoje 312</span></div>
+      <p style="font-size:12px;color:rgba(32,30,29,.6);margin-top:14px">94% respondidas pelo bot. Tempo médio de primeira resposta: 4 s.</p>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 1d — Inbox / takeover ══════════ -->
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Inbox — conversa ao vivo com takeover humano (estrutura combina com <a class="dv-oid" href="#1a">1a</a>)</div>
+<div class="dv-card" style="width:1240px">
+<div style="display:flex;min-height:740px">
+  <aside style="width:320px;flex:none;border-right:2px solid rgba(32,30,29,.4);display:flex;flex-direction:column">
+    <div style="padding:20px 20px 14px;border-bottom:2px solid rgba(32,30,29,.4)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><h4 style="margin:0">Inbox</h4><span style="font-size:12px;color:rgba(32,30,29,.55)">14 ativas</span></div>
+      <div class="seg" style="width:100%">
+        <label class="seg-opt" style="flex:1;justify-content:center"><input type="radio" name="inbox-f" checked>Todas</label>
+        <label class="seg-opt" style="flex:1;justify-content:center"><input type="radio" name="inbox-f">Bot</label>
+        <label class="seg-opt" style="flex:1;justify-content:center"><input type="radio" name="inbox-f">Humano</label>
+      </div>
+    </div>
+    <div style="flex:1;overflow:auto">
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(32,30,29,.25);border-left:3px solid #ec3013;background:#fff2ef">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Construtora Iveco</span><span style="font-size:11px;color:rgba(32,30,29,.5)">14 min</span></div>
+        <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:3px">Preciso falar com um responsável.</div>
+        <span class="tag tag-outline" style="margin-top:6px">pediu humano</span>
+      </div>
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(32,30,29,.25)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Marcos Vieira</span><span style="font-size:11px;color:rgba(32,30,29,.5)">2 min</span></div>
+        <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:3px">Fecho pelos R$ 2.230 então. Pode emitir?</div>
+        <span class="tag tag-accent" style="margin-top:6px">bot · negociando</span>
+      </div>
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(32,30,29,.25)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Ana Lúcia Prado</span><span style="font-size:11px;color:rgba(32,30,29,.5)">9 min</span></div>
+        <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:3px">Vocês entregam no Cambuí?</div>
+        <span class="tag tag-accent" style="margin-top:6px">bot</span>
+      </div>
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(32,30,29,.25)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Juliana Castro</span><span style="font-size:11px;color:rgba(32,30,29,.5)">31 min</span></div>
+        <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:3px">Obrigada! Chegou tudo certinho 🙂</div>
+        <span class="tag tag-neutral" style="margin-top:6px">pós-venda</span>
+      </div>
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(32,30,29,.25)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Otávio Ramos</span><span style="font-size:11px;color:rgba(32,30,29,.5)">1 h</span></div>
+        <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:3px">Combinado, faço o PIX ainda hoje.</div>
+        <span class="tag tag-accent" style="margin-top:6px">bot · fechado</span>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:2px solid rgba(32,30,29,.4)">
+      <div>
+        <div style="font-size:16px;font-weight:800">Construtora Iveco</div>
+        <div style="font-size:12px;color:rgba(32,30,29,.55)">+55 19 98123-4455 · cliente desde mar 2026 · 4 pedidos</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="tag tag-outline">bot pausado</span>
+        <button class="btn btn-primary">Assumir conversa</button>
+      </div>
+    </header>
+    <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:14px;background:#eae9e9">
+      <div style="align-self:center" class="tag tag-neutral">hoje · 19:48</div>
+      <div style="max-width:520px;background:#fff;padding:10px 14px;box-shadow:0 1px 2px rgba(45,43,43,.14)">
+        <div style="font-size:13px">Boa noite! Vocês fazem entrega de 40 sacos de argamassa pra obra no Taquaral? Precisa ser sexta de manhã.</div>
+        <div style="font-size:10px;color:rgba(32,30,29,.45);margin-top:4px">Construtora Iveco · 19:48</div>
+      </div>
+      <div style="max-width:520px;align-self:flex-end;background:#201e1d;color:#f3f2f2;padding:10px 14px">
+        <div style="font-size:13px">Fazemos sim! 40 sacos de argamassa AC-II ficam em R$ 1.240 com entrega inclusa pro Taquaral. Sexta às 8h está dentro da nossa rota. Quer que eu emita a cotação?</div>
+        <div style="font-size:10px;color:rgba(243,242,242,.5);margin-top:4px;display:flex;gap:6px;align-items:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="#ff9783" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Agente de vendas · 19:48</div>
+      </div>
+      <div style="max-width:520px;background:#fff;padding:10px 14px;box-shadow:0 1px 2px rgba(45,43,43,.14)">
+        <div style="font-size:13px">Preciso falar com um responsável. É pra negociar um fornecimento mensal, coisa maior.</div>
+        <div style="font-size:10px;color:rgba(32,30,29,.45);margin-top:4px">Construtora Iveco · 19:52</div>
+      </div>
+      <div style="align-self:center;display:flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #ec3013;background:#fff2ef">
+        <span style="width:8px;height:8px;background:#ec3013"></span>
+        <span style="font-size:12px;color:#ae1800;font-weight:800">Bot pausou e chamou você — cliente pediu atendimento humano</span>
+      </div>
+    </div>
+    <div style="border-top:2px solid rgba(32,30,29,.4);padding:14px 24px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px">
+        <span class="tag tag-neutral" style="cursor:pointer">Sugerir: agendar ligação</span>
+        <span class="tag tag-neutral" style="cursor:pointer">Sugerir: tabela de atacado</span>
+        <span class="tag tag-neutral" style="cursor:pointer">Ver histórico de pedidos</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <input class="input" placeholder="Responder como Giuseppe…" style="flex:1">
+        <button class="btn btn-primary">Enviar</button>
+        <button class="btn btn-secondary">Devolver ao bot</button>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<!-- ══════════ 1e — Cotações + aprovação ══════════ -->
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Cotações — tabela com aprovação de desconto inline (estrutura combina com <a class="dv-oid" href="#1a">1a</a>)</div>
+<div class="dv-card" style="width:1240px">
+<div style="min-height:640px;padding:28px 36px;display:flex;flex-direction:column;gap:20px">
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:16px;border-bottom:2px solid rgba(32,30,29,.4)">
+    <div><h2 style="margin:0 0 4px">Cotações</h2><p style="margin:0;font-size:13px;color:rgba(32,30,29,.55)">21 enviadas esta semana · 8 aceitas · R$ 18.240 fechados</p></div>
+    <div style="display:flex;gap:8px">
+      <div class="seg">
+        <label class="seg-opt"><input type="radio" name="cot-f" checked>Todas</label>
+        <label class="seg-opt"><input type="radio" name="cot-f">Aguardando</label>
+        <label class="seg-opt"><input type="radio" name="cot-f">Aceitas</label>
+        <label class="seg-opt"><input type="radio" name="cot-f">Expiradas</label>
+      </div>
+      <button class="btn btn-primary">Nova cotação</button>
+    </div>
+  </header>
+  <div style="border:1px solid #ec3013;display:flex;align-items:center;gap:16px;padding:14px 20px;background:#fff2ef">
+    <span style="width:10px;height:10px;background:#ec3013;flex:none"></span>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:800">#341 — Marcos Vieira pediu 14% de desconto. Seu limite pro bot é 10%.</div>
+      <div style="font-size:12px;color:rgba(32,30,29,.65);margin-top:2px">200 un. bloco estrutural · tabela: R$ 2.480 · com 14%: R$ 2.133 · margem estimada cai de 31% para 24%</div>
+    </div>
+    <div style="display:flex;gap:8px;flex:none">
+      <button class="btn btn-primary">Aprovar 14%</button>
+      <button class="btn btn-secondary">Contra-oferta 12%</button>
+      <button class="btn btn-ghost">Manter 10%</button>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Nº</th><th>Cliente</th><th>Itens</th><th>Valor</th><th>Origem</th><th>Status</th><th>Atualizada</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:800">#341</td><td>Marcos Vieira</td><td style="color:rgba(32,30,29,.65)">200 un. bloco estrutural</td><td style="font-weight:800">R$ 2.230</td><td><span class="tag tag-accent">bot</span></td><td><span class="tag tag-outline">negociando</span></td><td>2 min</td></tr>
+      <tr><td style="font-weight:800">#340</td><td>Construtora Iveco</td><td style="color:rgba(32,30,29,.65)">40 sacos argamassa AC-II + frete</td><td style="font-weight:800">R$ 4.870</td><td><span class="tag tag-accent">bot</span></td><td><span class="tag tag-neutral">aguardando</span></td><td>18 min</td></tr>
+      <tr><td style="font-weight:800">#339</td><td>Otávio Ramos</td><td style="color:rgba(32,30,29,.65)">Kit hidráulico completo, 2 banheiros</td><td style="font-weight:800">R$ 1.190</td><td><span class="tag tag-accent">bot</span></td><td><span class="tag tag-accent">aceita</span></td><td>1 h</td></tr>
+      <tr><td style="font-weight:800">#338</td><td>Juliana Castro</td><td style="color:rgba(32,30,29,.65)">Piso vinílico 32 m² + rodapé</td><td style="font-weight:800">R$ 3.120</td><td><span class="tag tag-neutral">manual</span></td><td><span class="tag tag-accent">entregue</span></td><td>ontem</td></tr>
+      <tr><td style="font-weight:800">#337</td><td>Dep. Casa Forte</td><td style="color:rgba(32,30,29,.65)">Cimento CP-II 60 sacos, revenda</td><td style="font-weight:800">R$ 3.640</td><td><span class="tag tag-accent">bot</span></td><td><span class="tag tag-neutral">aguardando</span></td><td>ontem</td></tr>
+      <tr><td style="font-weight:800">#336</td><td>Renata Albuquerque</td><td style="color:rgba(32,30,29,.65)">Tinta acrílica 18L ×4 + acessórios</td><td style="font-weight:800">R$ 1.480</td><td><span class="tag tag-accent">bot</span></td><td><span class="tag tag-neutral" style="opacity:.6">expirada</span></td><td>seg</td></tr>
+    </tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(32,30,29,.55)">
+    <span>Mostrando 6 de 21</span>
+    <div style="display:flex;gap:8px"><button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" disabled>Anterior</button><button class="btn btn-secondary" style="font-size:12px;padding:5px 12px">Próxima</button></div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Tente: "mais como <a class="dv-oid" href="#1a">1a</a> mas com a sidebar escura de <a class="dv-oid" href="#1b">1b</a>" · "detalhe a tela de Contexto/tabela de preços" · "versão de <a class="dv-oid" href="#1c">1c</a> com o prompt de IA"</p>
+</section>
+
+</x-dc>
+</body>
+</html>
