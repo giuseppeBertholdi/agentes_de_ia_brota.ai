@@ -1,12 +1,14 @@
 from typing import Optional
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File, Form
 from app.api.auth import require_company, get_current_user
 from app.database import supabase
 from app.services import whatsapp_cloud_api
 from app.models.schemas import SendMessageRequest, TakeOverRequest
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
+
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5MB — mesmo teto usado na Central de Contexto
 
 
 @router.get("/")
@@ -132,6 +134,70 @@ async def send_message(
         "content": body.content,
         "sent_by_human": True,
         "wa_message_id": wa_id,
+    }).execute()
+
+    return {"ok": True}
+
+
+@router.post("/send-media")
+async def send_media(
+    conversation_id: str = Form(...),
+    caption: str = Form(""),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+    company_id: str = Depends(require_company),
+):
+    conv = (
+        supabase.table("conversations")
+        .select("remote_jid")
+        .eq("id", conversation_id)
+        .eq("company_id", company_id)
+        .single()
+        .execute()
+    )
+    if not conv.data:
+        raise HTTPException(404, "Conversa não encontrada")
+
+    instance_r = (
+        supabase.table("whatsapp_instances")
+        .select("phone_number_id")
+        .eq("company_id", company_id)
+        .single()
+        .execute()
+    )
+    if not instance_r.data:
+        raise HTTPException(400, "WhatsApp não conectado")
+
+    content = await file.read()
+    if len(content) > MAX_IMAGE_BYTES:
+        raise HTTPException(400, "Imagem maior que 5MB — reduza o tamanho e tente de novo.")
+    mime_type = file.content_type or "image/jpeg"
+    if not mime_type.startswith("image/"):
+        raise HTTPException(400, "Só é possível enviar imagens por aqui.")
+
+    phone_number_id = instance_r.data["phone_number_id"]
+    try:
+        media_id = await whatsapp_cloud_api.upload_media(phone_number_id, content, mime_type, file.filename or "foto.jpg")
+        resp = await whatsapp_cloud_api.send_image(
+            phone_number_id,
+            whatsapp_cloud_api.normalize_br_number(conv.data["remote_jid"]),
+            media_id,
+            caption=caption or None,
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(400, f"Falha ao enviar via WhatsApp: {e.response.text}")
+
+    wa_id = (resp.get("messages") or [{}])[0].get("id")
+    supabase.table("messages").insert({
+        "conversation_id": conversation_id,
+        "company_id": company_id,
+        "role": "assistant",
+        "content": caption or "[Foto]",
+        "sent_by_human": True,
+        "wa_message_id": wa_id,
+        "media_type": "image",
+        "media_id": media_id,
+        "media_mime_type": mime_type,
     }).execute()
 
     return {"ok": True}

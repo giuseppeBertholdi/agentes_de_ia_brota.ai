@@ -101,15 +101,28 @@ async function download(path: string, filename: string): Promise<void> {
   URL.revokeObjectURL(url)
 }
 
-// upload multipart (ex: documento da Central de Contexto) — sem Content-Type
-// manual, o navegador define o boundary do multipart sozinho.
-async function upload<T>(path: string, file: File): Promise<T> {
+// upload multipart (ex: documento da Central de Contexto, foto no Inbox) —
+// sem Content-Type manual, o navegador define o boundary do multipart sozinho.
+async function upload<T>(path: string, file: File, fields?: Record<string, string>): Promise<T> {
   const headers = await authHeaders()
   delete (headers as Record<string, string>)['Content-Type']
   const form = new FormData()
   form.append('file', file)
+  for (const [k, v] of Object.entries(fields || {})) form.append(k, v)
   const r = await fetch(`${BASE}${path}`, { method: 'POST', headers, body: form })
   return handle<T>(r)
 }
 
-export const api = { get, post, patch, put, delete: del, download, upload }
+// busca um binário autenticado (ex: foto/documento recebido no WhatsApp) e
+// devolve uma object URL pra usar direto num <img src> ou link — quem chama
+// é responsável por revogar a URL (URL.revokeObjectURL) quando não precisar mais.
+async function getObjectUrl(path: string): Promise<string> {
+  const headers = await authHeaders()
+  delete (headers as Record<string, string>)['Content-Type']
+  const r = await fetch(`${BASE}${path}`, { headers })
+  if (!r.ok) throw new ApiError(r.status, await r.text())
+  const blob = await r.blob()
+  return URL.createObjectURL(blob)
+}
+
+export const api = { get, post, patch, put, delete: del, download, upload, getObjectUrl }

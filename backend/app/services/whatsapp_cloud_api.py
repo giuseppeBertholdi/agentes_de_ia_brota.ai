@@ -119,6 +119,40 @@ async def send_template(
         return r.json()
 
 
+async def upload_media(phone_number_id: str, content: bytes, mime_type: str, filename: str) -> str:
+    """Sobe um arquivo (ex: foto tirada pelo atendente) pro WhatsApp e retorna o media_id
+    a ser usado no envio — a Cloud API não aceita enviar bytes direto na mensagem."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.post(
+            f"{GRAPH_BASE}/{phone_number_id}/media",
+            headers=SYSTEM_USER_HEADERS,
+            data={"messaging_product": "whatsapp", "type": mime_type},
+            files={"file": (filename, content, mime_type)},
+        )
+        r.raise_for_status()
+        return r.json()["id"]
+
+
+async def send_image(phone_number_id: str, to: str, media_id: str, caption: str | None = None) -> dict:
+    image: dict = {"id": media_id}
+    if caption:
+        image["caption"] = caption
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{GRAPH_BASE}/{phone_number_id}/messages",
+            headers=SYSTEM_USER_HEADERS,
+            json={
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": to,
+                "type": "image",
+                "image": image,
+            },
+        )
+        r.raise_for_status()
+        return r.json()
+
+
 async def get_media_url(media_id: str) -> str:
     """
     A Meta guarda a mídia por um tempo (ligada ao media_id), mas a URL de

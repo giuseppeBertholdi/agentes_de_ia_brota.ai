@@ -68,6 +68,7 @@ export default function App() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="inbox" element={<Inbox />} />
+          <Route path="inbox/:id" element={<Inbox />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="quotes" element={<Quotes />} />
           <Route path="reports" element={<Reports />} />

@@ -23,7 +23,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   const { pathname } = useLocation()
   const { user } = useAuth()
 
-  const meta = routeMeta[pathname]
+  const meta = routeMeta[pathname] || (pathname.startsWith('/app/inbox/') ? routeMeta['/app/inbox'] : undefined)
   const name: string =
     (user?.user_metadata?.full_name as string | undefined) ||
     user?.email?.split('@')[0] ||

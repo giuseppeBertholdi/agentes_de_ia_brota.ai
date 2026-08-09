@@ -6,6 +6,7 @@ import AiAssistant from '@/components/AiAssistant'
 import { api } from '@/lib/api'
 import { useWhatsapp } from '@/hooks/useWhatsapp'
 import { useSubscription } from '@/hooks/useSubscription'
+import { cn } from '@/lib/utils'
 
 // páginas que só fazem sentido com o bot realmente atendendo (assinatura ativa + WhatsApp conectado)
 const GATED_PATHS = ['/app/inbox', '/app/approvals', '/app/quotes', '/app/reports', '/app/post-sale']
@@ -19,7 +20,11 @@ export default function AppLayout() {
   const { connected: waConnected, loading: waLoading } = useWhatsapp()
   const { active: subscriptionActive, loading: statusLoading } = useSubscription()
 
-  const isInbox = location.pathname === '/app/inbox'
+  const isInbox = location.pathname.startsWith('/app/inbox')
+  // numa conversa aberta, no celular, o cabeçalho do próprio Inbox já mostra
+  // nome/voltar — duplicar a topbar ali só rouba espaço de tela, como no
+  // WhatsApp Web em modo navegador mobile
+  const isInboxConversation = /^\/app\/inbox\/[^/]+$/.test(location.pathname)
   const statusReady = !waLoading && !statusLoading
 
   useEffect(() => { setNavOpen(false) }, [location.pathname])
@@ -42,15 +47,18 @@ export default function AppLayout() {
   }
 
   // acesso direto por URL a páginas que dependem do bot ativo — manda pra Configurações
-  if (statusReady && !(subscriptionActive && waConnected) && GATED_PATHS.includes(location.pathname)) {
+  const isGatedPath = GATED_PATHS.some(p => location.pathname === p || location.pathname.startsWith(`${p}/`))
+  if (statusReady && !(subscriptionActive && waConnected) && isGatedPath) {
     return <Navigate to="/app/settings" replace />
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-cream font-body">
+    <div className="flex h-dvh overflow-hidden bg-cream font-body">
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <Topbar onMenuClick={() => setNavOpen(true)} />
+        <div className={cn(isInboxConversation && 'hidden md:block')}>
+          <Topbar onMenuClick={() => setNavOpen(true)} />
+        </div>
         <div className="flex-1 overflow-y-auto min-h-0">
           <Outlet key={configVersion} />
         </div>

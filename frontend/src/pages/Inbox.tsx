@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download, Zap } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download, Zap, Camera, X as XIcon, Loader2 } from 'lucide-react'
 import { cn, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { useRealtimeTable } from '@/hooks/useRealtime'
+import ChatImage from '@/components/ChatImage'
 
 interface Conversation {
   id: string
@@ -48,15 +50,23 @@ const avatarColor: Record<string, string> = {
 const SUGGESTIONS = ['Sugerir: agendar ligação', 'Sugerir: tabela de atacado', 'Histórico de pedidos']
 
 export default function Inbox() {
+  const { id: activeId } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [convs, setConvs] = useState<Conversation[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [deptFilter, setDeptFilter] = useState<string>('')
-  const [active, setActive] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null)
+  const [sendingImage, setSendingImage] = useState(false)
+  const [mediaError, setMediaError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const active = convs.find(c => c.id === activeId) || null
 
   const loadConvs = () =>
     api.get<Conversation[]>(`/conversations/${deptFilter ? `?department_id=${deptFilter}` : ''}`).then(setConvs).catch(console.error)
@@ -70,17 +80,20 @@ export default function Inbox() {
   useEffect(() => { loadConvs() }, [deptFilter])
   useRealtimeTable('conversations', loadConvs)
   useRealtimeTable('messages', (payload) => {
-    if (active && (payload as { new?: { conversation_id?: string } }).new?.conversation_id === active.id) {
-      loadMessages(active.id)
+    if (activeId && (payload as { new?: { conversation_id?: string } }).new?.conversation_id === activeId) {
+      loadMessages(activeId)
     }
   })
 
+  useEffect(() => {
+    if (activeId) loadMessages(activeId)
+    else setMessages([])
+  }, [activeId])
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  const selectConv = (c: Conversation) => {
-    setActive(c)
-    loadMessages(c.id)
-  }
+  const selectConv = (c: Conversation) => navigate(`/app/inbox/${c.id}`)
+  const backToList = () => navigate('/app/inbox')
 
   const deptName = (id: string | null) => departments.find(d => d.id === id)?.name
 
@@ -101,21 +114,18 @@ export default function Inbox() {
     if (!active) return
     await api.post('/conversations/takeover', { conversation_id: active.id })
     loadConvs()
-    setActive(a => a ? { ...a, status: 'human' } : a)
   }
 
   const release = async () => {
     if (!active) return
     await api.post(`/conversations/${active.id}/release`)
     loadConvs()
-    setActive(a => a ? { ...a, status: 'bot' } : a)
   }
 
   const resolve = async () => {
     if (!active) return
     await api.post(`/conversations/${active.id}/resolve`)
     loadConvs()
-    setActive(a => a ? { ...a, status: 'resolved' } : a)
   }
 
   const downloadMedia = async (m: Message) => {
@@ -127,6 +137,42 @@ export default function Inbox() {
     } finally {
       setDownloadingId(null)
     }
+  }
+
+  const pickImage = (file: File) => {
+    setMediaError(null)
+    setPendingImage(file)
+    setPendingImagePreview(URL.createObjectURL(file))
+  }
+
+  const cancelImage = () => {
+    if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview)
+    setPendingImage(null)
+    setPendingImagePreview(null)
+  }
+
+  const sendImage = async () => {
+    if (!pendingImage || !active) return
+    setSendingImage(true)
+    setMediaError(null)
+    try {
+      await api.upload('/conversations/send-media', pendingImage, {
+        conversation_id: active.id,
+        caption: input.trim(),
+      })
+      setInput('')
+      cancelImage()
+      loadMessages(active.id)
+    } catch (e) {
+      setMediaError(e instanceof Error ? e.message : 'Falha ao enviar a foto')
+    } finally {
+      setSendingImage(false)
+    }
+  }
+
+  const handleSend = () => {
+    if (pendingImage) sendImage()
+    else send()
   }
 
   return (
@@ -212,11 +258,11 @@ export default function Inbox() {
 
       {/* Chat */}
       {active ? (
-        <div className="flex-1 flex flex-col w-full">
+        <div className="flex-1 flex flex-col w-full min-h-0">
           {/* Chat header */}
-          <div className="flex items-center px-3 sm:px-6 py-3.5 bg-white border-b border-ink/8 gap-3 sm:gap-4">
+          <div className="flex items-center px-3 sm:px-6 py-3.5 bg-white border-b border-ink/8 gap-3 sm:gap-4 flex-none">
             <button
-              onClick={() => setActive(null)}
+              onClick={backToList}
               className="md:hidden p-1.5 -ml-1 rounded-md text-ink-soft hover:bg-cream-2 flex-none"
               aria-label="Voltar para a lista"
             >
@@ -264,7 +310,7 @@ export default function Inbox() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-3 bg-chat-bg">
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-8 flex flex-col gap-3 bg-chat-bg overscroll-contain">
             {active.status === 'human' && (
               <div className="self-center flex items-center gap-2 bg-white rounded-2xl px-4 py-1.5 shadow-xs mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green" />
@@ -277,10 +323,17 @@ export default function Inbox() {
                   'max-w-[85%] sm:max-w-[520px] px-3.5 py-2.5 rounded-[10px] text-sm shadow-xs',
                   m.role === 'user' ? 'bg-white text-ink rounded-tl-[2px]' : 'bg-chat-bubble text-ink rounded-tr-[2px]'
                 )}>
-                  <p className="leading-relaxed whitespace-pre-line flex items-start gap-1.5">
-                    {m.media_type && <Paperclip size={13} className="mt-0.5 flex-none opacity-60" />}
-                    {m.content}
-                  </p>
+                  {m.media_type === 'image' && (
+                    <div className="mb-1.5">
+                      <ChatImage messageId={m.id} />
+                    </div>
+                  )}
+                  {!(m.media_type && m.content.startsWith('[')) && (
+                    <p className="leading-relaxed whitespace-pre-line flex items-start gap-1.5">
+                      {m.media_type && m.media_type !== 'image' && <Paperclip size={13} className="mt-0.5 flex-none opacity-60" />}
+                      {m.content}
+                    </p>
+                  )}
                   {m.media_type === 'document' && (
                     <button
                       onClick={() => downloadMedia(m)}
@@ -318,31 +371,72 @@ export default function Inbox() {
 
           {/* Input */}
           {(active.status === 'human' || active.status === 'awaiting_payment') && (
-            <div className="bg-white border-t border-ink/8 p-3.5 flex flex-col gap-2.5">
-              <div className="flex gap-2 flex-wrap">
-                {SUGGESTIONS.map(s => (
+            <div className="bg-white border-t border-ink/8 p-3 sm:p-3.5 flex flex-col gap-2.5 flex-none" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) pickImage(f); e.target.value = '' }}
+              />
+
+              {pendingImagePreview && (
+                <div className="relative w-fit">
+                  <img src={pendingImagePreview} className="h-20 rounded-md border border-ink/10" alt="Prévia da foto" />
                   <button
-                    key={s}
-                    onClick={() => setInput(s.replace(/^Sugerir: /, ''))}
-                    className="text-xs text-ink-soft bg-cream-2 hover:bg-cream-3 transition-colors px-3 py-1.5 rounded-full"
+                    onClick={cancelImage}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white flex items-center justify-center"
+                    aria-label="Cancelar foto"
                   >
-                    {s}
+                    <XIcon size={11} />
                   </button>
-                ))}
-              </div>
-              <div className="flex gap-2.5">
+                </div>
+              )}
+
+              {mediaError && (
+                <div className="text-xs text-red-600 font-semibold">{mediaError}</div>
+              )}
+
+              {!pendingImage && (
+                <div className="flex gap-2 flex-wrap">
+                  {SUGGESTIONS.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setInput(s.replace(/^Sugerir: /, ''))}
+                      className="text-xs text-ink-soft bg-cream-2 hover:bg-cream-3 transition-colors px-3 py-1.5 rounded-full"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2 sm:gap-2.5 items-center">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-none w-10 h-10 rounded-full bg-cream-2 hover:bg-cream-3 text-ink-soft flex items-center justify-center transition-colors"
+                  aria-label="Anexar ou tirar foto"
+                >
+                  <Camera size={17} />
+                </button>
                 <input
-                  className="flex-1 border-0 rounded-full px-4 py-2.5 text-sm text-ink bg-cream-2 focus:outline-none focus:ring-2 focus:ring-green-deep/40 transition-all"
-                  placeholder="Responder…"
+                  className="flex-1 min-w-0 border-0 rounded-full px-4 py-2.5 text-base sm:text-sm text-ink bg-cream-2 focus:outline-none focus:ring-2 focus:ring-green-deep/40 transition-all"
+                  placeholder={pendingImage ? 'Legenda (opcional)…' : 'Responder…'}
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send() } }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSend() } }}
                 />
-                <Button variant="lime" size="md" className="rounded-full flex-none" onClick={send} disabled={sending || !input.trim()}>
-                  <Send size={15} />
+                <Button
+                  variant="lime"
+                  size="md"
+                  className="rounded-full flex-none"
+                  onClick={handleSend}
+                  disabled={sending || sendingImage || (!pendingImage && !input.trim())}
+                >
+                  {sendingImage ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                 </Button>
                 {active.status === 'human' && (
-                  <Button variant="ghost" size="md" className="rounded-full flex-none" onClick={release}>
+                  <Button variant="ghost" size="md" className="rounded-full flex-none hidden sm:inline-flex" onClick={release}>
                     Devolver ao bot
                   </Button>
                 )}
@@ -351,7 +445,7 @@ export default function Inbox() {
           )}
 
           {active.status === 'bot' && (
-            <div className="bg-green-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
+            <div className="bg-green-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center flex-none">
               <span className="relative flex w-2 h-2 flex-none">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green opacity-60 animate-ping" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-green" />
@@ -366,7 +460,7 @@ export default function Inbox() {
           )}
 
           {active.status === 'awaiting_payment' && (
-            <div className="bg-amber-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center">
+            <div className="bg-amber-soft border-t border-ink/8 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-center flex-none">
               <DollarSign size={16} className="text-amber-text flex-none" />
               <p className="text-sm text-amber-text font-semibold">
                 Cliente aceitou a cotação — confirme o pagamento assim que ele cair.
