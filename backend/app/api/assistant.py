@@ -81,17 +81,45 @@ TOOLS: List[dict] = [
         "type": "function",
         "function": {
             "name": "update_agent",
-            "description": "Ativa, desativa ou personaliza o prompt de um agente de IA, define o desconto máximo que o agente de cotação pode oferecer sozinho, e/ou as palavras-chave que acionam transferência automática para um humano.",
+            "description": "Ativa/desativa um agente de IA, define o desconto máximo que o agente de cotação pode oferecer sozinho, e/ou as palavras-chave que acionam transferência automática para um humano. Para adicionar uma regra de comportamento (ex: um fluxo de triagem), use add_agent_instruction em vez desta — não use o parâmetro system_prompt aqui pra isso.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "agent_type": {"type": "string", "enum": ["receptionist", "quote"], "description": "Tipo do agente"},
                     "enabled": {"type": "boolean", "description": "Se o agente deve estar ativo"},
-                    "system_prompt": {"type": "string", "description": "Prompt personalizado. Omita para manter o atual ou use null para resetar ao padrão."},
+                    "system_prompt": {"type": "string", "description": "USE APENAS quando a pessoa pedir explicitamente pra REDEFINIR ou APAGAR tudo que já foi combinado sobre o comportamento do agente — isso SUBSTITUI qualquer instrução anterior. Envie null pra voltar ao padrão da plataforma sem nenhuma instrução extra. Pra ADICIONAR uma regra nova sem apagar as antigas, use add_agent_instruction."},
                     "max_discount_pct": {"type": "number", "description": "Desconto máximo (%) que o agente de cotação pode oferecer sozinho sem aprovação humana. Use 0 se a empresa não trabalha com desconto."},
                     "escalation_keywords": {"type": "string", "description": "Lista de palavras/expressões separadas por vírgula que, se ditas pelo cliente, transferem a conversa direto para um humano (ex: cancelar, reclamação, advogado)."},
                 },
                 "required": ["agent_type"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_agent_instruction",
+            "description": (
+                "Adiciona UMA regra/instrução nova de comportamento a um agente, SEM apagar as que já "
+                "existem — o servidor cuida de somar ao que já estava configurado. Use isso sempre que a "
+                "pessoa descrever um fluxo, processo, ou regra de atendimento (ex: 'faça uma triagem "
+                "perguntando X antes de responder', 'nunca fale sobre Y', 'se o cliente pedir Z, faça W'). "
+                "Essa é a forma correta e seguem de adicionar comportamento — nunca tente reescrever o "
+                "histórico de instruções manualmente."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "agent_type": {
+                        "type": "string", "enum": ["receptionist", "quote"],
+                        "description": "receptionist pra fluxo geral/triagem/recepção/transferência; quote pra comportamento específico de cotação/negociação",
+                    },
+                    "instruction": {
+                        "type": "string",
+                        "description": "Só a regra NOVA, escrita como uma instrução clara e imperativa pra um atendente seguir (não repita instruções antigas — o servidor já mantém elas).",
+                    },
+                },
+                "required": ["agent_type", "instruction"],
             },
         },
     },
@@ -142,7 +170,9 @@ FINISH_ONBOARDING_TOOL: dict = {
 # Durante o onboarding, a IA só deve mexer no que é relevante pra deixar o atendimento pronto —
 # nada de estatísticas, agentes ou exclusão de itens ainda.
 ONBOARDING_TOOLS: List[dict] = [
-    t for t in TOOLS if t["function"]["name"] in ("update_company", "create_price_item", "create_department", "update_agent")
+    t for t in TOOLS if t["function"]["name"] in (
+        "update_company", "create_price_item", "create_department", "update_agent", "add_agent_instruction",
+    )
 ] + [FINISH_ONBOARDING_TOOL]
 
 
@@ -155,9 +185,9 @@ def _build_system(company: dict, prices: List[dict], agents: List[dict], departm
 
     agent_lines = "\n".join(
         f"  {a['agent_type']}: {'ATIVO' if a.get('enabled', True) else 'INATIVO'}"
-        + (" | tem prompt customizado" if a.get("system_prompt") else "")
+        + (f" | instruções extras já configuradas: \"{a['system_prompt']}\"" if a.get("system_prompt") else " | nenhuma instrução extra configurada ainda")
         for a in agents
-    ) or "  (configuração padrão)"
+    ) or "  (configuração padrão, nenhum agente customizado ainda)"
 
     department_lines = "\n".join(
         f"  {d['name']}" + (f" — {d['description']}" if d.get("description") else "")
@@ -193,14 +223,38 @@ Quando o usuário descrever o negócio pela primeira vez (onboarding), entenda b
 3. Se fizer sentido para o negócio (ex: empresa com RH, financeiro, vendas, suporte), sugira e use create_department para os setores relevantes
 4. Confirme o que foi configurado e explique que os próximos passos — vídeo rápido e ativação do WhatsApp — vêm em seguida
 
+MUITO IMPORTANTE — regra de ouro: tudo o que a pessoa descrever sobre COMO o atendimento deve se comportar
+precisa virar configuração real, nunca só uma resposta de chat. Não é permitido concordar com um pedido de
+comportamento ("combinado!", "beleza, vou configurar assim") sem de fato chamar update_agent pra salvar isso
+— se você não chamou a ferramenta, não aconteceu.
+- Se a pessoa descrever um FLUXO ou PROCESSO específico de atendimento — ex: "quero que a IA faça uma
+  triagem perguntando X, Y e Z antes de encaminhar pra um humano", "sempre confirme o endereço antes de
+  fechar", "se o cliente pedir orçamento, pergunte a quantidade primeiro" — isso não se encaixa em nenhum
+  campo estruturado (preço/tom/desconto/palavra-chave). Transforme em instrução clara e imperativa (escrita
+  como se fosse uma orientação pra um atendente humano seguir) e salve com add_agent_instruction no agente
+  certo: receptionist pra fluxo geral/triagem/recepção, quote pra comportamento específico de cotação.
+- SEMPRE use add_agent_instruction pra adicionar uma regra nova — nunca update_agent(system_prompt=...) pra
+  isso (esse último apaga qualquer instrução anterior). O servidor já cuida de somar com o que existia, você
+  não precisa repetir nem reescrever instruções antigas.
+- Depois de salvar, confirme de volta pra pessoa em uma frase o que exatamente ficou configurado, pra ela
+  saber que não foi só papo.
+
 Seja natural, direto e proativo. Faça perguntas quando precisar de mais detalhes.
 Responda sempre em português brasileiro."""
 
 
-def _build_onboarding_system(company: dict, prices: List[dict]) -> str:
+def _build_onboarding_system(company: dict, prices: List[dict], agents: List[dict]) -> str:
     price_lines = "\n".join(
         f"  {p['name']} — R$ {float(p['price']):.2f}/{p.get('unit','un')}" for p in prices
     ) or "  (nenhum ainda)"
+
+    agent_lines = "\n".join(
+        f"  {a['agent_type']}: {'ATIVO' if a.get('enabled', True) else 'INATIVO'}"
+        + (f" | instruções extras já configuradas: \"{a['system_prompt']}\"" if a.get("system_prompt") else "")
+        + (f" | desconto máximo: {a['max_discount_pct']}%" if a.get("max_discount_pct") is not None else "")
+        + (f" | transfere pra humano com: {a['escalation_keywords']}" if a.get("escalation_keywords") else "")
+        for a in agents
+    ) or "  (nenhum agente customizado ainda)"
 
     return f"""Você é a assistente de onboarding da Plimpost, plataforma de agentes de IA para WhatsApp.
 Sua única missão nesta conversa é entender como o atendimento dessa empresa funciona NA VIDA REAL, pra
@@ -213,8 +267,18 @@ Tom de voz: {company.get('voice_tone') or 'não informado'}
 Descrição: {company.get('business_desc') or 'não informada'}
 Produtos/serviços:
 {price_lines}
+Agentes:
+{agent_lines}
 
-Regras muito importantes:
+MUITO IMPORTANTE — regra de ouro: tudo que a pessoa descrever sobre COMO o atendimento deve se comportar
+precisa virar configuração real na hora, nunca só uma resposta de chat. Se você respondeu "combinado!" ou
+"beleza, vou configurar assim" sem chamar a ferramenta certa, isso não foi salvo — a pessoa vai testar o
+bot depois e ele não vai fazer o que foi combinado. Exemplo: se a pessoa disser "quero que a IA faça uma
+triagem perguntando o problema, depois encaminhe pra um humano", isso não é um papo — é uma instrução de
+comportamento que precisa ser salva com add_agent_instruction(agent_type="receptionist", instruction="...")
+antes de você seguir pra próxima pergunta.
+
+Regras:
 1. Faça UMA pergunta principal por vez — nunca uma lista de perguntas. Converse como uma pessoa real, não como um formulário.
 2. Cubra, na ordem que fizer sentido pela conversa, estes pontos (pule os que não se aplicarem ao negócio):
    a. O que a empresa vende/oferece, e como costuma ser o primeiro contato com um cliente novo.
@@ -224,13 +288,19 @@ Regras muito importantes:
       ceder sozinho sem precisar checar com alguém? Se a resposta for que nunca há desconto, confirme isso
       e salve com update_agent (agent_type="quote", max_discount_pct=0) — é uma configuração válida e
       esperada, não pule essa pergunta.
-   e. Quando o atendimento humano normalmente entra na conversa: existe algum tipo de pedido, palavra ou
-      situação (ex: reclamação, cancelamento, assunto jurídico, pedido específico fora do que a IA resolve)
-      que deveria transferir direto para uma pessoa? Salve as palavras-chave com update_agent
-      (agent_type="receptionist", escalation_keywords="...").
-   f. Se fizer sentido pelo tipo de negócio, setores de transferência (RH, financeiro, vendas, suporte etc.)
+   e. Quando o atendimento humano normalmente entra na conversa por uma PALAVRA/PEDIDO específico (ex:
+      "cancelar", "reclamação", "advogado") — salve com update_agent(agent_type="receptionist",
+      escalation_keywords="..."). Isso é só pra gatilhos literais, não pra fluxos (veja item f).
+   f. Se a pessoa descrever um FLUXO ou PROCESSO de atendimento — uma sequência de perguntas antes de
+      responder/encaminhar (triagem), uma regra tipo "se acontecer X, faça Y", um jeito específico de
+      conduzir a conversa — transforme numa instrução clara e imperativa (como uma orientação escrita pra
+      um atendente humano seguir) e salve com add_agent_instruction no agente certo: receptionist pra fluxo
+      geral/triagem/recepção, quote pra comportamento específico de cotação. Use SEMPRE add_agent_instruction
+      pra isso, nunca update_agent(system_prompt=...) — o servidor já soma com o que existia sozinho, sem
+      risco de apagar uma regra combinada antes.
+   g. Se fizer sentido pelo tipo de negócio, setores de transferência (RH, financeiro, vendas, suporte etc.)
       via create_department.
-   g. Como funciona o pagamento depois que o cliente fecha (chave PIX, link, condições) — salve com
+   h. Como funciona o pagamento depois que o cliente fecha (chave PIX, link, condições) — salve com
       update_company (payment_instructions).
 3. Assim que uma informação for confirmada pela pessoa, salve na hora com a ferramenta certa. Não espere o
    fim da conversa pra salvar tudo de uma vez.
@@ -320,6 +390,32 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
             {"type": "update_agent", "data": payload},
         )
 
+    if name == "add_agent_instruction":
+        agent_type = args["agent_type"]
+        new_instruction = args["instruction"].strip()
+        current_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).eq("agent_type", agent_type).limit(1).execute()
+        current = (current_r.data or [{}])[0]
+
+        existing = (current.get("system_prompt") or "").strip()
+        merged = f"{existing}\n\n{new_instruction}" if existing else new_instruction
+
+        payload: Dict[str, Any] = {
+            "company_id": company_id,
+            "agent_type": agent_type,
+            "enabled": current.get("enabled", True),
+            "system_prompt": merged,
+        }
+        if current.get("max_discount_pct") is not None:
+            payload["max_discount_pct"] = current["max_discount_pct"]
+        if current.get("escalation_keywords"):
+            payload["escalation_keywords"] = current["escalation_keywords"]
+
+        supabase.table("agent_configs").upsert(payload, on_conflict="company_id,agent_type").execute()
+        return (
+            f"Instrução adicionada ao agente {agent_type}: \"{new_instruction}\"",
+            {"type": "add_agent_instruction", "data": payload},
+        )
+
     if name == "create_department":
         item = {"company_id": company_id, "name": args["name"]}
         if args.get("description"):
@@ -382,7 +478,7 @@ async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(r
     departments_r = supabase.table("departments").select("*").eq("company_id", company_id).order("name").execute()
     departments = departments_r.data or []
 
-    system = _build_onboarding_system(company, prices) if body.is_onboarding else _build_system(company, prices, agents, departments)
+    system = _build_onboarding_system(company, prices, agents) if body.is_onboarding else _build_system(company, prices, agents, departments)
     tools = ONBOARDING_TOOLS if body.is_onboarding else TOOLS
 
     messages: List[dict] = [{"role": "system", "content": system}]
