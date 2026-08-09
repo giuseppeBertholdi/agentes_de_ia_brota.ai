@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, Fil
 from app.api.auth import require_company, get_current_user
 from app.database import supabase
 from app.services import whatsapp_cloud_api
+from app.services.image_utils import normalize_image_orientation
 from app.models.schemas import SendMessageRequest, TakeOverRequest
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
@@ -174,6 +175,10 @@ async def send_media(
     mime_type = file.content_type or "image/jpeg"
     if not mime_type.startswith("image/"):
         raise HTTPException(400, "Só é possível enviar imagens por aqui.")
+
+    # corrige fotos verticais que a câmera do celular grava com rotação só
+    # na tag EXIF — a Cloud API nem sempre respeita isso na exibição
+    content = normalize_image_orientation(content, mime_type)
 
     phone_number_id = instance_r.data["phone_number_id"]
     try:
