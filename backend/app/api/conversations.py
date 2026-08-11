@@ -10,6 +10,7 @@ from app.models.schemas import SendMessageRequest, TakeOverRequest
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5MB — mesmo teto usado na Central de Contexto
+MAX_DOCUMENT_BYTES = 16 * 1024 * 1024  # 16MB — limite da própria Cloud API pra documentos
 
 
 @router.get("/")
@@ -170,25 +171,28 @@ async def send_media(
         raise HTTPException(400, "WhatsApp não conectado")
 
     content = await file.read()
-    if len(content) > MAX_IMAGE_BYTES:
-        raise HTTPException(400, "Imagem maior que 5MB — reduza o tamanho e tente de novo.")
-    mime_type = file.content_type or "image/jpeg"
-    if not mime_type.startswith("image/"):
-        raise HTTPException(400, "Só é possível enviar imagens por aqui.")
+    mime_type = file.content_type or "application/octet-stream"
+    is_image = mime_type.startswith("image/")
 
-    # corrige fotos verticais que a câmera do celular grava com rotação só
-    # na tag EXIF — a Cloud API nem sempre respeita isso na exibição
-    content = normalize_image_orientation(content, mime_type)
+    max_bytes = MAX_IMAGE_BYTES if is_image else MAX_DOCUMENT_BYTES
+    if len(content) > max_bytes:
+        limit_mb = max_bytes // (1024 * 1024)
+        raise HTTPException(400, f"Arquivo maior que {limit_mb}MB — reduza o tamanho e tente de novo.")
+
+    if is_image:
+        # corrige fotos verticais que a câmera do celular grava com rotação só
+        # na tag EXIF — a Cloud API nem sempre respeita isso na exibição
+        content = normalize_image_orientation(content, mime_type)
 
     phone_number_id = instance_r.data["phone_number_id"]
+    filename = file.filename or ("foto.jpg" if is_image else "arquivo")
     try:
-        media_id = await whatsapp_cloud_api.upload_media(phone_number_id, content, mime_type, file.filename or "foto.jpg")
-        resp = await whatsapp_cloud_api.send_image(
-            phone_number_id,
-            whatsapp_cloud_api.normalize_br_number(conv.data["remote_jid"]),
-            media_id,
-            caption=caption or None,
-        )
+        media_id = await whatsapp_cloud_api.upload_media(phone_number_id, content, mime_type, filename)
+        to = whatsapp_cloud_api.normalize_br_number(conv.data["remote_jid"])
+        if is_image:
+            resp = await whatsapp_cloud_api.send_image(phone_number_id, to, media_id, caption=caption or None)
+        else:
+            resp = await whatsapp_cloud_api.send_document(phone_number_id, to, media_id, filename, caption=caption or None)
     except httpx.HTTPStatusError as e:
         raise HTTPException(400, f"Falha ao enviar via WhatsApp: {e.response.text}")
 
@@ -197,11 +201,12 @@ async def send_media(
         "conversation_id": conversation_id,
         "company_id": company_id,
         "role": "assistant",
-        "content": caption or "[Foto]",
+        "content": caption or ("[Foto]" if is_image else f"[Arquivo] {filename}"),
         "sent_by_human": True,
         "wa_message_id": wa_id,
-        "media_type": "image",
+        "media_type": "image" if is_image else "document",
         "media_id": media_id,
+        "media_filename": None if is_image else filename,
         "media_mime_type": mime_type,
     }).execute()
 

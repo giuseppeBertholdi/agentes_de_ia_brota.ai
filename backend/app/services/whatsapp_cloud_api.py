@@ -153,6 +153,26 @@ async def send_image(phone_number_id: str, to: str, media_id: str, caption: str 
         return r.json()
 
 
+async def send_document(phone_number_id: str, to: str, media_id: str, filename: str, caption: str | None = None) -> dict:
+    document: dict = {"id": media_id, "filename": filename}
+    if caption:
+        document["caption"] = caption
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{GRAPH_BASE}/{phone_number_id}/messages",
+            headers=SYSTEM_USER_HEADERS,
+            json={
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": to,
+                "type": "document",
+                "document": document,
+            },
+        )
+        r.raise_for_status()
+        return r.json()
+
+
 async def get_media_url(media_id: str) -> str:
     """
     A Meta guarda a mídia por um tempo (ligada ao media_id), mas a URL de

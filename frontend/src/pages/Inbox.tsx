@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download, Zap, Camera, X as XIcon, Loader2 } from 'lucide-react'
+import { Send, Bot, User, Check, CheckCheck, AlertCircle, ArrowLeft, CheckCircle2, DollarSign, MessageSquare, Paperclip, Download, Zap, Camera, X as XIcon, Loader2, FileText } from 'lucide-react'
 import { cn, initials } from '@/lib/utils'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -49,13 +49,43 @@ const avatarColor: Record<string, string> = {
 
 const SUGGESTIONS = ['Sugerir: agendar ligação', 'Sugerir: tabela de atacado', 'Histórico de pedidos']
 
+const CONVS_LOADING_MESSAGES = [
+  'Carregando conversas…',
+  'Buscando as últimas mensagens…',
+  'Organizando o inbox…',
+  'Quase lá…',
+]
+
+const MESSAGES_LOADING_MESSAGES = [
+  'Carregando mensagens…',
+  'Sincronizando com o WhatsApp…',
+  'Quase lá…',
+]
+
+function LoadingMessages({ messages, className }: { messages: string[]; className?: string }) {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    setI(0)
+    const id = setInterval(() => setI(v => (v + 1) % messages.length), 1600)
+    return () => clearInterval(id)
+  }, [messages])
+  return (
+    <div className={cn('flex flex-col items-center gap-2 text-center', className)}>
+      <Loader2 size={18} className="animate-spin text-ink-faint" />
+      <p className="text-ink-faint text-xs font-semibold">{messages[i]}</p>
+    </div>
+  )
+}
+
 export default function Inbox() {
   const { id: activeId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [convs, setConvs] = useState<Conversation[]>([])
+  const [convsLoading, setConvsLoading] = useState(true)
   const [departments, setDepartments] = useState<Department[]>([])
   const [deptFilter, setDeptFilter] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [messagesLoading, setMessagesLoading] = useState(false)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -64,12 +94,16 @@ export default function Inbox() {
   const [sendingImage, setSendingImage] = useState(false)
   const [mediaError, setMediaError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const active = convs.find(c => c.id === activeId) || null
 
   const loadConvs = () =>
-    api.get<Conversation[]>(`/conversations/${deptFilter ? `?department_id=${deptFilter}` : ''}`).then(setConvs).catch(console.error)
+    api.get<Conversation[]>(`/conversations/${deptFilter ? `?department_id=${deptFilter}` : ''}`)
+      .then(setConvs)
+      .catch(console.error)
+      .finally(() => setConvsLoading(false))
 
   const loadMessages = (id: string) =>
     api.get<Message[]>(`/conversations/${id}/messages`).then(setMessages).catch(console.error)
@@ -86,8 +120,13 @@ export default function Inbox() {
   })
 
   useEffect(() => {
-    if (activeId) loadMessages(activeId)
-    else setMessages([])
+    if (activeId) {
+      setMessages([])
+      setMessagesLoading(true)
+      loadMessages(activeId).finally(() => setMessagesLoading(false))
+    } else {
+      setMessages([])
+    }
   }, [activeId])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
@@ -142,7 +181,7 @@ export default function Inbox() {
   const pickImage = (file: File) => {
     setMediaError(null)
     setPendingImage(file)
-    setPendingImagePreview(URL.createObjectURL(file))
+    setPendingImagePreview(file.type.startsWith('image/') ? URL.createObjectURL(file) : null)
   }
 
   const cancelImage = () => {
@@ -164,7 +203,7 @@ export default function Inbox() {
       cancelImage()
       loadMessages(active.id)
     } catch (e) {
-      setMediaError(e instanceof Error ? e.message : 'Falha ao enviar a foto')
+      setMediaError(e instanceof Error ? e.message : 'Falha ao enviar o arquivo')
     } finally {
       setSendingImage(false)
     }
@@ -244,7 +283,9 @@ export default function Inbox() {
               </div>
             </button>
           ))}
-          {convs.length === 0 && (
+          {convsLoading ? (
+            <LoadingMessages messages={CONVS_LOADING_MESSAGES} className="px-6 py-16" />
+          ) : convs.length === 0 && (
             <div className="px-6 py-16 text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-cream-2 flex items-center justify-center">
                 <MessageSquare size={20} className="text-ink-faint" />
@@ -317,6 +358,9 @@ export default function Inbox() {
                 <span className="text-xs text-green-deep font-semibold">Bot pausou — cliente pediu atendimento humano</span>
               </div>
             )}
+            {messagesLoading && (
+              <LoadingMessages messages={MESSAGES_LOADING_MESSAGES} className="m-auto" />
+            )}
             {messages.map(m => (
               <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
@@ -373,20 +417,33 @@ export default function Inbox() {
           {(active.status === 'human' || active.status === 'awaiting_payment') && (
             <div className="bg-white border-t border-ink/8 p-3 sm:p-3.5 flex flex-col gap-2.5 flex-none" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
               <input
-                ref={fileInputRef}
+                ref={cameraInputRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) pickImage(f); e.target.value = '' }}
               />
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) pickImage(f); e.target.value = '' }}
+              />
 
-              {pendingImagePreview && (
+              {pendingImage && (
                 <div className="relative w-fit">
-                  <img src={pendingImagePreview} className="h-20 rounded-md border border-ink/10" alt="Prévia da foto" />
+                  {pendingImagePreview ? (
+                    <img src={pendingImagePreview} className="h-20 rounded-md border border-ink/10" alt="Prévia da foto" />
+                  ) : (
+                    <div className="h-20 min-w-[10rem] px-3 rounded-md border border-ink/10 bg-cream-2 flex items-center gap-2">
+                      <FileText size={18} className="text-ink-soft flex-none" />
+                      <span className="text-xs text-ink-soft truncate">{pendingImage.name}</span>
+                    </div>
+                  )}
                   <button
                     onClick={cancelImage}
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white flex items-center justify-center"
-                    aria-label="Cancelar foto"
+                    aria-label="Cancelar anexo"
                   >
                     <XIcon size={11} />
                   </button>
@@ -413,11 +470,18 @@ export default function Inbox() {
 
               <div className="flex gap-2 sm:gap-2.5 items-center">
                 <button
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => cameraInputRef.current?.click()}
                   className="flex-none w-10 h-10 rounded-full bg-cream-2 hover:bg-cream-3 text-ink-soft flex items-center justify-center transition-colors"
-                  aria-label="Anexar ou tirar foto"
+                  aria-label="Tirar ou enviar foto"
                 >
                   <Camera size={17} />
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-none w-10 h-10 rounded-full bg-cream-2 hover:bg-cream-3 text-ink-soft flex items-center justify-center transition-colors"
+                  aria-label="Anexar arquivo"
+                >
+                  <Paperclip size={17} />
                 </button>
                 <input
                   className="flex-1 min-w-0 border-0 rounded-full px-4 py-2.5 text-base sm:text-sm text-ink bg-cream-2 focus:outline-none focus:ring-2 focus:ring-green-deep/40 transition-all"
