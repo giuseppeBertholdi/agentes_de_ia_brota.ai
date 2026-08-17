@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import Any
 from openai import AsyncOpenAI
 from app.config import settings
@@ -231,9 +232,22 @@ def _matches_escalation_keyword(user_message: str, keywords_csv: str | None) -> 
     return False
 
 
+_WEEKDAYS_PT = [
+    "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira",
+    "sexta-feira", "sábado", "domingo",
+]
+
+
 def _customer_context_text(conversation: dict | None) -> str:
-    today = datetime.now(timezone.utc).strftime("%d/%m/%Y")
-    lines = [f"\nData de hoje: {today}."]
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    weekday = _WEEKDAYS_PT[now_local.weekday()]
+    lines = [
+        f"\nData e hora de agora: {now_local.strftime('%d/%m/%Y')} ({weekday}), "
+        f"{now_local.strftime('%H:%M')} (horário de Brasília). Use essa informação para "
+        "saber se o atendimento está aberto ou fechado agora, com base no horário de "
+        "funcionamento informado abaixo — nunca assuma que está aberto sem checar o dia e "
+        "a hora atual contra esse horário."
+    ]
     name = (conversation or {}).get("contact_name")
     phone = (conversation or {}).get("contact_phone")
     if name:
@@ -273,7 +287,12 @@ def _pending_approval_text(pending_approval: dict | None) -> str:
 def _business_hours_text(business_hours: str | None) -> str:
     if not business_hours:
         return ""
-    return f"\nHorário de funcionamento da loja: {business_hours}."
+    return (
+        f"\nHorário de funcionamento da loja: {business_hours}. Se o cliente perguntar se "
+        "vocês estão abertos, o horário de atendimento, ou algo do tipo, compare o dia e a "
+        "hora atual (informados acima) com esse horário de funcionamento e responda "
+        "corretamente se está aberto ou fechado agora, e quando reabre se estiver fechado."
+    )
 
 
 def _pending_quote_text(quote: dict | None) -> str:
@@ -339,11 +358,11 @@ async def run_receptionist(
         business_desc=company.get("business_desc", ""),
     )
     system += _custom_instructions_text(custom_prompt)
+    system += _customer_context_text(conversation)
     system += _business_hours_text(company.get("business_hours"))
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
     system += _pending_approval_text(pending_approval)
-    system += _customer_context_text(conversation)
     system += _context_documents_text(context_documents or [])
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
