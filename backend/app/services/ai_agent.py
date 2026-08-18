@@ -238,8 +238,7 @@ _WEEKDAYS_PT = [
 ]
 
 
-def _customer_context_text(conversation: dict | None) -> str:
-    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
+def _customer_context_text(conversation: dict | None, now_local: datetime) -> str:
     weekday = _WEEKDAYS_PT[now_local.weekday()]
     lines = [
         f"\nData e hora de agora: {now_local.strftime('%d/%m/%Y')} ({weekday}), "
@@ -284,7 +283,55 @@ def _pending_approval_text(pending_approval: dict | None) -> str:
     )
 
 
-def _business_hours_text(business_hours: str | None) -> str:
+_SCHEDULE_DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def _compute_open_status(schedule: dict | None, now_local: datetime) -> tuple[bool, str] | None:
+    """Calcula em código (não deixa pro modelo) se a loja está aberta agora,
+    a partir do horário estruturado por dia da semana. Retorna None se não
+    houver horário estruturado configurado (empresa ainda não migrou do
+    campo de texto livre antigo)."""
+    if not schedule:
+        return None
+
+    today_idx = now_local.weekday()
+    today_hours = schedule.get(_SCHEDULE_DAY_KEYS[today_idx])
+    if today_hours:
+        open_t = datetime.strptime(today_hours["open"], "%H:%M").time()
+        close_t = datetime.strptime(today_hours["close"], "%H:%M").time()
+        if open_t <= now_local.time() < close_t:
+            return True, f"aberto agora, até às {today_hours['close']}"
+
+    # fechado agora — procura a próxima abertura, a partir de hoje (mais tarde) até 7 dias à frente
+    for offset in range(0, 8):
+        day_idx = (today_idx + offset) % 7
+        hours = schedule.get(_SCHEDULE_DAY_KEYS[day_idx])
+        if not hours:
+            continue
+        open_t = datetime.strptime(hours["open"], "%H:%M").time()
+        if offset == 0 and open_t <= now_local.time():
+            continue  # hoje já passou do horário de abertura E de fechamento
+        when = "hoje" if offset == 0 else ("amanhã" if offset == 1 else f"{_WEEKDAYS_PT[day_idx]}")
+        return False, f"fechado agora, reabre {when} às {hours['open']}"
+
+    return False, "fechado agora, sem próxima abertura configurada"
+
+
+def _business_hours_text(business_hours: str | None, schedule: dict | None, now_local: datetime) -> str:
+    computed = _compute_open_status(schedule, now_local)
+    if computed is not None:
+        is_open, status = computed
+        lines = [
+            f"\nStatus de atendimento AGORA (já calculado, não recalcule nem questione): {status.upper()}."
+        ]
+        if business_hours:
+            lines.append(f"Horário de funcionamento da loja (para citar ao cliente): {business_hours}.")
+        lines.append(
+            "Use o status já calculado acima para responder se o cliente perguntar se "
+            "vocês estão abertos — não tente comparar dia/hora você mesmo."
+        )
+        return "\n".join(lines)
+
     if not business_hours:
         return ""
     return (
@@ -357,9 +404,10 @@ async def run_receptionist(
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
     system += _custom_instructions_text(custom_prompt)
-    system += _customer_context_text(conversation)
-    system += _business_hours_text(company.get("business_hours"))
+    system += _customer_context_text(conversation, now_local)
+    system += _business_hours_text(company.get("business_hours"), company.get("business_hours_schedule"), now_local)
     system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
     system += _pending_approval_text(pending_approval)
@@ -479,10 +527,12 @@ async def run_quote_agent(
         voice_tone=company.get("voice_tone", "amigável"),
         price_table=_price_table_text(price_items),
     )
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
     system += _custom_instructions_text(custom_prompt)
     system += _negotiation_text(max_discount_pct)
     system += _pending_approval_text(pending_approval)
-    system += _customer_context_text(conversation)
+    system += _customer_context_text(conversation, now_local)
+    system += _business_hours_text(company.get("business_hours"), company.get("business_hours_schedule"), now_local)
     system += _context_documents_text(context_documents or [])
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})

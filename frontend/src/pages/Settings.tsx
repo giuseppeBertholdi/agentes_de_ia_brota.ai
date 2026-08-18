@@ -19,14 +19,28 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useCheckout } from '@/hooks/useCheckout'
 import { useWhatsappConnection } from '@/hooks/useWhatsappConnection'
 
+interface DayHours { open: string; close: string }
+type BusinessHoursSchedule = Partial<Record<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun', DayHours | null>>
+
 interface Company {
   id: string
   name: string
   voice_tone: string
   business_desc: string
   business_hours?: string
+  business_hours_schedule?: BusinessHoursSchedule
   payment_instructions?: string
 }
+
+const WEEK_DAYS: { key: keyof BusinessHoursSchedule; label: string }[] = [
+  { key: 'mon', label: 'Seg' },
+  { key: 'tue', label: 'Ter' },
+  { key: 'wed', label: 'Qua' },
+  { key: 'thu', label: 'Qui' },
+  { key: 'fri', label: 'Sex' },
+  { key: 'sat', label: 'Sáb' },
+  { key: 'sun', label: 'Dom' },
+]
 interface PriceItem { id?: string; name: string; description?: string; price: number; unit: string; active: boolean }
 interface AgentConfig {
   agent_type: string
@@ -147,6 +161,7 @@ export default function Settings() {
       voice_tone: company.voice_tone,
       business_desc: company.business_desc,
       business_hours: company.business_hours,
+      business_hours_schedule: company.business_hours_schedule,
       payment_instructions: company.payment_instructions,
     })
     setSaving(false)
@@ -509,12 +524,67 @@ export default function Settings() {
                     <label className="font-mono text-[11px] font-bold uppercase tracking-wide text-ink-soft">
                       Horário de funcionamento
                     </label>
+                    <div className="flex flex-col gap-1.5 rounded-lg border border-cream-3 p-3">
+                      {WEEK_DAYS.map(({ key, label }) => {
+                        const hours = company.business_hours_schedule?.[key]
+                        const isOpen = !!hours
+                        return (
+                          <div key={key} className="flex items-center gap-3">
+                            <label className="flex w-24 items-center gap-2 font-body text-sm text-ink">
+                              <input
+                                type="checkbox"
+                                checked={isOpen}
+                                onChange={e => setCompany(c => {
+                                  if (!c) return c
+                                  const schedule = { ...(c.business_hours_schedule || {}) }
+                                  schedule[key] = e.target.checked ? { open: '08:00', close: '18:00' } : null
+                                  return { ...c, business_hours_schedule: schedule }
+                                })}
+                              />
+                              {label}
+                            </label>
+                            {isOpen ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="time"
+                                  className="w-28"
+                                  value={hours.open}
+                                  onChange={e => setCompany(c => {
+                                    if (!c) return c
+                                    const schedule = { ...(c.business_hours_schedule || {}) }
+                                    schedule[key] = { open: e.target.value, close: schedule[key]?.close || '18:00' }
+                                    return { ...c, business_hours_schedule: schedule }
+                                  })}
+                                />
+                                <span className="text-ink-faint text-sm">às</span>
+                                <Input
+                                  type="time"
+                                  className="w-28"
+                                  value={hours.close}
+                                  onChange={e => setCompany(c => {
+                                    if (!c) return c
+                                    const schedule = { ...(c.business_hours_schedule || {}) }
+                                    schedule[key] = { open: schedule[key]?.open || '08:00', close: e.target.value }
+                                    return { ...c, business_hours_schedule: schedule }
+                                  })}
+                                />
+                              </div>
+                            ) : (
+                              <span className="text-ink-faint text-sm font-body">Fechado</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="text-ink-faint text-[11px] font-body">
+                      A IA usa isso para calcular automaticamente se vocês estão abertos agora — sem depender de ela mesma fazer essa conta.
+                    </p>
                     <Input
-                      placeholder="Ex: Seg a Sex, 8h às 18h · Sáb 8h às 12h"
+                      className="mt-1"
+                      placeholder="Observação opcional pro cliente, ex: fechado em feriados"
                       value={company.business_hours || ''}
                       onChange={e => setCompany(c => c ? { ...c, business_hours: e.target.value } : c)}
                     />
-                    <p className="text-ink-faint text-[11px] font-body">A IA usa isso pra responder quando o cliente perguntar se você está aberto.</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button variant="primary" onClick={saveCompany} disabled={saving}>

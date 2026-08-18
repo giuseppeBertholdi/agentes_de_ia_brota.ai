@@ -1,5 +1,10 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Dict, Optional
+
+
+class DayHours(BaseModel):
+    open: str
+    close: str
 
 
 class EmbeddedSignupCallback(BaseModel):
@@ -47,6 +52,7 @@ class CompanyUpdate(BaseModel):
     voice_tone: Optional[str] = None
     business_desc: Optional[str] = None
     business_hours: Optional[str] = None
+    business_hours_schedule: Optional[Dict[str, Optional[DayHours]]] = None
     payment_instructions: Optional[str] = None
     followup_template_name: Optional[str] = None
     followup_template_language: Optional[str] = None
