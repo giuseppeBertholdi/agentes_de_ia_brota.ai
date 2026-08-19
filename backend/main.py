@@ -21,7 +21,7 @@ if settings.sentry_dsn:
             # logger.error/.exception já usados no código viram eventos no Sentry
             LoggingIntegration(level=None, event_level="ERROR"),
         ],
-        traces_sample_rate=0.1,
+        traces_sample_rate=settings.sentry_traces_sample_rate,
         send_default_pii=False,
     )
 

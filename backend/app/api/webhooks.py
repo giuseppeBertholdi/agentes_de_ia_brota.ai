@@ -8,6 +8,8 @@ import json
 import logging
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Response
+from starlette.concurrency import run_in_threadpool
+
 from app.config import settings
 from app.database import supabase
 from app.services import message_buffer, whatsapp_cloud_api
@@ -61,19 +63,19 @@ async def _handle_message(phone_number_id: str, value: dict):
     if not messages:
         return
 
-    instance_r = (
+    instance_r = await run_in_threadpool(
         supabase.table("whatsapp_instances")
         .select("company_id")
         .eq("phone_number_id", phone_number_id)
         .maybe_single()
-        .execute()
+        .execute
     )
     if not instance_r or not instance_r.data:
         return
     company_id = instance_r.data["company_id"]
 
-    company_r = (
-        supabase.table("companies").select("subscription_status").eq("id", company_id).maybe_single().execute()
+    company_r = await run_in_threadpool(
+        supabase.table("companies").select("subscription_status").eq("id", company_id).maybe_single().execute
     )
     if ((company_r.data if company_r else None) or {}).get("subscription_status") != "active":
         return
@@ -89,7 +91,7 @@ async def _handle_message(phone_number_id: str, value: dict):
 
         push_name = contacts.get(from_number, "")
 
-        conv_r = (
+        conv_r = await run_in_threadpool(
             supabase.table("conversations")
             .upsert(
                 {
@@ -101,7 +103,7 @@ async def _handle_message(phone_number_id: str, value: dict):
                 },
                 on_conflict="company_id,remote_jid",
             )
-            .execute()
+            .execute
         )
         conversation = conv_r.data[0] if conv_r.data else None
         if not conversation:
@@ -139,13 +141,13 @@ async def _handle_media_message(
 ) -> None:
     """Mídia que a IA não lê: registra a mensagem original (com media_id, pra
     poder ser baixada depois) e manda uma resposta padrão — sem passar pela IA."""
-    existing = (
+    existing = await run_in_threadpool(
         supabase.table("messages")
         .select("id")
         .eq("company_id", company_id)
         .eq("message_id", wa_message_id)
         .limit(1)
-        .execute()
+        .execute
     )
     if existing.data:
         return
@@ -154,31 +156,35 @@ async def _handle_media_message(
     label = MEDIA_LABELS.get(msg_type, "um arquivo")
     placeholder = f"[Cliente enviou {label}" + (f": {filename}" if filename else "") + "]"
 
-    supabase.table("messages").insert({
-        "conversation_id": conversation_id,
-        "company_id": company_id,
-        "role": "user",
-        "content": placeholder,
-        "message_id": wa_message_id,
-        "media_type": msg_type,
-        "media_id": media.get("id"),
-        "media_filename": filename,
-        "media_mime_type": media.get("mime_type"),
-    }).execute()
+    await run_in_threadpool(
+        supabase.table("messages").insert({
+            "conversation_id": conversation_id,
+            "company_id": company_id,
+            "role": "user",
+            "content": placeholder,
+            "message_id": wa_message_id,
+            "media_type": msg_type,
+            "media_id": media.get("id"),
+            "media_filename": filename,
+            "media_mime_type": media.get("mime_type"),
+        }).execute
+    )
 
     reply = DOCUMENT_REPLY if msg_type == "document" else UNREADABLE_MEDIA_REPLY
     try:
         to = whatsapp_cloud_api.normalize_br_number(from_number)
         resp = await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
         sent_wa_id = (resp.get("messages") or [{}])[0].get("id")
-        supabase.table("messages").insert({
-            "conversation_id": conversation_id,
-            "company_id": company_id,
-            "role": "assistant",
-            "content": reply,
-            "wa_message_id": sent_wa_id,
-            "delivery_status": "sent",
-        }).execute()
+        await run_in_threadpool(
+            supabase.table("messages").insert({
+                "conversation_id": conversation_id,
+                "company_id": company_id,
+                "role": "assistant",
+                "content": reply,
+                "wa_message_id": sent_wa_id,
+                "delivery_status": "sent",
+            }).execute
+        )
     except Exception:
         logger.exception("Falha ao responder mensagem de mídia (company_id=%s)", company_id)
 
@@ -191,7 +197,9 @@ async def _handle_status_update(value: dict):
         new_status = status.get("status")
         if not wa_id or new_status not in ("sent", "delivered", "read", "failed"):
             continue
-        supabase.table("messages").update({"delivery_status": new_status}).eq("wa_message_id", wa_id).execute()
+        await run_in_threadpool(
+            supabase.table("messages").update({"delivery_status": new_status}).eq("wa_message_id", wa_id).execute
+        )
 
 
 @router.post("")

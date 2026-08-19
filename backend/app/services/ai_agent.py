@@ -13,8 +13,10 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from typing import Any
 from openai import AsyncOpenAI
+from starlette.concurrency import run_in_threadpool
 from app.config import settings
 from app.database import supabase
+from app.services import rate_limiter
 
 client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=20.0, max_retries=2)
 
@@ -25,6 +27,11 @@ MODEL = "gpt-4o-mini"
 # dashboard), pra nunca ter dois lugares com critérios diferentes do que
 # conta como "aceita"
 WON_QUOTE_STATUSES = {"accepted", "paid"}
+
+RATE_LIMIT_MESSAGE = (
+    "Recebi várias mensagens bem rápido e preferi já chamar alguém da equipe pra te "
+    "ajudar por aqui — só um instante!"
+)
 
 USAGE_LIMIT_MESSAGE = (
     "No momento nosso atendimento automático atingiu o limite de mensagens deste mês. "
@@ -56,15 +63,15 @@ def _month_start_iso() -> str:
     return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
 
 
-def _monthly_ai_usage(company_id: str) -> int:
+async def _monthly_ai_usage(company_id: str) -> int:
     """Conta quantas respostas de IA a empresa já gerou no mês corrente."""
-    r = (
+    r = await run_in_threadpool(
         supabase.table("messages")
         .select("id", count="exact")
         .eq("company_id", company_id)
         .eq("role", "assistant")
         .gte("created_at", _month_start_iso())
-        .execute()
+        .execute
     )
     return r.count or 0
 
@@ -194,8 +201,8 @@ DEFAULT_ACCEPT_MESSAGE = "Perfeito! Já vamos dar andamento e entraremos em cont
 ESCALATION_MESSAGE = "Entendo — já vou te colocar em contato com alguém da equipe. Só um instante!"
 
 
-def _save_assistant_message(conversation_id: str, company_id: str, content: str) -> str | None:
-    r = (
+async def _save_assistant_message(conversation_id: str, company_id: str, content: str) -> str | None:
+    r = await run_in_threadpool(
         supabase.table("messages")
         .insert({
             "conversation_id": conversation_id,
@@ -203,7 +210,7 @@ def _save_assistant_message(conversation_id: str, company_id: str, content: str)
             "role": "assistant",
             "content": content,
         })
-        .execute()
+        .execute
     )
     return r.data[0]["id"] if r.data else None
 
@@ -404,14 +411,20 @@ async def run_receptionist(
         voice_tone=company.get("voice_tone", "amigável"),
         business_desc=company.get("business_desc", ""),
     )
-    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    # ordem importa pro prompt caching automático da OpenAI: ele só cacheia um
+    # prefixo idêntico entre chamadas, então tudo que é fixo por empresa vem
+    # primeiro (reaproveitado entre mensagens e entre conversas da mesma
+    # empresa) e o que muda a cada chamada (data/hora, pendências) vai por
+    # último, sem quebrar o prefixo cacheável
     system += _custom_instructions_text(custom_prompt)
+    system += _departments_text(departments or [])
+    system += _context_documents_text(context_documents or [])
+
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
     system += _customer_context_text(conversation, now_local)
     system += _business_hours_text(company.get("business_hours"), company.get("business_hours_schedule"), now_local)
-    system += _departments_text(departments or [])
     system += _pending_quote_text(pending_quote)
     system += _pending_approval_text(pending_approval)
-    system += _context_documents_text(context_documents or [])
 
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
@@ -527,13 +540,16 @@ async def run_quote_agent(
         voice_tone=company.get("voice_tone", "amigável"),
         price_table=_price_table_text(price_items),
     )
-    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    # mesma lógica de ordenação de run_receptionist — estático primeiro, pra
+    # ativar o prompt caching automático da OpenAI
     system += _custom_instructions_text(custom_prompt)
     system += _negotiation_text(max_discount_pct)
-    system += _pending_approval_text(pending_approval)
+    system += _context_documents_text(context_documents or [])
+
+    now_local = datetime.now(ZoneInfo("America/Sao_Paulo"))
     system += _customer_context_text(conversation, now_local)
     system += _business_hours_text(company.get("business_hours"), company.get("business_hours_schedule"), now_local)
-    system += _context_documents_text(context_documents or [])
+    system += _pending_approval_text(pending_approval)
     messages = [{"role": "system", "content": system}] + _history_text(history)
     messages.append({"role": "user", "content": user_message})
 
@@ -601,88 +617,92 @@ async def process_message(
     """
     # a Meta reentrega o mesmo evento em at-least-once delivery — sem isso,
     # um reenvio gera resposta e cotação duplicadas
-    existing = (
+    existing = await run_in_threadpool(
         supabase.table("messages")
         .select("id")
         .eq("company_id", company_id)
         .eq("message_id", message_id)
         .limit(1)
-        .execute()
+        .execute
     )
     if existing.data:
         return "", None
 
     # carrega contexto
-    company_r = supabase.table("companies").select("*").eq("id", company_id).single().execute()
+    company_r = await run_in_threadpool(supabase.table("companies").select("*").eq("id", company_id).single().execute)
     company = company_r.data
 
     # as 30 mensagens mais RECENTES, em ordem cronológica — buscar em ordem
     # ascendente sem desc=True pegaria as mais antigas e "congelaria" o
     # contexto da IA no começo da conversa
-    history_r = (
+    history_r = await run_in_threadpool(
         supabase.table("messages")
         .select("role,content")
         .eq("conversation_id", conversation_id)
         .order("created_at", desc=True)
         .limit(30)
-        .execute()
+        .execute
     )
     history = list(reversed(history_r.data or []))
 
-    agents_r = supabase.table("agent_configs").select("*").eq("company_id", company_id).execute()
+    agents_r = await run_in_threadpool(supabase.table("agent_configs").select("*").eq("company_id", company_id).execute)
     agents = {a["agent_type"]: a for a in (agents_r.data or [])}
 
-    departments_r = supabase.table("departments").select("id,name,description").eq("company_id", company_id).execute()
+    departments_r = await run_in_threadpool(
+        supabase.table("departments").select("id,name,description").eq("company_id", company_id).execute
+    )
     departments = departments_r.data or []
 
-    pending_quote_r = (
+    pending_quote_r = await run_in_threadpool(
         supabase.table("quotes")
         .select("id,total")
         .eq("conversation_id", conversation_id)
         .eq("status", "sent")
         .order("created_at", desc=True)
         .limit(1)
-        .execute()
+        .execute
     )
     pending_quote = (pending_quote_r.data or [None])[0]
 
-    pending_approval_r = (
+    pending_approval_r = await run_in_threadpool(
         supabase.table("ai_pending_approvals")
         .select("id,requested_total")
         .eq("conversation_id", conversation_id)
         .eq("status", "pending")
         .order("created_at", desc=True)
         .limit(1)
-        .execute()
+        .execute
     )
     pending_approval = (pending_approval_r.data or [None])[0]
 
-    context_docs_r = (
+    context_docs_r = await run_in_threadpool(
         supabase.table("context_documents")
         .select("filename,content_text")
         .eq("company_id", company_id)
         .order("created_at", desc=True)
-        .execute()
+        .execute
     )
     context_documents = context_docs_r.data or []
 
-    conversation_r = (
+    conversation_r = await run_in_threadpool(
         supabase.table("conversations")
         .select("status,contact_name,contact_phone")
         .eq("id", conversation_id)
         .single()
-        .execute()
+        .execute
     )
     conversation = conversation_r.data
 
     # salva mensagem do usuário
-    supabase.table("messages").insert({
-        "conversation_id": conversation_id,
-        "company_id": company_id,
-        "role": "user",
-        "content": user_message,
-        "message_id": message_id,
-    }).execute()
+    await run_in_threadpool(
+        supabase.table("messages").insert({
+            "conversation_id": conversation_id,
+            "company_id": company_id,
+            "role": "user",
+            "content": user_message,
+            "message_id": message_id,
+        }).execute
+    )
 
     # interruptor geral da IA (Dashboard) — desligado, tudo vira modo humano.
     # conversas que já estavam em 'bot'/'awaiting_payment' são migradas em
@@ -691,8 +711,10 @@ async def process_message(
     if company and not company.get("ai_enabled", True):
         already_human = conversation and conversation.get("status") == "human"
         if not already_human:
-            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
-            msg_id = _save_assistant_message(conversation_id, company_id, AI_DISABLED_MESSAGE)
+            await run_in_threadpool(
+                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+            )
+            msg_id = await _save_assistant_message(conversation_id, company_id, AI_DISABLED_MESSAGE)
             return AI_DISABLED_MESSAGE, msg_id
         return "", None
 
@@ -703,9 +725,18 @@ async def process_message(
         return "", None
 
     # teto de uso mensal — protege a margem do plano contra picos de custo de IA
-    if _monthly_ai_usage(company_id) >= settings.ai_monthly_message_limit:
-        msg_id = _save_assistant_message(conversation_id, company_id, USAGE_LIMIT_MESSAGE)
+    if await _monthly_ai_usage(company_id) >= settings.ai_monthly_message_limit:
+        msg_id = await _save_assistant_message(conversation_id, company_id, USAGE_LIMIT_MESSAGE)
         return USAGE_LIMIT_MESSAGE, msg_id
+
+    # rajada de mensagens fora do normal (contato malicioso ou bug de cliente
+    # WhatsApp) — em vez de a IA insistir gastando tokens, escala pra humano
+    if not rate_limiter.allow(f"{company_id}:{conversation_id}"):
+        await run_in_threadpool(
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+        )
+        msg_id = await _save_assistant_message(conversation_id, company_id, RATE_LIMIT_MESSAGE)
+        return RATE_LIMIT_MESSAGE, msg_id
 
     # Recepcionista
     receptionist_cfg = agents.get("receptionist", {})
@@ -715,8 +746,10 @@ async def process_message(
     # palavras-chave de escalonamento (ex: "cancelar", "reclamação", "advogado")
     # pulam a IA inteiramente e chamam um humano — configurável por empresa
     if _matches_escalation_keyword(user_message, receptionist_cfg.get("escalation_keywords")):
-        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
-        msg_id = _save_assistant_message(conversation_id, company_id, ESCALATION_MESSAGE)
+        await run_in_threadpool(
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+        )
+        msg_id = await _save_assistant_message(conversation_id, company_id, ESCALATION_MESSAGE)
         return ESCALATION_MESSAGE, msg_id
 
     rec_result = await run_receptionist(
@@ -734,13 +767,19 @@ async def process_message(
     reply_text = ""
 
     if rec_result["action"] == "error":
-        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+        await run_in_threadpool(
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+        )
         reply_text = AI_UNAVAILABLE_MESSAGE
     elif rec_result["action"] == "accept_quote":
-        supabase.table("quotes").update({"status": "accepted"}).eq("id", pending_quote["id"]).execute()
+        await run_in_threadpool(
+            supabase.table("quotes").update({"status": "accepted"}).eq("id", pending_quote["id"]).execute
+        )
         # entrega para um humano cobrar o pagamento — a IA para de responder
         # automaticamente a partir daqui, ver checagem de status acima
-        supabase.table("conversations").update({"status": "awaiting_payment"}).eq("id", conversation_id).execute()
+        await run_in_threadpool(
+            supabase.table("conversations").update({"status": "awaiting_payment"}).eq("id", conversation_id).execute
+        )
         reply_text = rec_result.get("message") or DEFAULT_ACCEPT_MESSAGE
         payment_instructions = (company or {}).get("payment_instructions")
         if payment_instructions:
@@ -754,7 +793,7 @@ async def process_message(
         update = {"status": "human"}
         if dept:
             update["department_id"] = dept["id"]
-        supabase.table("conversations").update(update).eq("id", conversation_id).execute()
+        await run_in_threadpool(supabase.table("conversations").update(update).eq("id", conversation_id).execute)
         reply_text = rec_result.get("message") or (
             f"Vou te transferir para o setor de {dept['name']}, aguarde um instante."
             if dept else "Vou te colocar em contato com alguém da equipe, só um instante!"
@@ -763,7 +802,9 @@ async def process_message(
         # aciona agente de cotação
         quote_cfg = agents.get("quote", {})
         if quote_cfg.get("enabled", True):
-            prices_r = supabase.table("price_items").select("*").eq("company_id", company_id).eq("active", True).execute()
+            prices_r = await run_in_threadpool(
+                supabase.table("price_items").select("*").eq("company_id", company_id).eq("active", True).execute
+            )
             price_items = prices_r.data or []
 
             q_result = await run_quote_agent(
@@ -779,10 +820,14 @@ async def process_message(
             )
 
             if q_result["action"] == "error":
-                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                await run_in_threadpool(
+                    supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+                )
                 reply_text = AI_UNAVAILABLE_MESSAGE
             elif q_result["action"] == "escalate":
-                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                await run_in_threadpool(
+                    supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+                )
                 reply_text = q_result.get("message") or ESCALATION_MESSAGE
             elif q_result["action"] == "needs_approval":
                 if pending_approval:
@@ -790,54 +835,67 @@ async def process_message(
                     # duplica, só reforça que ainda está em análise
                     reply_text = "Ainda estou verificando esse valor com a equipe, te aviso assim que tiver retorno!"
                 else:
-                    supabase.table("ai_pending_approvals").insert({
-                        "company_id": company_id,
-                        "conversation_id": conversation_id,
-                        "requested_items": q_result["items"],
-                        "requested_total": q_result["total"],
-                        "max_allowed_items": q_result["clamped_items"],
-                        "max_allowed_total": q_result["clamped_total"],
-                        "customer_message": DISCOUNT_APPROVAL_MESSAGE,
-                        "status": "pending",
-                    }).execute()
+                    await run_in_threadpool(
+                        supabase.table("ai_pending_approvals").insert({
+                            "company_id": company_id,
+                            "conversation_id": conversation_id,
+                            "requested_items": q_result["items"],
+                            "requested_total": q_result["total"],
+                            "max_allowed_items": q_result["clamped_items"],
+                            "max_allowed_total": q_result["clamped_total"],
+                            "customer_message": DISCOUNT_APPROVAL_MESSAGE,
+                            "status": "pending",
+                        }).execute
+                    )
                     reply_text = DISCOUNT_APPROVAL_MESSAGE
             else:
                 reply_text = q_result["message"]
                 if q_result["action"] == "collecting" and _is_repeating_last_reply(reply_text, history):
                     # a IA ficou travada repetindo a mesma pergunta em vez de avançar
                     # ou reconhecer que não sabe responder o que o cliente pediu
-                    supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+                    await run_in_threadpool(
+                        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+                    )
                     reply_text = STUCK_ESCALATION_MESSAGE
 
             if q_result["action"] == "quote_ready":
                 # uma cotação nova substitui qualquer cotação anterior ainda
                 # pendente nessa conversa — evita "fechar" a cotação errada
                 # quando o cliente pediu uma segunda cotação diferente
-                supabase.table("quotes").update({"status": "superseded"}).eq(
-                    "conversation_id", conversation_id
-                ).eq("status", "sent").execute()
+                await run_in_threadpool(
+                    supabase.table("quotes").update({"status": "superseded"})
+                    .eq("conversation_id", conversation_id)
+                    .eq("status", "sent")
+                    .execute
+                )
 
-                supabase.table("quotes").insert({
-                    "company_id": company_id,
-                    "conversation_id": conversation_id,
-                    "contact_name": (conversation or {}).get("contact_name"),
-                    "contact_phone": (conversation or {}).get("contact_phone"),
-                    "items": q_result["items"],
-                    "total": q_result["total"],
-                    "status": "sent",
-                }).execute()
+                await run_in_threadpool(
+                    supabase.table("quotes").insert({
+                        "company_id": company_id,
+                        "conversation_id": conversation_id,
+                        "contact_name": (conversation or {}).get("contact_name"),
+                        "contact_phone": (conversation or {}).get("contact_phone"),
+                        "items": q_result["items"],
+                        "total": q_result["total"],
+                        "status": "sent",
+                    }).execute
+                )
         else:
             # sem agente de Cotação ativo não existe como gerar um orçamento
             # automático — chama um humano em vez de repetir uma mensagem
             # genérica pra sempre (o cliente já passou pela triagem do
             # Recepcionista, que segue valendo no histórico pra quem assumir)
-            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+            await run_in_threadpool(
+                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+            )
             reply_text = "Vou chamar alguém da equipe pra te ajudar com o orçamento, só um instante!"
     else:
         reply_text = rec_result["message"]
         if _is_repeating_last_reply(reply_text, history):
-            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+            await run_in_threadpool(
+                supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+            )
             reply_text = STUCK_ESCALATION_MESSAGE
 
-    msg_id = _save_assistant_message(conversation_id, company_id, reply_text) if reply_text else None
+    msg_id = await _save_assistant_message(conversation_id, company_id, reply_text) if reply_text else None
     return reply_text, msg_id

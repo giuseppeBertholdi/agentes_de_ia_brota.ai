@@ -13,17 +13,24 @@ Limitação aceita: como é em memória, um restart do processo no meio da
 janela de debounce perde a mensagem pendente (sem resposta automática pro
 cliente). Para a escala atual (uma instância, sem múltiplos workers) é um
 trade-off razoável perto do problema que resolve.
+
+Se `REDIS_URL` estiver configurada, um lock distribuído (`distributed_lock.py`)
+evita que duas instâncias processem a mesma conversa ao mesmo tempo — sem
+ela, o lock é um no-op e o comportamento é idêntico ao de sempre.
 """
 import asyncio
 import logging
 
+from starlette.concurrency import run_in_threadpool
+
 from app.database import supabase
-from app.services import whatsapp_cloud_api
+from app.services import distributed_lock, whatsapp_cloud_api
 from app.services.ai_agent import process_message
 
 logger = logging.getLogger("message_buffer")
 
 DEBOUNCE_SECONDS = 3.0
+FLUSH_LOCK_TTL_SECONDS = 30
 
 _pending: dict[str, dict] = {}
 
@@ -66,6 +73,18 @@ async def _flush_after_delay(conversation_id: str) -> None:
     if not entry:
         return
 
+    lock_key = f"brota:flush-lock:{conversation_id}"
+    if not await distributed_lock.try_acquire(lock_key, FLUSH_LOCK_TTL_SECONDS):
+        logger.warning("Flush de %s já está sendo processado por outra instância — pulando.", conversation_id)
+        return
+
+    try:
+        await _process_and_reply(conversation_id, entry)
+    finally:
+        await distributed_lock.release(lock_key)
+
+
+async def _process_and_reply(conversation_id: str, entry: dict) -> None:
     combined_message = "\n".join(p for p in entry["parts"] if p)
     last_message_id = entry["message_ids"][-1]
     company_id = entry["company_id"]
@@ -79,7 +98,9 @@ async def _flush_after_delay(conversation_id: str) -> None:
         )
     except Exception:
         logger.exception("Falha ao processar mensagem com a IA (company_id=%s)", company_id)
-        supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute()
+        await run_in_threadpool(
+            supabase.table("conversations").update({"status": "human"}).eq("id", conversation_id).execute
+        )
         reply = (
             "Desculpe, tive um problema técnico agora. Já chamei alguém da equipe "
             "para te responder por aqui — só um momento!"
@@ -93,10 +114,15 @@ async def _flush_after_delay(conversation_id: str) -> None:
         resp = await whatsapp_cloud_api.send_text(phone_number_id, to, reply)
         sent_wa_id = (resp.get("messages") or [{}])[0].get("id")
         if saved_message_id:
-            supabase.table("messages").update(
-                {"wa_message_id": sent_wa_id, "delivery_status": "sent"}
-            ).eq("id", saved_message_id).execute()
+            await run_in_threadpool(
+                supabase.table("messages")
+                .update({"wa_message_id": sent_wa_id, "delivery_status": "sent"})
+                .eq("id", saved_message_id)
+                .execute
+            )
     except Exception:
         logger.exception("Falha ao enviar resposta via WhatsApp (company_id=%s)", company_id)
         if saved_message_id:
-            supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute()
+            await run_in_threadpool(
+                supabase.table("messages").update({"delivery_status": "failed"}).eq("id", saved_message_id).execute
+            )

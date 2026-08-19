@@ -4,7 +4,7 @@ Assistente de IA para configuração e consulta da plataforma via chat natural.
 from __future__ import annotations
 
 import json
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
@@ -464,10 +464,22 @@ async def _execute_tool(name: str, args: dict, company_id: str) -> "tuple[str, d
     return f"Ferramenta desconhecida: {name}", {}
 
 
+ONBOARDING_ASSISTANT_MESSAGE_LIMIT = 40
+
+
 @router.post("/chat")
 async def assistant_chat(body: AssistantChatRequest, company_id: str = Depends(require_active_subscription_after_onboarding)):
     company_r = supabase.table("companies").select("*").eq("id", company_id).single().execute()
     company = company_r.data or {}
+
+    # o assistente é liberado de propósito antes de assinar, pra ajudar a
+    # configurar a empresa — mas sem teto isso vira IA grátis e ilimitada pra
+    # quem nunca completa o onboarding (ver require_active_subscription_after_onboarding)
+    if not company.get("onboarding_completed_at") and company.get("subscription_status") != "active":
+        used = company.get("onboarding_assistant_messages_used") or 0
+        if used >= ONBOARDING_ASSISTANT_MESSAGE_LIMIT:
+            raise HTTPException(status_code=402, detail="Limite de mensagens gratuitas do assistente atingido — assine pra continuar.")
+        supabase.table("companies").update({"onboarding_assistant_messages_used": used + 1}).eq("id", company_id).execute()
 
     prices_r = supabase.table("price_items").select("*").eq("company_id", company_id).order("name").execute()
     prices = prices_r.data or []

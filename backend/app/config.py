@@ -27,8 +27,15 @@ class Settings(BaseSettings):
     ai_monthly_message_limit: int = 2000
     # Observabilidade — Sentry fica inativo se sentry_dsn não for configurado
     sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.1
     environment: str = "development"
     log_level: str = "INFO"
+    # Redis opcional — só ativa lock distribuído do buffer de mensagens (ver
+    # distributed_lock.py) se configurado; sem ele, comportamento em memória atual
+    redis_url: str = ""
+    # Retenção de dados (LGPD) — dias até o conteúdo de mensagens de clientes
+    # finais ser anonimizado (a linha continua existindo, só o texto é trocado)
+    message_retention_days: int = 90
 
 
 settings = Settings()

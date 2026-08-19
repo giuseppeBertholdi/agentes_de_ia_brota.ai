@@ -52,19 +52,31 @@ async def pending_count(company_id: str = Depends(require_company)):
 async def _resolve_approval(
     approval_id: str, company_id: str, user_id: str, *, approve: bool
 ) -> dict:
-    approval_r = (
+    # update condicional atômico — só uma requisição consegue "reivindicar" a
+    # aprovação (where status='pending'); evita duas resoluções quase simultâneas
+    # (ex: aprovar + rejeitar em cliques rápidos) mandando mensagens conflitantes
+    claim_r = (
         supabase.table("ai_pending_approvals")
-        .select("*")
+        .update({"status": "processing"})
         .eq("id", approval_id)
         .eq("company_id", company_id)
-        .single()
+        .eq("status", "pending")
         .execute()
     )
-    if not approval_r.data:
-        raise HTTPException(404, "Solicitação não encontrada")
-    approval = approval_r.data
-    if approval["status"] != "pending":
+    if not claim_r.data:
+        # ou não existe, ou já foi resolvida/está sendo resolvida por outra requisição
+        exists_r = (
+            supabase.table("ai_pending_approvals")
+            .select("id")
+            .eq("id", approval_id)
+            .eq("company_id", company_id)
+            .maybe_single()
+            .execute()
+        )
+        if not exists_r or not exists_r.data:
+            raise HTTPException(404, "Solicitação não encontrada")
         raise HTTPException(409, "Essa solicitação já foi resolvida")
+    approval = claim_r.data[0]
 
     conversation_id = approval["conversation_id"]
     conv_r = (
@@ -103,6 +115,8 @@ async def _resolve_approval(
             message,
         )
     except Exception as e:
+        # devolve pro estado 'pending' pra a solicitação continuar retentável
+        supabase.table("ai_pending_approvals").update({"status": "pending"}).eq("id", approval_id).execute()
         raise HTTPException(502, f"Falha ao enviar mensagem: {e}")
 
     # a cotação (aprovada ou com o valor máximo) vira a proposta ativa da
